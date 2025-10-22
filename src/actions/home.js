@@ -1,33 +1,15 @@
+// home.js - REFACTORED
 "use server";
 
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
-
-// 🎯 Constants
-const ITEMS_PER_PAGE = 18;
-
-// 🎯 Build match query based on filters
-function buildMatchQuery(filters = {}) {
-  const matchQuery = {};
-
-  if (filters.genre?.length > 0) {
-    matchQuery.genre = { $in: filters.genre };
-  }
-
-  if (filters.year?.length > 0) {
-    matchQuery.releaseYear = { $in: filters.year.map((y) => parseInt(y, 10)) };
-  }
-
-  if (filters.language?.length > 0) {
-    matchQuery.language = { $in: filters.language };
-  }
-
-  if (filters.country?.length > 0) {
-    matchQuery.country = { $in: filters.country };
-  }
-
-  return matchQuery;
-}
+import {
+  buildMatchQuery,
+  buildPaginationResponse,
+  buildErrorResponse,
+  serializeDocument,
+  ITEMS_PER_PAGE,
+} from "./db-utils";
 
 // 🚀 Get latest added (films + series combined)
 export const getLatestAdded = cache(async (filters = {}, page = 1) => {
@@ -46,7 +28,7 @@ export const getLatestAdded = cache(async (filters = {}, page = 1) => {
 
     const totalItems = totalCount[0] + totalCount[1];
 
-    // Calculate how many items we need to fetch to ensure we have enough for this page
+    // Calculate how many items we need to fetch
     const itemsToFetch = skip + ITEMS_PER_PAGE * 2;
 
     // Fetch from both collections with filters
@@ -65,29 +47,14 @@ export const getLatestAdded = cache(async (filters = {}, page = 1) => {
         .toArray(),
     ]);
 
-    // Helper function to convert all ObjectIds to strings
-    const convertObjectIds = (item) => ({
-      ...item,
-      _id: item._id.toString(),
-      services: item.services?.map((service) => ({
-        ...service,
-        _id: service._id?.toString(),
-        qualities: service.qualities?.map((quality) =>
-          typeof quality === "object" && quality._id
-            ? { ...quality, _id: quality._id.toString() }
-            : quality
-        ),
-      })),
-    });
-
     // Merge and sort by createdAt
     const merged = [
       ...filmsData.map((item) => ({
-        ...convertObjectIds(item),
+        ...serializeDocument(item),
         type: "film",
       })),
       ...seriesData.map((item) => ({
-        ...convertObjectIds(item),
+        ...serializeDocument(item),
         type: "series",
       })),
     ]
@@ -108,20 +75,7 @@ export const getLatestAdded = cache(async (filters = {}, page = 1) => {
     };
   } catch (error) {
     console.error("❌ Error fetching latest added:", error);
-
-    return {
-      success: false,
-      error: error.message,
-      documents: [],
-      pagination: {
-        currentPage: page,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: false,
-        hasPrev: false,
-      },
-    };
+    return buildErrorResponse("mixed", error, page);
   }
 });
 
@@ -134,10 +88,9 @@ export const getNewSeries = cache(async (filters = {}, page = 1) => {
     const skip = (page - 1) * ITEMS_PER_PAGE;
 
     // Combine category filter with user filters
-    const matchQuery = {
+    const matchQuery = buildMatchQuery(filters, {
       "category.isNew": true,
-      ...buildMatchQuery(filters),
-    };
+    });
 
     const pipeline = [
       { $match: matchQuery },
@@ -173,37 +126,13 @@ export const getNewSeries = cache(async (filters = {}, page = 1) => {
 
     const [result] = await collection.aggregate(pipeline).toArray();
 
-    const totalSeries = result.metadata[0]?.total || 0;
-    const documents = result.data || [];
-
     return {
       success: true,
-      documents,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalSeries / ITEMS_PER_PAGE),
-        totalItems: totalSeries,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: page < Math.ceil(totalSeries / ITEMS_PER_PAGE),
-        hasPrev: page > 1,
-      },
+      ...buildPaginationResponse(result, page),
     };
   } catch (error) {
     console.error("❌ Error fetching new series:", error);
-
-    return {
-      success: false,
-      error: error.message,
-      documents: [],
-      pagination: {
-        currentPage: page,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: false,
-        hasPrev: false,
-      },
-    };
+    return buildErrorResponse("series", error, page);
   }
 });
 
@@ -216,10 +145,9 @@ export const getNewMovies = cache(async (filters = {}, page = 1) => {
     const skip = (page - 1) * ITEMS_PER_PAGE;
 
     // Combine category filter with user filters
-    const matchQuery = {
+    const matchQuery = buildMatchQuery(filters, {
       "category.isNew": true,
-      ...buildMatchQuery(filters),
-    };
+    });
 
     const pipeline = [
       { $match: matchQuery },
@@ -255,37 +183,13 @@ export const getNewMovies = cache(async (filters = {}, page = 1) => {
 
     const [result] = await collection.aggregate(pipeline).toArray();
 
-    const totalMovies = result.metadata[0]?.total || 0;
-    const documents = result.data || [];
-
     return {
       success: true,
-      documents,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalMovies / ITEMS_PER_PAGE),
-        totalItems: totalMovies,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: page < Math.ceil(totalMovies / ITEMS_PER_PAGE),
-        hasPrev: page > 1,
-      },
+      ...buildPaginationResponse(result, page),
     };
   } catch (error) {
     console.error("❌ Error fetching new movies:", error);
-
-    return {
-      success: false,
-      error: error.message,
-      documents: [],
-      pagination: {
-        currentPage: page,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: false,
-        hasPrev: false,
-      },
-    };
+    return buildErrorResponse("films", error, page);
   }
 });
 
@@ -298,7 +202,6 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
     const skip = (page - 1) * ITEMS_PER_PAGE;
 
     // For episodes, we need to filter by series properties
-    // First, get matching series IDs if filters are applied
     let seriesIds = null;
 
     if (Object.keys(filters).length > 0) {
@@ -386,36 +289,12 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
 
     const [result] = await collection.aggregate(pipeline).toArray();
 
-    const totalEpisodes = result.metadata[0]?.total || 0;
-    const documents = result.data || [];
-
     return {
       success: true,
-      documents,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalEpisodes / ITEMS_PER_PAGE),
-        totalItems: totalEpisodes,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: page < Math.ceil(totalEpisodes / ITEMS_PER_PAGE),
-        hasPrev: page > 1,
-      },
+      ...buildPaginationResponse(result, page),
     };
   } catch (error) {
     console.error("❌ Error fetching latest episodes:", error);
-
-    return {
-      success: false,
-      error: error.message,
-      documents: [],
-      pagination: {
-        currentPage: page,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: false,
-        hasPrev: false,
-      },
-    };
+    return buildErrorResponse("episodes", error, page);
   }
 });

@@ -1,173 +1,53 @@
+// films.js - REFACTORED
 "use server";
 
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
-import { ObjectId } from "mongodb";
+import {
+  BASE_SORT_CONFIGS,
+  buildContentAggregationPipeline,
+  buildPaginationResponse,
+  buildErrorResponse,
+  toObjectId,
+  serializeDocument,
+} from "./db-utils";
 
-// 🎯 Constants
-const ITEMS_PER_PAGE = 18;
-const CURRENT_YEAR = new Date().getFullYear();
-
-// 🎯 Sort configurations avec leur logique de filtrage
-const SORT_CONFIGS = {
-  new: {
-    sort: { createdAt: -1, rating: -1 },
-    filter: { "category.isNew": true },
-  },
-  old: {
-    sort: { releaseYear: -1, rating: -1 },
-    filter: (hasYearFilter) =>
-      hasYearFilter ? {} : { releaseYear: { $lte: CURRENT_YEAR - 1 } },
-  },
-  popular: {
-    sort: { rating: -1, views: -1 },
-    filter: { "category.isPopular": true },
-  },
-  best: {
-    sort: { rating: -1, imdbRating: -1 },
-    filter: { "category.isTop": true },
-  },
-  rating: {
-    sort: { rating: -1 },
-    filter: {},
-  },
-  year: {
-    sort: { releaseYear: -1, rating: -1 },
-    filter: {},
-  },
+// 🎯 Film-specific sort configurations (extend base configs)
+const FILMS_SORT_CONFIGS = {
+  ...BASE_SORT_CONFIGS,
+  // Add any film-specific configs here if needed
 };
 
-// 🎯 Build MongoDB aggregation query
-function buildAggregationPipeline(filters, sortId, page) {
-  const skip = (page - 1) * ITEMS_PER_PAGE;
-  const sortConfig = sortId
-    ? SORT_CONFIGS[sortId] || SORT_CONFIGS.new
-    : {
-        sort: { createdAt: -1 }, // Default sort when no filter selected
-        filter: {},
-      };
-
-  // Base match query
-  const matchQuery = {};
-
-  // Apply sort-specific filters
-  const sortFilter =
-    typeof sortConfig.filter === "function"
-      ? sortConfig.filter(filters.year?.length > 0)
-      : sortConfig.filter;
-
-  Object.assign(matchQuery, sortFilter);
-
-  // Apply user filters
-  if (filters.genre?.length > 0) {
-    matchQuery.genre = { $in: filters.genre };
-  }
-
-  if (filters.quality?.length > 0) {
-    matchQuery.quality = { $in: filters.quality };
-  }
-
-  if (filters.year?.length > 0) {
-    matchQuery.releaseYear = { $in: filters.year.map((y) => parseInt(y, 10)) };
-  }
-
-  if (filters.language?.length > 0) {
-    matchQuery.language = { $in: filters.language };
-  }
-
-  if (filters.country?.length > 0) {
-    matchQuery.country = { $in: filters.country };
-  }
-
-  // Aggregation pipeline avec facet pour éviter 2 queries
-  return [
-    { $match: matchQuery },
-    {
-      $facet: {
-        metadata: [{ $count: "total" }],
-        data: [
-          { $sort: sortConfig.sort },
-          { $skip: skip },
-          { $limit: ITEMS_PER_PAGE },
-          {
-            $project: {
-              _id: { $toString: "$_id" },
-              title: 1,
-              genre: 1,
-              rating: 1,
-              releaseYear: 1,
-              quality: 1,
-              language: 1,
-              country: 1,
-              image: 1,
-              slug: 1,
-              category: 1,
-              duration: 1,
-              views: 1,
-            },
-          },
-        ],
-      },
-    },
-  ];
-}
-
-// 🚀 Main action avec React cache
+// 🚀 Get Films with filters and sorting
 export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
-  // Changed default from "new" to null
   try {
     const client = await clientPromise;
     const collection = client.db().collection("films");
 
-    const pipeline = buildAggregationPipeline(filters, sortId, page);
-    const [result] = await collection.aggregate(pipeline).toArray();
+    const sortConfig = sortId
+      ? FILMS_SORT_CONFIGS[sortId] || FILMS_SORT_CONFIGS.all
+      : { sort: { createdAt: -1 }, filter: {} };
 
-    const totalFilms = result.metadata[0]?.total || 0;
-    const documents = result.data || [];
+    const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
+    const [result] = await collection.aggregate(pipeline).toArray();
 
     return {
       success: true,
-      documents,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalFilms / ITEMS_PER_PAGE),
-        totalItems: totalFilms,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: page < Math.ceil(totalFilms / ITEMS_PER_PAGE),
-        hasPrev: page > 1,
-      },
+      ...buildPaginationResponse(result, page),
     };
   } catch (error) {
-    console.error("❌ Error fetching documents:", error);
-
-    return {
-      success: false,
-      error: error.message,
-      documents: [],
-      pagination: {
-        currentPage: page,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: false,
-        hasPrev: false,
-      },
-    };
+    console.error("❌ Error fetching films:", error);
+    return buildErrorResponse("films", error, page);
   }
 });
 
-// 🚀 Get single film by slug with React cache
-// Add this function to your films.js file
-
-// 🚀 Get single film by slug with React cache
+// 🚀 Get single film by slug
 export const getFilmBySlug = cache(async (slug) => {
   try {
     const client = await clientPromise;
     const collection = client.db().collection("films");
 
-    // Decode the URL-encoded slug
     const decodedSlug = decodeURIComponent(slug);
-
     const film = await collection.findOne({ slug: decodedSlug });
 
     if (!film) {
@@ -178,16 +58,12 @@ export const getFilmBySlug = cache(async (slug) => {
       };
     }
 
-    // Convert _id to string
-    film._id = film._id.toString();
-
     return {
       success: true,
-      film,
+      film: serializeDocument(film),
     };
   } catch (error) {
     console.error("❌ Error fetching film by slug:", error);
-
     return {
       success: false,
       error: error.message,
@@ -197,17 +73,13 @@ export const getFilmBySlug = cache(async (slug) => {
 });
 
 // 🎯 Get film collection by film ID
-// 🎯 Get film collection by film ID
 export const getFilmCollection = cache(async (filmId) => {
   try {
     const client = await clientPromise;
     const db = client.db();
 
-    // Convert filmId to ObjectId if it's a string
-    const filmObjectId =
-      typeof filmId === "string" ? new ObjectId(filmId) : filmId;
+    const filmObjectId = toObjectId(filmId);
 
-    // Find collection containing this film
     const collection = await db.collection("filmcollections").findOne({
       films: filmObjectId,
     });
@@ -221,20 +93,11 @@ export const getFilmCollection = cache(async (filmId) => {
       };
     }
 
-    // Get all films in this collection
     const films = await db
       .collection("films")
-      .find({
-        _id: { $in: collection.films },
-      })
-      .sort({ releaseYear: 1 }) // Sort by release year ascending
+      .find({ _id: { $in: collection.films } })
+      .sort({ releaseYear: 1 })
       .toArray();
-
-    // Convert _id to string for each film
-    const serializedFilms = films.map((film) => ({
-      ...film,
-      _id: film._id.toString(),
-    }));
 
     return {
       success: true,
@@ -244,7 +107,7 @@ export const getFilmCollection = cache(async (filmId) => {
         createdAt: collection.createdAt,
         updatedAt: collection.updatedAt,
       },
-      films: serializedFilms,
+      films: films.map(serializeDocument),
     };
   } catch (error) {
     console.error("❌ Error fetching film collection:", error);
@@ -264,18 +127,13 @@ export const getRelatedFilms = cache(
       const client = await clientPromise;
       const collection = client.db().collection("films");
 
-      // Convert filmId to ObjectId if it's a string
-      const filmObjectId =
-        typeof filmId === "string" ? new ObjectId(filmId) : filmId;
-
+      const filmObjectId = toObjectId(filmId);
       const { genre = [], releaseYear, language } = filmData;
 
-      // Build match query for similar films
       const matchQuery = {
-        _id: { $ne: filmObjectId }, // Exclude current film
+        _id: { $ne: filmObjectId },
       };
 
-      // Add filters based on available data
       const orConditions = [];
 
       if (genre.length > 0) {
@@ -283,7 +141,6 @@ export const getRelatedFilms = cache(
       }
 
       if (releaseYear) {
-        // Find films within 3 years range
         orConditions.push({
           releaseYear: {
             $gte: releaseYear - 3,
@@ -296,17 +153,14 @@ export const getRelatedFilms = cache(
         orConditions.push({ language });
       }
 
-      // If we have conditions, add them to match query
       if (orConditions.length > 0) {
         matchQuery.$or = orConditions;
       }
 
-      // Aggregation pipeline with scoring for better matches
       const pipeline = [
         { $match: matchQuery },
         {
           $addFields: {
-            // Calculate similarity score
             genreMatch: {
               $size: {
                 $ifNull: [{ $setIntersection: ["$genre", genre] }, []],
@@ -333,7 +187,7 @@ export const getRelatedFilms = cache(
           $addFields: {
             similarityScore: {
               $add: [
-                { $multiply: ["$genreMatch", 3] }, // Genre is most important
+                { $multiply: ["$genreMatch", 3] },
                 "$yearMatch",
                 "$languageMatch",
               ],

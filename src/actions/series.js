@@ -1,266 +1,52 @@
+// series.js - REFACTORED
 "use server";
 
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
+import {
+  BASE_SORT_CONFIGS,
+  buildContentAggregationPipeline,
+  buildPaginationResponse,
+  buildErrorResponse,
+  toObjectId,
+  serializeDocument,
+  ITEMS_PER_PAGE,
+} from "./db-utils";
 
-// 🎯 Constants
-const ITEMS_PER_PAGE = 18;
-const CURRENT_YEAR = new Date().getFullYear();
-
-// 🎯 Sort configurations avec leur logique de filtrage
-const SORT_CONFIGS = {
-  all: {
-    sort: { _id: -1 }, // ترتيب افتراضي بسيط
-    filter: {},
-  },
-  new: {
-    sort: { createdAt: -1, rating: -1 },
-    filter: { "category.isNew": true },
-  },
-  old: {
-    sort: { releaseYear: -1, rating: -1 },
-    filter: (hasYearFilter) =>
-      hasYearFilter ? {} : { releaseYear: { $lte: CURRENT_YEAR - 1 } },
-  },
-  popular: {
-    sort: { rating: -1, views: -1 },
-    filter: { "category.isPopular": true },
-  },
-  best: {
-    sort: { rating: -1, imdbRating: -1 },
-    filter: { "category.isTop": true },
-  },
-  rating: {
-    sort: { rating: -1 },
-    filter: {},
-  },
-  year: {
-    sort: { releaseYear: -1, rating: -1 },
-    filter: {},
-  },
-};
-
-// 🎯 Build MongoDB aggregation query
-function buildAggregationPipeline(filters, sortId, page) {
-  const skip = (page - 1) * ITEMS_PER_PAGE;
-  const sortConfig = SORT_CONFIGS[sortId] || SORT_CONFIGS.all;
-
-  // Base match query
-  const matchQuery = {};
-
-  // Apply sort-specific filters
-  const sortFilter =
-    typeof sortConfig.filter === "function"
-      ? sortConfig.filter(filters.year?.length > 0)
-      : sortConfig.filter;
-
-  Object.assign(matchQuery, sortFilter);
-
-  // Apply user filters
-  if (filters.genre?.length > 0) {
-    matchQuery.genre = { $in: filters.genre };
-  }
-
-  if (filters.quality?.length > 0) {
-    matchQuery.quality = { $in: filters.quality };
-  }
-
-  if (filters.year?.length > 0) {
-    matchQuery.releaseYear = { $in: filters.year.map((y) => parseInt(y, 10)) };
-  }
-
-  if (filters.language?.length > 0) {
-    matchQuery.language = { $in: filters.language };
-  }
-
-  if (filters.country?.length > 0) {
-    matchQuery.country = { $in: filters.country };
-  }
-
-  // Aggregation pipeline avec facet pour éviter 2 queries
-  return [
-    { $match: matchQuery },
-    {
-      $facet: {
-        metadata: [{ $count: "total" }],
-        data: [
-          { $sort: sortConfig.sort },
-          { $skip: skip },
-          { $limit: ITEMS_PER_PAGE },
-          {
-            $project: {
-              _id: { $toString: "$_id" },
-              title: 1,
-              genre: 1,
-              rating: 1,
-              releaseYear: 1,
-              quality: 1,
-              language: 1,
-              country: 1,
-              image: 1,
-              slug: 1,
-              category: 1,
-              duration: 1,
-              views: 1,
-            },
-          },
-        ],
-      },
-    },
-  ];
-}
-
-// 🚀 Main action avec React cache
+// 🚀 Get Series with filters and sorting
 export const getSeries = cache(
   async (filters = {}, sortId = "all", page = 1) => {
     try {
       const client = await clientPromise;
       const collection = client.db().collection("series");
 
-      const pipeline = buildAggregationPipeline(filters, sortId, page);
-      const [result] = await collection.aggregate(pipeline).toArray();
+      const sortConfig = BASE_SORT_CONFIGS[sortId] || BASE_SORT_CONFIGS.all;
 
-      const totalSeries = result.metadata[0]?.total || 0;
-      const documents = result.data || [];
+      const pipeline = buildContentAggregationPipeline(
+        filters,
+        sortConfig,
+        page
+      );
+      const [result] = await collection.aggregate(pipeline).toArray();
 
       return {
         success: true,
-        documents,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(totalSeries / ITEMS_PER_PAGE),
-          totalItems: totalSeries,
-          itemsPerPage: ITEMS_PER_PAGE,
-          hasNext: page < Math.ceil(totalSeries / ITEMS_PER_PAGE),
-          hasPrev: page > 1,
-        },
+        ...buildPaginationResponse(result, page),
       };
     } catch (error) {
-      console.error("❌ Error fetching films:", error);
-
-      return {
-        success: false,
-        error: error.message,
-        documents: [],
-        pagination: {
-          currentPage: page,
-          totalPages: 0,
-          totalItems: 0,
-          itemsPerPage: ITEMS_PER_PAGE,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
+      console.error("❌ Error fetching series:", error);
+      return buildErrorResponse("series", error, page);
     }
   }
 );
 
-// 🎯 Get All Episodes - FIXED VERSION
-export const getEpisodes = cache(async (page = 1) => {
-  try {
-    const client = await clientPromise;
-    const collection = client.db().collection("episodes");
-
-    const skip = (page - 1) * ITEMS_PER_PAGE;
-
-    // Aggregation pipeline with season population
-    const pipeline = [
-      {
-        $lookup: {
-          from: "seasons",
-          localField: "seasonId",
-          foreignField: "_id",
-          as: "season",
-        },
-      },
-      { $unwind: { path: "$season", preserveNullAndEmptyArrays: true } },
-      {
-        $facet: {
-          metadata: [{ $count: "total" }],
-          data: [
-            { $sort: { createdAt: -1 } },
-            { $skip: skip },
-            { $limit: ITEMS_PER_PAGE },
-            {
-              $project: {
-                _id: { $toString: "$_id" },
-                seriesId: { $toString: "$seriesId" },
-                seasonId: { $toString: "$seasonId" },
-                episodeNumber: 1,
-                duration: 1,
-                // Convert all ObjectIds in services array
-                services: {
-                  $map: {
-                    input: "$services",
-                    as: "service",
-                    in: {
-                      quality: "$$service.quality",
-                      iframe: "$$service.iframe",
-                      downloadLink: "$$service.downloadLink",
-                      _id: { $toString: "$$service._id" }, // Convert service._id
-                    },
-                  },
-                },
-                createdAt: 1,
-                updatedAt: 1,
-                season: {
-                  _id: { $toString: "$season._id" },
-                  seasonNumber: "$season.seasonNumber",
-                  image: "$season.image",
-                  title: "$season.title",
-                },
-              },
-            },
-          ],
-        },
-      },
-    ];
-
-    const [result] = await collection.aggregate(pipeline).toArray();
-
-    const totalEpisodes = result.metadata[0]?.total || 0;
-    const documents = result.data || [];
-
-    return {
-      success: true,
-      documents,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalEpisodes / ITEMS_PER_PAGE),
-        totalItems: totalEpisodes,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: page < Math.ceil(totalEpisodes / ITEMS_PER_PAGE),
-        hasPrev: page > 1,
-      },
-    };
-  } catch (error) {
-    console.error("❌ Error fetching documents:", error);
-
-    return {
-      success: false,
-      error: error.message,
-      documents: [],
-      pagination: {
-        currentPage: page,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: false,
-        hasPrev: false,
-      },
-    };
-  }
-});
-
-// 🚀 Get single serie by slug with React cache
+// 🚀 Get single series by slug
 export const getSerieBySlug = cache(async (slug) => {
   try {
     const client = await clientPromise;
     const collection = client.db().collection("series");
 
-    // Decode the URL-encoded slug
     const decodedSlug = decodeURIComponent(slug);
-
     const serie = await collection.findOne({ slug: decodedSlug });
 
     if (!serie) {
@@ -271,16 +57,12 @@ export const getSerieBySlug = cache(async (slug) => {
       };
     }
 
-    // Convert _id to string
-    serie._id = serie._id.toString();
-
     return {
       success: true,
-      serie,
+      serie: serializeDocument(serie),
     };
   } catch (error) {
     console.error("❌ Error fetching serie by slug:", error);
-
     return {
       success: false,
       error: error.message,
@@ -295,15 +77,11 @@ export const getSeasonsBySeries = cache(async (seriesId) => {
     const client = await clientPromise;
     const collection = client.db().collection("seasons");
 
-    // Convert seriesId to ObjectId if it's a string
-    const ObjectId = require("mongodb").ObjectId;
-    const seriesObjectId =
-      typeof seriesId === "string" ? new ObjectId(seriesId) : seriesId;
+    const seriesObjectId = toObjectId(seriesId);
 
-    // Find all seasons for this series
     const seasons = await collection
       .find({ seriesId: seriesObjectId })
-      .sort({ seasonNumber: 1 }) // Sort by season number ascending
+      .sort({ seasonNumber: 1 })
       .toArray();
 
     if (!seasons || seasons.length === 0) {
@@ -314,24 +92,21 @@ export const getSeasonsBySeries = cache(async (seriesId) => {
       };
     }
 
-    // Serialize seasons (convert ObjectIds to strings)
-    const serializedSeasons = seasons.map((season) => ({
-      _id: season._id.toString(),
-      seriesId: season.seriesId.toString(),
-      seasonNumber: season.seasonNumber,
-      releaseYear: season.releaseYear,
-      rating: season.rating,
-      image: season.image,
-      status: season.status,
-      slug: season.slug,
-      createdAt: season.createdAt?.toISOString(),
-      updatedAt: season.updatedAt?.toISOString(),
-    }));
-
     return {
       success: true,
-      seasons: serializedSeasons,
-      count: serializedSeasons.length,
+      seasons: seasons.map((season) => ({
+        _id: season._id.toString(),
+        seriesId: season.seriesId.toString(),
+        seasonNumber: season.seasonNumber,
+        releaseYear: season.releaseYear,
+        rating: season.rating,
+        image: season.image,
+        status: season.status,
+        slug: season.slug,
+        createdAt: season.createdAt?.toISOString(),
+        updatedAt: season.updatedAt?.toISOString(),
+      })),
+      count: seasons.length,
     };
   } catch (error) {
     console.error("❌ Error fetching seasons by series:", error);
@@ -343,16 +118,14 @@ export const getSeasonsBySeries = cache(async (seriesId) => {
   }
 });
 
-// 🚀 Get single season by slug with React cache
+// 🚀 Get single season by slug
 export const getSeasonBySlug = cache(async (slug) => {
   try {
     const client = await clientPromise;
     const db = client.db();
 
-    // Decode the URL-encoded slug
     const decodedSlug = decodeURIComponent(slug);
 
-    // Find the season
     const season = await db
       .collection("seasons")
       .findOne({ slug: decodedSlug });
@@ -366,7 +139,6 @@ export const getSeasonBySlug = cache(async (slug) => {
       };
     }
 
-    // Get the series information
     const series = await db.collection("series").findOne({
       _id: season.seriesId,
     });
@@ -399,7 +171,6 @@ export const getSeasonBySlug = cache(async (slug) => {
     };
   } catch (error) {
     console.error("❌ Error fetching season by slug:", error);
-
     return {
       success: false,
       error: error.message,
@@ -415,15 +186,11 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
     const client = await clientPromise;
     const collection = client.db().collection("episodes");
 
-    // Convert seasonId to ObjectId if it's a string
-    const ObjectId = require("mongodb").ObjectId;
-    const seasonObjectId =
-      typeof seasonId === "string" ? new ObjectId(seasonId) : seasonId;
+    const seasonObjectId = toObjectId(seasonId);
 
-    // Find all episodes for this season
     const episodes = await collection
       .find({ seasonId: seasonObjectId })
-      .sort({ episodeNumber: 1 }) // Sort by episode number ascending
+      .sort({ episodeNumber: 1 })
       .toArray();
 
     if (!episodes || episodes.length === 0) {
@@ -434,29 +201,26 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
       };
     }
 
-    // Serialize episodes (convert ObjectIds to strings)
-    const serializedEpisodes = episodes.map((episode) => ({
-      _id: episode._id.toString(),
-      seriesId: episode.seriesId.toString(),
-      seasonId: episode.seasonId.toString(),
-      episodeNumber: episode.episodeNumber,
-      duration: episode.duration,
-      slug: episode.slug,
-      services:
-        episode.services?.map((service) => ({
-          quality: service.quality,
-          iframe: service.iframe,
-          downloadLink: service.downloadLink,
-          _id: service._id?.toString(),
-        })) || [],
-      createdAt: episode.createdAt?.toISOString(),
-      updatedAt: episode.updatedAt?.toISOString(),
-    }));
-
     return {
       success: true,
-      episodes: serializedEpisodes,
-      count: serializedEpisodes.length,
+      episodes: episodes.map((episode) => ({
+        _id: episode._id.toString(),
+        seriesId: episode.seriesId.toString(),
+        seasonId: episode.seasonId.toString(),
+        episodeNumber: episode.episodeNumber,
+        duration: episode.duration,
+        slug: episode.slug,
+        services:
+          episode.services?.map((service) => ({
+            quality: service.quality,
+            iframe: service.iframe,
+            downloadLink: service.downloadLink,
+            _id: service._id?.toString(),
+          })) || [],
+        createdAt: episode.createdAt?.toISOString(),
+        updatedAt: episode.updatedAt?.toISOString(),
+      })),
+      count: episodes.length,
     };
   } catch (error) {
     console.error("❌ Error fetching episodes by season:", error);
@@ -468,16 +232,14 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
   }
 });
 
-// 🚀 Get single episode by slug with React cache
+// 🚀 Get single episode by slug
 export const getEpisodeBySlug = cache(async (slug) => {
   try {
     const client = await clientPromise;
     const db = client.db();
 
-    // Decode the URL-encoded slug
     const decodedSlug = decodeURIComponent(slug);
 
-    // Find the episode with aggregation to get related data
     const pipeline = [
       { $match: { slug: decodedSlug } },
       {
@@ -560,7 +322,6 @@ export const getEpisodeBySlug = cache(async (slug) => {
     };
   } catch (error) {
     console.error("❌ Error fetching episode by slug:", error);
-
     return {
       success: false,
       error: error.message,
@@ -568,5 +329,76 @@ export const getEpisodeBySlug = cache(async (slug) => {
       season: null,
       series: null,
     };
+  }
+});
+
+// 🎯 Get All Episodes (with pagination)
+export const getEpisodes = cache(async (page = 1) => {
+  try {
+    const client = await clientPromise;
+    const collection = client.db().collection("episodes");
+
+    const skip = (page - 1) * ITEMS_PER_PAGE;
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: "seasons",
+          localField: "seasonId",
+          foreignField: "_id",
+          as: "season",
+        },
+      },
+      { $unwind: { path: "$season", preserveNullAndEmptyArrays: true } },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: ITEMS_PER_PAGE },
+            {
+              $project: {
+                _id: { $toString: "$_id" },
+                seriesId: { $toString: "$seriesId" },
+                seasonId: { $toString: "$seasonId" },
+                episodeNumber: 1,
+                duration: 1,
+                services: {
+                  $map: {
+                    input: "$services",
+                    as: "service",
+                    in: {
+                      quality: "$$service.quality",
+                      iframe: "$$service.iframe",
+                      downloadLink: "$$service.downloadLink",
+                      _id: { $toString: "$$service._id" },
+                    },
+                  },
+                },
+                createdAt: 1,
+                updatedAt: 1,
+                season: {
+                  _id: { $toString: "$season._id" },
+                  seasonNumber: "$season.seasonNumber",
+                  image: "$season.image",
+                  title: "$season.title",
+                },
+              },
+            },
+          ],
+        },
+      },
+    ];
+
+    const [result] = await collection.aggregate(pipeline).toArray();
+
+    return {
+      success: true,
+      ...buildPaginationResponse(result, page),
+    };
+  } catch (error) {
+    console.error("❌ Error fetching episodes:", error);
+    return buildErrorResponse("episodes", error, page);
   }
 });

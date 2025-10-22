@@ -1,5 +1,6 @@
 import React from "react";
 import { SkeletonCard } from "../skeletons/Skeletons";
+import { DESIGN_TOKENS } from "@/lib/data";
 
 const SkeletonCarousel = () => (
   <div className="mb-8">
@@ -38,7 +39,7 @@ export default function FilterSectionSkeleton() {
       <SkeletonFilterBar />
 
       {/* Grid of Cards */}
-      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
+      <div className={DESIGN_TOKENS.grid.container}>
         {[...Array(12)].map((_, i) => (
           <SkeletonCard key={i} />
         ))}

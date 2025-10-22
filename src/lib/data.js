@@ -58,7 +58,7 @@ export const DESIGN_TOKENS = {
   },
   grid: {
     container:
-      "grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-5 px-2",
+      "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-5 px-2",
   },
 };
 
