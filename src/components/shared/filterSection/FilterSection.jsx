@@ -43,9 +43,16 @@ export default function FilterSection({
 
       // Single loop through all parameters
       for (const [key, value] of Object.entries(filters)) {
+        // FIXED: Check for empty strings and null/undefined
         if (Array.isArray(value) && value.length > 0) {
-          params.set(key, value.join(","));
-        } else if (value && value !== null) {
+          // Filter out any empty strings from the array
+          const cleanedArray = value.filter(
+            (v) => v && String(v).trim() !== ""
+          );
+          if (cleanedArray.length > 0) {
+            params.set(key, cleanedArray.join(","));
+          }
+        } else if (value && value !== null && String(value).trim() !== "") {
           params.set(key, value.toString());
         }
       }

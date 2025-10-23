@@ -85,7 +85,7 @@ export default async function CategoryPage({ params, searchParams }) {
 
   let isEpisode = sortId === "latestAnimeEpisodes";
   let isFilmCollection = sortId === "movieSeries";
-  console.log("Server: searchParams =", searchParamsResolved);
+
   return (
     <div className="min-h-screen">
       <Suspense fallback={<FilterSectionSkeleton />}>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export const SubMenuDropdown = ({
   items,
@@ -6,7 +7,52 @@ export const SubMenuDropdown = ({
   handleSubMenuClick,
   position = "desktop",
 }) => {
+  const pathname = usePathname();
   const isDesktop = position === "desktop";
+
+  // Function to check if submenu item is active
+  const isItemActive = (itemPath) => {
+    if (!pathname) return false;
+
+    // Get search params from the current URL
+    const searchParams =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search)
+        : new URLSearchParams();
+
+    // Parse the item path
+    const [itemBasePath, itemQuery] = itemPath.split("?");
+    const currentBasePath = pathname;
+
+    // If item has query params, check base path and query params match
+    if (itemQuery) {
+      const itemParams = new URLSearchParams(itemQuery);
+
+      // Check if base paths match
+      if (itemBasePath !== currentBasePath) {
+        return false;
+      }
+
+      // Check if all item params match current URL params
+      for (const [key, value] of itemParams) {
+        if (searchParams.get(key) !== value) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // If no query params on item, match base path only when there are no query params in URL
+    if (
+      !itemQuery &&
+      itemBasePath === currentBasePath &&
+      !searchParams.toString()
+    ) {
+      return true;
+    }
+
+    return false;
+  };
 
   return (
     <div
@@ -25,6 +71,7 @@ export const SubMenuDropdown = ({
             const label = typeof item === "string" ? item : item.label;
             const path =
               typeof item === "string" ? `/category/${item}` : item.path;
+            const isActive = isItemActive(path);
 
             return (
               <Link
@@ -32,20 +79,47 @@ export const SubMenuDropdown = ({
                 href={path}
                 className={`relative group w-full text-right ${
                   isDesktop ? "px-4 py-3" : "px-3 py-2.5"
-                } rounded-lg text-gray-100 hover:text-white transition-all duration-200 ${
+                } rounded-lg transition-all duration-200 ${
                   isDesktop ? "font-medium" : "text-sm font-medium"
-                } hover:bg-white/20 ${
-                  isDesktop && "hover:shadow-lg"
-                } cursor-pointer block`}
-                onClick={handleSubMenuClick}
+                } block ${
+                  isActive
+                    ? "bg-white/30 text-white shadow-lg font-bold cursor-default"
+                    : "text-gray-100 hover:text-white hover:bg-white/20 cursor-pointer"
+                } ${isDesktop && !isActive && "hover:shadow-lg"}`}
+                onClick={(e) => {
+                  if (isActive) {
+                    e.preventDefault();
+                    handleSubMenuClick();
+                  } else {
+                    handleSubMenuClick();
+                  }
+                }}
               >
+                {/* Active indicator gradient background */}
+                {isActive && (
+                  <>
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-20 rounded-lg`}
+                    />
+                    <div
+                      className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} opacity-30 rounded-lg blur-sm`}
+                    />
+                  </>
+                )}
+
                 {isDesktop && (
                   <div className="relative flex items-center justify-between">
-                    <div className="w-2 h-2 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
-                    <span>{label}</span>
+                    <div
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        isActive
+                          ? "bg-white opacity-100 scale-110"
+                          : "bg-white opacity-0 group-hover:opacity-100"
+                      }`}
+                    />
+                    <span className="relative">{label}</span>
                   </div>
                 )}
-                {!isDesktop && <span>{label}</span>}
+                {!isDesktop && <span className="relative">{label}</span>}
               </Link>
             );
           })}
