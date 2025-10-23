@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { DESIGN_TOKENS } from "@/lib/data";
 
 const SearchResultCard = ({ item }) => {
   // Determine the link based on content type
@@ -115,7 +116,7 @@ export const SearchResults = ({
 
         {/* Results Grid */}
         <div className="p-3">
-          <div className="grid grid-cols-3 md:grid-cols-5 xl:grid-cols-7 gap-3">
+          <div className={DESIGN_TOKENS.grid.container}>
             {searchResults.map((item) => (
               <SearchResultCard
                 key={item.id}
