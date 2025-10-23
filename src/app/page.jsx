@@ -7,6 +7,7 @@ import {
 } from "@/actions/home";
 import { SORT_OPTIONS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
+import FilterSectionSkeleton from "@/components/shared/filterSection/FilterSectionSkeleton";
 
 export const metadata = {
   title: "Home - Stream Movies & Series",
@@ -45,7 +46,7 @@ export default async function Home({ searchParams }) {
 
   return (
     <div className="min-h-screen">
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<FilterSectionSkeleton />}>
         <FilterSection
           initialData={initialData}
           sortOptions={SORT_OPTIONS.home}
