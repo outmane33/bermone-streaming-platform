@@ -2,7 +2,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X, Search } from "lucide-react";
+import { X, Search } from "lucide-react";
 import clsx from "clsx";
 import { DESIGN_TOKENS, CATEGORIES } from "@/lib/data";
 import { searchContent } from "@/actions/search";
@@ -73,6 +73,7 @@ function useDebounce(value, delay) {
 export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const [isDesktop, setIsDesktop] = useState(true);
 
   const [activeCategory, setActiveCategory] = useState(() =>
     getActiveCategoryFromPath(pathname)
@@ -87,6 +88,17 @@ export default function Header() {
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsDesktop(window.innerWidth >= 768); // or your breakpoint
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   // Update active category when pathname changes
   useEffect(() => {
@@ -254,6 +266,7 @@ export default function Header() {
                       onClick={() => handleCategoryClick(category.id)}
                       handleSubMenuClick={() => handleSubMenuClick(category.id)}
                       isHome={!isHome}
+                      isDesktop={isDesktop}
                     />
                   ))}
                 </div>

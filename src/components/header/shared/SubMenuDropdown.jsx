@@ -57,7 +57,7 @@ export const SubMenuDropdown = ({
   return (
     <div
       className={`absolute top-full ${
-        isDesktop ? "mt-6 right-0 w-56" : "mt-2 left-0 right-0"
+        isDesktop ? "mt-6 right-0 w-56" : "mt-4 right-[-50px] w-56"
       } z-50`}
     >
       {isDesktop && (
@@ -65,7 +65,7 @@ export const SubMenuDropdown = ({
       )}
       <div className="relative bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl overflow-hidden ">
         <div className={`h-1 bg-gradient-to-r  ${gradient}`} />
-        <div className={`p-2 ${!isDesktop && "max-h-60 overflow-y-auto "}`}>
+        <div className={`p-2 ${!isDesktop && "max-h-70 overflow-y-auto "}`}>
           {items.map((item, index) => {
             // Handle both object format and string format for backward compatibility
             const label = typeof item === "string" ? item : item.label;
