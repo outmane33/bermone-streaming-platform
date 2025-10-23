@@ -1,3 +1,4 @@
+// FilterTag.jsx (unchanged, already optimal)
 import React from "react";
 import { X } from "lucide-react";
 import { filterIcons, getIcon } from "@/lib/data";

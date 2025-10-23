@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useMemo } from "react";
+import { useTransition, useMemo, useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { DESIGN_TOKENS } from "@/lib/data";
 import Card from "../card/Card";
@@ -19,59 +19,59 @@ export default function FilterSection({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const searchParamsString = searchParams.toString();
-
+  // Memoize current filters to avoid recalculation
   const currentFilters = useMemo(() => {
-    const params = new URLSearchParams(searchParamsString);
+    const params = new URLSearchParams(searchParams.toString());
+    const parseArray = (key) =>
+      params.get(key)?.split(",").filter(Boolean) || [];
+
     return {
-      genre: params.get("genre")?.split(",").filter(Boolean) || [],
-      year: params.get("year")?.split(",").filter(Boolean) || [],
-      language: params.get("language")?.split(",").filter(Boolean) || [],
-      country: params.get("country")?.split(",").filter(Boolean) || [],
+      genre: parseArray("genre"),
+      year: parseArray("year"),
+      language: parseArray("language"),
+      country: parseArray("country"),
       sort: params.get("sort") || null,
       page: parseInt(params.get("page") || "1", 10),
     };
-  }, [searchParamsString]);
+  }, [searchParams]);
 
-  const updateURL = (newParams) => {
-    const params = new URLSearchParams();
+  // Optimized URL update with single iteration
+  const updateURL = useCallback(
+    (newParams) => {
+      const params = new URLSearchParams();
+      const { page, ...filters } = newParams;
 
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (key === "page") return;
-
-      if (Array.isArray(value) && value.length > 0) {
-        params.set(key, value.join(","));
-      } else if (value && !Array.isArray(value) && value !== null) {
-        params.set(key, value.toString());
+      // Single loop through all parameters
+      for (const [key, value] of Object.entries(filters)) {
+        if (Array.isArray(value) && value.length > 0) {
+          params.set(key, value.join(","));
+        } else if (value && value !== null) {
+          params.set(key, value.toString());
+        }
       }
-    });
 
-    const pageNum = newParams.page || 1;
-    if (pageNum > 1) {
-      params.set("page", pageNum.toString());
-    }
+      if (page > 1) params.set("page", page.toString());
 
-    const queryString = params.toString();
-    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      const newUrl = params.toString() ? `${pathname}?${params}` : pathname;
+      router.push(newUrl, { scroll: false });
+    },
+    [pathname, router]
+  );
 
-    router.push(newUrl, { scroll: false });
-  };
+  const handleFilterChange = useCallback(
+    (newFilters) => {
+      updateURL({ ...newFilters, page: 1 });
+    },
+    [updateURL]
+  );
 
-  const handleFilterChange = (newFilters) => {
-    updateURL({
-      ...newFilters,
-      page: 1,
-    });
-  };
-
-  const handlePageChange = (newPage) => {
-    updateURL({
-      ...currentFilters,
-      page: newPage,
-    });
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const handlePageChange = useCallback(
+    (newPage) => {
+      updateURL({ ...currentFilters, page: newPage });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [currentFilters, updateURL]
+  );
 
   const { documents, pagination } = initialData;
 
@@ -87,9 +87,9 @@ export default function FilterSection({
 
       {documents?.length > 0 ? (
         <div
-          className={`${DESIGN_TOKENS.grid.container} opacity-${
-            isPending ? "50" : "100"
-          } transition-opacity`}
+          className={`${DESIGN_TOKENS.grid.container} transition-opacity ${
+            isPending ? "opacity-50" : "opacity-100"
+          }`}
         >
           {documents.map((film) => (
             <Card
@@ -101,17 +101,7 @@ export default function FilterSection({
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-          <div className="text-6xl">🎬</div>
-          <h3 className="text-2xl font-bold text-white">No documents found</h3>
-          <p className="text-gray-400">Try adjusting your filters</p>
-          <button
-            onClick={() => router.push(pathname)}
-            className="px-6 py-2 bg-cyan-500 rounded hover:bg-cyan-600 transition"
-          >
-            Clear Filters
-          </button>
-        </div>
+        <EmptyState onClear={() => router.push(pathname)} />
       )}
 
       {documents.length > 0 && (
@@ -128,3 +118,18 @@ export default function FilterSection({
     </div>
   );
 }
+
+// Extracted empty state component
+const EmptyState = ({ onClear }) => (
+  <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+    <div className="text-6xl">🎬</div>
+    <h3 className="text-2xl font-bold text-white">No documents found</h3>
+    <p className="text-gray-400">Try adjusting your filters</p>
+    <button
+      onClick={onClear}
+      className="px-6 py-2 bg-cyan-500 rounded hover:bg-cyan-600 transition"
+    >
+      Clear Filters
+    </button>
+  </div>
+);

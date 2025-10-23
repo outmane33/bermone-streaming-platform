@@ -59,11 +59,7 @@ const PageButton = ({ pageNum, isActive, onClick, isMobile }) => (
   </button>
 );
 
-export default function Pagination({
-  currentPage = 1,
-  totalPages = 10,
-  onPageChange,
-}) {
+export default function ({ currentPage = 1, totalPages = 10, onPageChange }) {
   const [page, setPage] = useState(currentPage);
 
   useEffect(() => {

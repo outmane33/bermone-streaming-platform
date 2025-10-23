@@ -1,5 +1,12 @@
+// Filter.jsx - Main component (optimized)
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { Menu } from "lucide-react";
 import { FilterTag } from "./FilterTag";
 import { FilterButton } from "./FilterButton";
@@ -7,19 +14,13 @@ import { DropdownMenu } from "./DropdownMenu";
 import { SortButton } from "./SortButton";
 import { MobileMenu } from "./MobileMenu";
 import { filterOptions } from "@/lib/data";
+import { useClickOutside } from "@/lib/helpers";
 
-const useClickOutside = (openDropdown, dropdownRefs, callback) => {
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (openDropdown && dropdownRefs.current[openDropdown]) {
-        if (!dropdownRefs.current[openDropdown].contains(e.target)) {
-          callback();
-        }
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [openDropdown, dropdownRefs, callback]);
+const INITIAL_FILTERS = {
+  genre: [],
+  year: [],
+  language: [],
+  country: [],
 };
 
 export default function Filter({
@@ -30,70 +31,83 @@ export default function Filter({
   isAnimeEpisode = false,
 }) {
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [mobileOpenDropdown, setMobileOpenDropdown] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState({
+  const [selectedFilters, setSelectedFilters] = useState(() => ({
     genre: currentFilters?.genre || [],
     year: currentFilters?.year || [],
     language: currentFilters?.language || [],
     country: currentFilters?.country || [],
-  });
+  }));
   const [selectedSort, setSelectedSort] = useState(
     currentFilters?.sort || null
   );
+
   const dropdownRefs = useRef({});
   const isFirstRender = useRef(true);
 
-  useClickOutside(openDropdown, dropdownRefs, () => setOpenDropdown(null));
+  useClickOutside(
+    openDropdown,
+    { current: dropdownRefs.current[openDropdown] },
+    useCallback(() => setOpenDropdown(null), [])
+  );
 
-  // ✅ Only notify parent when filters/sort actually change (skip first render)
+  // Notify parent only when filters/sort change (skip first render)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
+    onFilterChange?.({ ...selectedFilters, sort: selectedSort });
+  }, [selectedFilters, selectedSort, onFilterChange]);
 
-    if (onFilterChange) {
-      onFilterChange({ ...selectedFilters, sort: selectedSort });
-    }
-  }, [selectedFilters, selectedSort]);
+  // Memoized callbacks
+  const toggleDropdown = useCallback((category) => {
+    setOpenDropdown((prev) => (prev === category ? null : category));
+  }, []);
 
-  const toggleDropdown = (category) => {
-    setOpenDropdown(openDropdown === category ? null : category);
-  };
-
-  const toggleMobileDropdown = (category) => {
-    setMobileOpenDropdown(mobileOpenDropdown === category ? null : category);
-  };
-
-  const toggleFilter = (category, value) => {
+  const toggleFilter = useCallback((category, value) => {
     setSelectedFilters((prev) => {
-      const updated = { ...prev };
-      const categoryValues = updated[category];
-      updated[category] = categoryValues.includes(value)
-        ? categoryValues.filter((item) => item !== value)
-        : [...categoryValues, value];
-      return updated;
+      const categoryValues = prev[category];
+      return {
+        ...prev,
+        [category]: categoryValues.includes(value)
+          ? categoryValues.filter((item) => item !== value)
+          : [...categoryValues, value],
+      };
     });
-  };
+  }, []);
 
-  const handleSortClick = (sortId) => {
-    const newSort = selectedSort === sortId ? null : sortId;
-    setSelectedSort(newSort);
-  };
+  const handleSortClick = useCallback((sortId) => {
+    setSelectedSort((prev) => (prev === sortId ? null : sortId));
+  }, []);
 
-  const clearAllFilters = () => {
-    setSelectedFilters({
-      genre: [],
-      year: [],
-      language: [],
-      country: [],
-    });
+  const clearAllFilters = useCallback(() => {
+    setSelectedFilters(INITIAL_FILTERS);
     setSelectedSort(null);
-  };
+  }, []);
 
-  const activeFilterCount = Object.values(selectedFilters).flat().length;
-  const categoryCount = (category) => selectedFilters[category].length;
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
+
+  // Memoized computed values
+  const activeFilterCount = useMemo(
+    () => Object.values(selectedFilters).flat().length,
+    [selectedFilters]
+  );
+
+  const categoryCount = useCallback(
+    (category) => selectedFilters[category].length,
+    [selectedFilters]
+  );
+
+  const selectedSortOption = useMemo(
+    () => sortOptions?.find((s) => s.id === selectedSort),
+    [sortOptions, selectedSort]
+  );
+
+  const hasActiveFilters = activeFilterCount > 0 || selectedSort;
+  const totalActiveCount = activeFilterCount + (selectedSort ? 1 : 0);
 
   return (
     <div className="mb-4 relative">
@@ -104,6 +118,7 @@ export default function Filter({
         />
       )}
 
+      {/* Mobile Toggle Button */}
       <button
         onClick={() => setMobileMenuOpen(true)}
         className="lg:hidden w-full flex items-center justify-between gap-3 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-xl px-4 py-3 mb-3 hover:bg-white/15 transition-all duration-300"
@@ -112,18 +127,17 @@ export default function Filter({
           <Menu size={20} className="text-gray-200" />
           <span className="text-white font-semibold">الفلاتر والترتيب</span>
         </div>
-        {(activeFilterCount > 0 || selectedSort) && (
+        {hasActiveFilters && (
           <span className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-black rounded-full">
-            {activeFilterCount + (selectedSort ? 1 : 0)}
+            {totalActiveCount}
           </span>
         )}
       </button>
 
+      {/* Desktop Filter Bar */}
       {!isAnimeEpisode && (
         <div className="hidden lg:flex items-center justify-between gap-1 xl:gap-2 flex-wrap bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-2xl px-3 sm:px-4 py-2 relative z-[20]">
-          {isEpisode ? (
-            <div></div>
-          ) : (
+          {!isEpisode && (
             <div className="flex items-center gap-1 xl:gap-2 flex-wrap">
               {Object.keys(filterOptions).map((category) => (
                 <div
@@ -152,9 +166,9 @@ export default function Filter({
             </div>
           )}
 
-          <div className="flex items-center gap-1 sm:gap-2 pr-2 sm:pr-4 border-r-2 border-white/20">
-            {sortOptions &&
-              sortOptions.map((option) => (
+          {sortOptions?.length > 0 && (
+            <div className="flex items-center gap-1 sm:gap-2 pr-2 sm:pr-4 border-r-2 border-white/20">
+              {sortOptions.map((option) => (
                 <SortButton
                   key={option.id}
                   option={option}
@@ -162,29 +176,27 @@ export default function Filter({
                   onClick={() => handleSortClick(option.id)}
                 />
               ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
+      {/* Mobile Menu */}
       <MobileMenu
         isOpen={mobileMenuOpen}
-        onClose={() => {
-          setMobileMenuOpen(false);
-          setMobileOpenDropdown(null);
-        }}
+        onClose={closeMobileMenu}
         filterOptions={filterOptions}
         selectedFilters={selectedFilters}
         toggleFilter={toggleFilter}
         sortOptions={sortOptions}
         selectedSort={selectedSort}
         handleSortClick={handleSortClick}
-        openDropdown={mobileOpenDropdown}
-        toggleDropdown={toggleMobileDropdown}
-        getCategoryCount={categoryCount}
+        categoryCount={categoryCount}
         isEpisode={isEpisode}
       />
 
-      {(activeFilterCount > 0 || selectedSort) && (
+      {/* Active Filters Display */}
+      {hasActiveFilters && (
         <div className="mt-4 sm:mt-6">
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <span className="text-white font-bold text-sm sm:text-base">
@@ -200,10 +212,10 @@ export default function Filter({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {sortOptions && selectedSort && (
+            {selectedSortOption && (
               <FilterTag
-                icon={sortOptions.find((s) => s.id === selectedSort)?.icon}
-                label={sortOptions.find((s) => s.id === selectedSort)?.label}
+                icon={selectedSortOption.icon}
+                label={selectedSortOption.label}
                 onRemove={() => handleSortClick(selectedSort)}
               />
             )}
@@ -221,23 +233,6 @@ export default function Filter({
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(6, 182, 212, 0.5);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(6, 182, 212, 0.7);
-        }
-      `}</style>
     </div>
   );
 }

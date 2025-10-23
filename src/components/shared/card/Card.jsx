@@ -2,6 +2,7 @@ import { Play, Star, Calendar, Clock, Film } from "lucide-react";
 import { COMPONENT_STYLES, DESIGN_TOKENS } from "@/lib/data";
 import CardWrapper from "./CardWrapper";
 
+// Shared components
 const TopBadges = ({
   isNew,
   quality,
@@ -103,178 +104,145 @@ const PlayButtonOverlay = () => (
   </div>
 );
 
+// Unified card container component
+const CardContainer = ({ children, href, className = "" }) => (
+  <CardWrapper href={href}>
+    <div className="block cursor-pointer">
+      <article
+        className={`group relative rounded-xl transition-all duration-500 hover:scale-105 ${className}`}
+      >
+        {children}
+      </article>
+    </div>
+  </CardWrapper>
+);
+
+// Unified card content component
+const CardContent = ({
+  image,
+  title,
+  children,
+  gradientColors = "cyan-purple",
+}) => {
+  const gradients = {
+    "cyan-purple": "from-cyan-500/10 via-purple-500/10",
+    "purple-pink": "from-purple-500/10 via-pink-500/10",
+  };
+
+  return (
+    <div
+      className={`relative ${DESIGN_TOKENS.glass.light} shadow-lg hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 h-full rounded-xl`}
+    >
+      <div className="relative overflow-hidden aspect-[3/4] rounded-xl">
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent group-hover:${gradients[gradientColors]} z-10 transition-all duration-500`}
+        />
+
+        <img
+          src={image}
+          alt={title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 rounded-xl"
+          loading="lazy"
+        />
+
+        <PlayButtonOverlay />
+        {children}
+      </div>
+
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/0 to-purple-500/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none" />
+    </div>
+  );
+};
+
 export default function Card({
   media,
   className = "",
   isEpisode = false,
   isFilmCollection = false,
 }) {
+  if (!media) return null;
+
   // Film collection
   if (isFilmCollection) {
-    const displayData = {
-      image: media?.image || media?.films?.[0]?.image,
-      name: media?.name,
-      filmCount: media?.filmCount || media?.films?.length || 0,
-      films: media?.films || [],
-      avgRating: media?.films?.length
-        ? (
-            media.films.reduce((sum, film) => sum + (film.rating || 0), 0) /
-            media.films.length
-          ).toFixed(1)
-        : null,
-      yearRange: media?.films?.length
-        ? (() => {
-            const years = media.films
-              .map((f) => f.releaseYear)
-              .filter(Boolean)
-              .sort();
-            return years.length > 1
-              ? `${years[0]} - ${years[years.length - 1]}`
-              : years[0];
-          })()
-        : null,
-    };
+    const films = media?.films || [];
+    const oldestFilm = films.reduce(
+      (oldest, current) =>
+        current.releaseYear < oldest.releaseYear ? current : oldest,
+      films[0] || {}
+    );
 
-    const oldestFilm = media.films.reduce((oldest, current) => {
-      return current.releaseYear < oldest.releaseYear ? current : oldest;
-    });
-    const slug = oldestFilm.slug;
+    const years = films
+      .map((f) => f.releaseYear)
+      .filter(Boolean)
+      .sort();
+    const yearRange =
+      years.length > 1 ? `${years[0]} - ${years[years.length - 1]}` : years[0];
+    const avgRating = films.length
+      ? (
+          films.reduce((sum, film) => sum + (film.rating || 0), 0) /
+          films.length
+        ).toFixed(1)
+      : null;
 
     return (
-      <CardWrapper href={`/${slug}`}>
-        <div className="block cursor-pointer">
-          <article
-            className={`group relative rounded-xl transition-all duration-500 hover:scale-105 ${className}`}
-          >
-            <div
-              className={`relative ${DESIGN_TOKENS.glass.light} shadow-lg hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 h-full rounded-xl`}
-            >
-              <div className="relative overflow-hidden aspect-[3/4] rounded-xl">
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent group-hover:from-purple-500/10 group-hover:via-pink-500/10 z-10 transition-all duration-500" />
-
-                <img
-                  src={displayData.image}
-                  alt={displayData.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 rounded-xl"
-                  loading="lazy"
-                />
-
-                <PlayButtonOverlay />
-                <TopBadges
-                  filmCount={displayData.filmCount}
-                  rating={displayData.avgRating}
-                />
-
-                <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
-                  <MetaInfo year={displayData.yearRange} />
-                  <h3 className="text-sm md:text-lg font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 group-hover:bg-clip-text transition-all duration-300 text-right">
-                    {displayData.name}
-                  </h3>
-                </div>
-              </div>
-
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/0 to-pink-500/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none" />
-            </div>
-          </article>
-        </div>
-      </CardWrapper>
+      <CardContainer href={`/${oldestFilm.slug}`} className={className}>
+        <CardContent
+          image={media?.image || films[0]?.image}
+          title={media?.name}
+          gradientColors="purple-pink"
+        >
+          <TopBadges filmCount={films.length} rating={avgRating} />
+          <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
+            <MetaInfo year={yearRange} />
+            <h3 className="text-sm md:text-lg font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 group-hover:bg-clip-text transition-all duration-300 text-right">
+              {media?.name}
+            </h3>
+          </div>
+        </CardContent>
+      </CardContainer>
     );
   }
 
   // Episode
   if (isEpisode) {
-    const displayData = {
-      image: media?.season?.image || media?.image,
-      title: `الحلقة ${media?.episodeNumber}`,
-      duration: media?.duration,
-      episodeNumber: media?.episodeNumber,
-      seasonNumber: media?.season?.seasonNumber,
-      slug: media?.slug,
-    };
-
     return (
-      <CardWrapper href={`/${displayData.slug}`}>
-        <div className="block cursor-pointer">
-          <article
-            className={`group relative rounded-xl transition-all duration-500 hover:scale-105 ${className}`}
-          >
-            <div
-              className={`relative ${DESIGN_TOKENS.glass.light} shadow-lg hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 h-full rounded-xl`}
-            >
-              <div className="relative overflow-hidden aspect-[3/4] rounded-xl">
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent group-hover:from-cyan-500/10 group-hover:via-purple-500/10 z-10 transition-all duration-500" />
-
-                <img
-                  src={displayData.image}
-                  alt={displayData.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 rounded-xl"
-                  loading="lazy"
-                />
-
-                <PlayButtonOverlay />
-                <TopBadges
-                  episodeNumber={displayData.episodeNumber}
-                  seasonNumber={displayData.seasonNumber}
-                />
-
-                <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
-                  <MetaInfo duration={displayData.duration} />
-                  <h3 className="text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text transition-all duration-300 text-right">
-                    {displayData.title}
-                  </h3>
-                </div>
-              </div>
-
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/0 to-purple-500/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none" />
-            </div>
-          </article>
-        </div>
-      </CardWrapper>
+      <CardContainer href={`/${media?.slug}`} className={className}>
+        <CardContent
+          image={media?.season?.image || media?.image}
+          title={`الحلقة ${media?.episodeNumber}`}
+        >
+          <TopBadges
+            episodeNumber={media?.episodeNumber}
+            seasonNumber={media?.season?.seasonNumber}
+          />
+          <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
+            <MetaInfo duration={media?.duration} />
+            <h3 className="text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text transition-all duration-300 text-right">
+              الحلقة {media?.episodeNumber}
+            </h3>
+          </div>
+        </CardContent>
+      </CardContainer>
     );
   }
 
   // Regular media
-  if (!media) return null;
-
   return (
-    <CardWrapper href={`/${media?.slug}`}>
-      <div className="block cursor-pointer">
-        <article
-          className={`group relative rounded-xl transition-all duration-500 hover:scale-105 ${className}`}
-        >
-          <div
-            className={`relative ${DESIGN_TOKENS.glass.light} shadow-lg hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 h-full rounded-xl`}
-          >
-            <div className="relative overflow-hidden aspect-[3/4] rounded-xl">
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent group-hover:from-cyan-500/10 group-hover:via-purple-500/10 z-10 transition-all duration-500" />
-
-              <img
-                src={media.image}
-                alt={media.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 rounded-xl"
-                loading="lazy"
-              />
-
-              <PlayButtonOverlay />
-              <TopBadges
-                isNew={media?.category?.isNew}
-                quality={media.quality}
-                rating={media.rating}
-              />
-
-              <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
-                <MetaInfo year={media.releaseYear} duration={media.duration} />
-                <h3 className="text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text transition-all duration-300 text-right">
-                  {media.title}
-                </h3>
-                <GenreTags genre={media.genre} />
-              </div>
-            </div>
-
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/0 to-purple-500/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none" />
-          </div>
-        </article>
-      </div>
-    </CardWrapper>
+    <CardContainer href={`/${media?.slug}`} className={className}>
+      <CardContent image={media.image} title={media.title}>
+        <TopBadges
+          isNew={media?.category?.isNew}
+          quality={media.quality}
+          rating={media.rating}
+        />
+        <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
+          <MetaInfo year={media.releaseYear} duration={media.duration} />
+          <h3 className="text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text transition-all duration-300 text-right">
+            {media.title}
+          </h3>
+          <GenreTags genre={media.genre} />
+        </div>
+      </CardContent>
+    </CardContainer>
   );
 }
