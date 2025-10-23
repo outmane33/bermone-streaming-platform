@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getContent } from "@/actions/category";
 import { notFound } from "next/navigation";
-import ClientRedirect from "@/components/ClientRedirect";
+import FilterSectionSkeleton from "@/components/shared/filterSection/FilterSectionSkeleton";
 
 const VALID_SORT_IDS = [
   "foreignMovies",
@@ -88,8 +88,7 @@ export default async function CategoryPage({ params, searchParams }) {
   console.log("Server: searchParams =", searchParamsResolved);
   return (
     <div className="min-h-screen">
-      <ClientRedirect />
-      <Suspense>
+      <Suspense fallback={<FilterSectionSkeleton />}>
         <FilterSection
           initialData={contentData}
           contentType={slug}

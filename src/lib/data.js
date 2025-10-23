@@ -205,16 +205,6 @@ export const CATEGORIES = [
       { label: "افلام انمي", path: "/category/animes?sort=animeMovies" },
     ],
   },
-  {
-    id: "other",
-    icon: Blocks,
-    label: "اخري",
-    gradient: "from-indigo-500 to-purple-500",
-    subMenu: [
-      { label: "برامج تليفزيونية", path: "/برامج تليفزيونية" },
-      { label: "مصارعة حرة", path: "/مصارعة حرة" },
-    ],
-  },
 ];
 
 // ============================================

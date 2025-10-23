@@ -1,3 +1,4 @@
+// Header.jsx
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -11,7 +12,7 @@ import { SearchResults } from "./SearchResults";
 import { ActionButtons } from "./ActionButtons";
 import { CategoryItem } from "./CategoryItem";
 
-// FIXED: Helper function to get active category from pathname
+// Helper function to get active category from pathname
 const getActiveCategoryFromPath = (pathname) => {
   if (!pathname || pathname === "/") {
     return "home";
@@ -279,12 +280,12 @@ export default function Header() {
             DESIGN_TOKENS.glass.light,
             "px-4 lg:px-6 py-3",
             "rounded-lg z-0 transition-all duration-300",
-            mobileMenuOpen ? "block" : "hidden sm:block"
+            "block" // Always visible on all screen sizes
           )}
           aria-label="القائمة الرئيسية"
         >
-          {/* Categories Grid - Responsive */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:items-center lg:justify-between gap-2 lg:gap-1 xl:gap-2 flex-wrap">
+          {/* Categories Grid - Always visible, responsive */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center lg:justify-between gap-2 lg:gap-1 xl:gap-2 flex-wrap">
             {CATEGORIES.map((category) => (
               <CategoryItem
                 key={category.id}
@@ -298,10 +299,12 @@ export default function Header() {
             ))}
           </div>
 
-          {/* Action Buttons - Mobile */}
-          <div className="sm:hidden mt-4">
-            <ActionButtons isMobile={true} />
-          </div>
+          {/* Action Buttons - Mobile - Only show when menu is toggled */}
+          {mobileMenuOpen && (
+            <div className="sm:hidden mt-4 pt-4 border-t border-white/10">
+              <ActionButtons isMobile={true} />
+            </div>
+          )}
         </nav>
       </div>
     </div>

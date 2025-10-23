@@ -3,6 +3,7 @@ import { SORT_OPTIONS } from "@/lib/data";
 import { notFound } from "next/navigation";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getFilms } from "@/actions/films";
+import FilterSectionSkeleton from "@/components/shared/filterSection/FilterSectionSkeleton";
 
 const VALID_SORT_IDS = ["new", "old", "best", "popular"];
 
@@ -58,7 +59,7 @@ export default async function FilmsPage({ searchParams }) {
 
   return (
     <div className="min-h-screen">
-      <Suspense>
+      <Suspense fallback={<FilterSectionSkeleton />}>
         <FilterSection
           initialData={filmsData}
           sortOptions={SORT_OPTIONS.films}

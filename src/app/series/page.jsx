@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SORT_OPTIONS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getSeries, getEpisodes } from "@/actions/series";
+import FilterSectionSkeleton from "@/components/shared/filterSection/FilterSectionSkeleton";
 
 const VALID_SORT_IDS = ["latest", "new", "best", "popular", "all"];
 
@@ -66,7 +67,7 @@ export default async function SeriesPage({ searchParams }) {
 
   return (
     <div className="min-h-screen">
-      <Suspense>
+      <Suspense fallback={<FilterSectionSkeleton />}>
         <FilterSection
           initialData={data}
           sortOptions={SORT_OPTIONS.series}
