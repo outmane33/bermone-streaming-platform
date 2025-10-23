@@ -29,7 +29,7 @@ export const MobileMenu = memo(
           onClick={onClose}
         />
 
-        <div className="absolute bottom-0 left-0 right-0 bg-white/10 backdrop-blur-xl border-t border-white/20 rounded-t-3xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl max-h-[85vh] overflow-hidden flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-white/20">
             <h3 className="text-white font-bold text-lg">الفلاتر والترتيب</h3>
             <button
