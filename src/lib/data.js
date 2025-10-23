@@ -157,13 +157,6 @@ export const getIcon = (iconName) => ICON_MAP[iconName];
 // ============================================
 export const CATEGORIES = [
   {
-    id: "home",
-    icon: Home,
-    label: "الرئيسية",
-    gradient: "from-purple-500 to-pink-500",
-    href: "/",
-  },
-  {
     id: "movies",
     icon: Clapperboard,
     label: "الافلام",
@@ -173,6 +166,7 @@ export const CATEGORIES = [
       { label: "افلام اجنبي", path: "/category/films?sort=foreignMovies" },
       { label: "افلام اسيوي", path: "/category/films?sort=asianMovies" },
       { label: "سلاسل الافلام", path: "/category/films?sort=movieSeries" },
+      { label: "افلام انمي", path: "/category/films?sort=animeMovies" },
     ],
   },
   {
@@ -188,21 +182,11 @@ export const CATEGORIES = [
         label: "المسلسلات الاعلي تقييما",
         path: "/category/series?sort=topSeries",
       },
-    ],
-  },
-
-  {
-    id: "anime",
-    icon: Drama,
-    label: "انمي",
-    gradient: "from-red-500 to-pink-500",
-    subMenu: [
       {
-        label: "احدث الحلقات",
-        path: "/category/animes?sort=latestAnimeEpisodes",
+        label: "احدث حلقات الانمي",
+        path: "/category/series?sort=latestAnimeEpisodes",
       },
-      { label: "قائمة الانميات", path: "/category/animes?sort=animeSeries" },
-      { label: "افلام انمي", path: "/category/animes?sort=animeMovies" },
+      { label: "قائمة الانميات", path: "/category/series?sort=animeSeries" },
     ],
   },
 ];

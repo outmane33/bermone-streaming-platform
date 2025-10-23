@@ -9,7 +9,6 @@ import { searchContent } from "@/actions/search";
 import { Logo } from "./Logo";
 import { SearchBar } from "./SearchBar";
 import { SearchResults } from "./SearchResults";
-import { ActionButtons } from "./ActionButtons";
 import { CategoryItem } from "./CategoryItem";
 
 // Helper function to get active category from pathname
@@ -177,7 +176,7 @@ export default function Header() {
       {/* Overlay */}
       {showOverlay && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 transition-opacity duration-300"
           onClick={closeAllOverlays}
           aria-hidden="true"
         />
@@ -187,7 +186,7 @@ export default function Header() {
         {/* Top Bar */}
         <div
           className={clsx(
-            "flex flex-col sm:flex-row items-stretch sm:items-center justify-between",
+            "flex flex-col md:flex-row items-stretch sm:items-center justify-between",
             "gap-2 sm:gap-4 mb-2 sm:mb-4",
             DESIGN_TOKENS.glass.light,
             "px-4 lg:px-6 py-2 sm:py-2.5",
@@ -218,7 +217,7 @@ export default function Header() {
           ) : (
             <>
               {/* Logo & Mobile Controls */}
-              <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+              <div className="flex items-center justify-between ">
                 <Logo />
                 <div className="flex sm:hidden items-center gap-2">
                   <button
@@ -227,16 +226,6 @@ export default function Header() {
                     aria-label="فتح البحث"
                   >
                     <Search size={20} />
-                  </button>
-                  <button
-                    onClick={toggleMobileMenu}
-                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                    aria-label={
-                      mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"
-                    }
-                    aria-expanded={mobileMenuOpen}
-                  >
-                    {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
                   </button>
                 </div>
               </div>
@@ -252,10 +241,23 @@ export default function Header() {
                 />
               </div>
 
-              {/* Action Buttons - Desktop */}
-              <div className="hidden sm:flex flex-shrink-0">
-                <ActionButtons />
-              </div>
+              {/* Navigation Bar */}
+              <nav aria-label="القائمة الرئيسية">
+                {/* Categories Grid - Always visible, responsive */}
+                <div className="grid grid-cols-2 justify-items-center lg:flex lg:items-center lg:justify-between gap-2 lg:gap-1 xl:gap-2 flex-wrap">
+                  {CATEGORIES.map((category) => (
+                    <CategoryItem
+                      key={category.id}
+                      category={category}
+                      isActive={activeCategory === category.id}
+                      isMenuOpen={openMenuId === category.id}
+                      onClick={() => handleCategoryClick(category.id)}
+                      handleSubMenuClick={() => handleSubMenuClick(category.id)}
+                      isHome={!isHome}
+                    />
+                  ))}
+                </div>
+              </nav>
             </>
           )}
 
@@ -272,40 +274,6 @@ export default function Header() {
             />
           )}
         </div>
-
-        {/* Navigation Bar */}
-        <nav
-          className={clsx(
-            "relative",
-            DESIGN_TOKENS.glass.light,
-            "px-4 lg:px-6 py-3",
-            "rounded-lg z-0 transition-all duration-300",
-            "block" // Always visible on all screen sizes
-          )}
-          aria-label="القائمة الرئيسية"
-        >
-          {/* Categories Grid - Always visible, responsive */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center lg:justify-between gap-2 lg:gap-1 xl:gap-2 flex-wrap">
-            {CATEGORIES.map((category) => (
-              <CategoryItem
-                key={category.id}
-                category={category}
-                isActive={activeCategory === category.id}
-                isMenuOpen={openMenuId === category.id}
-                onClick={() => handleCategoryClick(category.id)}
-                handleSubMenuClick={() => handleSubMenuClick(category.id)}
-                isHome={!isHome}
-              />
-            ))}
-          </div>
-
-          {/* Action Buttons - Mobile - Only show when menu is toggled */}
-          {mobileMenuOpen && (
-            <div className="sm:hidden mt-4 pt-4 border-t border-white/10">
-              <ActionButtons isMobile={true} />
-            </div>
-          )}
-        </nav>
       </div>
     </div>
   );

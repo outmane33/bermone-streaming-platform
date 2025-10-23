@@ -20,7 +20,7 @@ export const CategoryItem = ({
   const hasHref = category.href && category.href.trim() !== "";
 
   const buttonClasses = `group relative flex items-center ${
-    isDesktop ? "gap-2 px-5 py-3" : "justify-start gap-3 w-full px-4 py-4"
+    isDesktop ? "gap-2 px-5 py-3" : "justify-center gap-3 w-full px-4 py-4"
   } rounded-lg transition-all duration-300 cursor-pointer ${
     isActive
       ? isDesktop

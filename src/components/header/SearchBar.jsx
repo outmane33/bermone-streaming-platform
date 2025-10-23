@@ -8,7 +8,7 @@ export const SearchBar = ({
   isSearching,
 }) => (
   <div
-    className={`relative transition-all duration-300 w-full sm:w-auto ${
+    className={`relative transition-all duration-300 w-full sm:min-w-[260px] sm:w-auto ${
       searchFocused ? "sm:w-96" : "sm:w-72"
     }`}
   >

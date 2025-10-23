@@ -1,3 +1,4 @@
+// CategoryPage - app/category/[slug]/page.js
 import { Suspense } from "react";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getContent } from "@/actions/category";
@@ -25,7 +26,6 @@ const VALID_QUERY_PARAMS = [
   "year",
   "language",
   "country",
-  "sort",
 ];
 
 export async function generateMetadata({ params }) {
@@ -51,8 +51,8 @@ export default async function CategoryPage({ params, searchParams }) {
   const { slug } = await params;
   const searchParamsResolved = await searchParams;
 
-  // Validate slug
-  if (!["films", "series", "animes"].includes(slug)) {
+  // Validate slug - REMOVED "animes"
+  if (!["films", "series"].includes(slug)) {
     notFound();
   }
 
@@ -81,6 +81,7 @@ export default async function CategoryPage({ params, searchParams }) {
   if (sortId && !VALID_SORT_IDS.includes(sortId)) {
     notFound();
   }
+
   const contentData = await getContent(slug, filters, sortId, page);
 
   let isEpisode = sortId === "latestAnimeEpisodes";

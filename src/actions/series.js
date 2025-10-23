@@ -369,9 +369,19 @@ export const getEpisodes = cache(async (page = 1) => {
                     input: "$services",
                     as: "service",
                     in: {
-                      quality: "$$service.quality",
-                      iframe: "$$service.iframe",
-                      downloadLink: "$$service.downloadLink",
+                      serviceName: "$$service.serviceName",
+                      qualities: {
+                        $map: {
+                          input: "$$service.qualities",
+                          as: "quality",
+                          in: {
+                            quality: "$$quality.quality",
+                            iframe: "$$quality.iframe",
+                            downloadLink: "$$quality.downloadLink",
+                            _id: { $toString: "$$quality._id" }, // ← This was missing!
+                          },
+                        },
+                      },
                       _id: { $toString: "$$service._id" },
                     },
                   },

@@ -172,7 +172,28 @@ export const getNewMovies = cache(async (filters = {}, page = 1) => {
                 category: 1,
                 duration: 1,
                 views: 1,
-                services: 1,
+                services: {
+                  $map: {
+                    input: "$services",
+                    as: "service",
+                    in: {
+                      serviceName: "$$service.serviceName",
+                      qualities: {
+                        $map: {
+                          input: "$$service.qualities",
+                          as: "quality",
+                          in: {
+                            quality: "$$quality.quality",
+                            iframe: "$$quality.iframe",
+                            downloadLink: "$$quality.downloadLink",
+                            _id: { $toString: "$$quality._id" }, // ← This was missing!
+                          },
+                        },
+                      },
+                      _id: { $toString: "$$service._id" },
+                    },
+                  },
+                },
                 type: { $literal: "film" },
               },
             },
@@ -267,7 +288,18 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
                     as: "service",
                     in: {
                       serviceName: "$$service.serviceName",
-                      qualities: "$$service.qualities",
+                      qualities: {
+                        $map: {
+                          input: "$$service.qualities",
+                          as: "quality",
+                          in: {
+                            quality: "$$quality.quality",
+                            iframe: "$$quality.iframe",
+                            downloadLink: "$$quality.downloadLink",
+                            _id: { $toString: "$$quality._id" }, // ← This was missing!
+                          },
+                        },
+                      },
                       _id: { $toString: "$$service._id" },
                     },
                   },

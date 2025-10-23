@@ -61,11 +61,11 @@ export const SubMenuDropdown = ({
       } z-50`}
     >
       {isDesktop && (
-        <div className="absolute -inset-1 bg-gradient-to-r bg-white/20 shadow-lg backdrop-blur-md rounded-xl blur-md opacity-50" />
+        <div className="absolute -inset-1 bg-gradient-to-r bg-white/20 shadow-lg backdrop-blur-md rounded-xl blur-md opacity-50 " />
       )}
-      <div className="relative bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl overflow-hidden">
-        <div className={`h-1 bg-gradient-to-r ${gradient}`} />
-        <div className={`p-2 ${!isDesktop && "max-h-60 overflow-y-auto"}`}>
+      <div className="relative bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl overflow-hidden ">
+        <div className={`h-1 bg-gradient-to-r  ${gradient}`} />
+        <div className={`p-2 ${!isDesktop && "max-h-60 overflow-y-auto "}`}>
           {items.map((item, index) => {
             // Handle both object format and string format for backward compatibility
             const label = typeof item === "string" ? item : item.label;
@@ -77,7 +77,7 @@ export const SubMenuDropdown = ({
               <Link
                 key={index}
                 href={path}
-                className={`relative group w-full text-right ${
+                className={`relative group w-full text-right font-semibold ${
                   isDesktop ? "px-4 py-3" : "px-3 py-2.5"
                 } rounded-lg transition-all duration-200 ${
                   isDesktop ? "font-medium" : "text-sm font-medium"

@@ -1,4 +1,3 @@
-// Filter.jsx - Main component (optimized)
 "use client";
 import React, {
   useState,
@@ -38,6 +37,8 @@ export default function Filter({
     language: currentFilters?.language || [],
     country: currentFilters?.country || [],
   }));
+
+  // ✅ FIX: Initialize with currentFilters.sort directly
   const [selectedSort, setSelectedSort] = useState(
     currentFilters?.sort || null
   );
@@ -51,6 +52,28 @@ export default function Filter({
     useCallback(() => setOpenDropdown(null), [])
   );
 
+  // ✅ FIX: Sync selectedSort with currentFilters.sort when it changes from parent
+  useEffect(() => {
+    if (currentFilters?.sort !== undefined) {
+      setSelectedSort(currentFilters.sort);
+    }
+  }, [currentFilters?.sort]);
+
+  // ✅ FIX: Sync selectedFilters with currentFilters when they change from parent
+  useEffect(() => {
+    setSelectedFilters({
+      genre: currentFilters?.genre || [],
+      year: currentFilters?.year || [],
+      language: currentFilters?.language || [],
+      country: currentFilters?.country || [],
+    });
+  }, [
+    currentFilters?.genre,
+    currentFilters?.year,
+    currentFilters?.language,
+    currentFilters?.country,
+  ]);
+
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -63,14 +86,30 @@ export default function Filter({
     };
   }, [mobileMenuOpen]);
 
-  // Notify parent only when filters/sort change (skip first render)
+  // ✅ FIX: Only notify parent when user actually changes something (not on URL changes)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-    onFilterChange?.({ ...selectedFilters, sort: selectedSort });
-  }, [selectedFilters, selectedSort, onFilterChange]);
+
+    // Check if this change came from user interaction, not from parent update
+    const filtersChanged =
+      JSON.stringify(selectedFilters) !==
+      JSON.stringify({
+        genre: currentFilters?.genre || [],
+        year: currentFilters?.year || [],
+        language: currentFilters?.language || [],
+        country: currentFilters?.country || [],
+      });
+
+    const sortChanged = selectedSort !== currentFilters?.sort;
+
+    // Only call onFilterChange if user actually changed something
+    if (filtersChanged || sortChanged) {
+      onFilterChange?.({ ...selectedFilters, sort: selectedSort });
+    }
+  }, [selectedFilters, selectedSort]);
 
   // Memoized callbacks
   const toggleDropdown = useCallback((category) => {
@@ -95,7 +134,9 @@ export default function Filter({
 
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
-    setSelectedSort(null);
+    // ✅ FIX: Keep sort when clearing other filters
+    // If you want to clear sort too, change to: setSelectedSort(null);
+    // For now, keeping sort as it's likely intentional
   }, []);
 
   const closeMobileMenu = useCallback(() => {
@@ -130,26 +171,46 @@ export default function Filter({
         />
       )}
 
-      {/* Mobile Toggle Button */}
-      <button
-        onClick={() => setMobileMenuOpen(true)}
-        className="lg:hidden w-full flex items-center justify-between gap-3 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-xl px-4 py-3 mb-3 hover:bg-white/15 transition-all duration-300"
-      >
-        <div className="flex items-center gap-3">
-          <Menu size={20} className="text-gray-200" />
-          <span className="text-white font-semibold">الفلاتر والترتيب</span>
+      {/* Mobile Combined Section */}
+      <div className="lg:hidden bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-xl mb-3 p-3">
+        <div className="flex items-center justify-between gap-2">
+          {/* Filters Toggle */}
+          {!isEpisode && (
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex items-center gap-2 hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300"
+            >
+              <Menu size={18} className="text-gray-200" />
+              <span className="text-white font-semibold text-sm">الفلاتر</span>
+              {activeFilterCount > 0 && (
+                <span className="px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-black rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Sort Options - Always Visible */}
+          {sortOptions?.length > 0 && (
+            <div className="grid grid-cols-2 items-center gap-2" dir="rtl">
+              {sortOptions.map((option) => (
+                <SortButton
+                  key={option.id}
+                  option={option}
+                  isSelected={selectedSort === option.id}
+                  onClick={() => handleSortClick(option.id)}
+                  isMobile
+                />
+              ))}
+            </div>
+          )}
         </div>
-        {hasActiveFilters && (
-          <span className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-black rounded-full">
-            {totalActiveCount}
-          </span>
-        )}
-      </button>
+      </div>
 
       {/* Desktop Filter Bar */}
       {!isAnimeEpisode && (
         <div className="hidden lg:flex items-center justify-between gap-1 xl:gap-2 flex-wrap bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-2xl px-3 sm:px-4 py-2 relative z-[20]">
-          {!isEpisode && (
+          {!isEpisode ? (
             <div className="flex items-center gap-1 xl:gap-2 flex-wrap">
               {Object.keys(filterOptions).map((category) => (
                 <div
@@ -176,6 +237,8 @@ export default function Filter({
                 </div>
               ))}
             </div>
+          ) : (
+            <div></div>
           )}
 
           {sortOptions?.length > 0 && (
@@ -193,22 +256,19 @@ export default function Filter({
         </div>
       )}
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Filters Only */}
       <MobileMenu
         isOpen={mobileMenuOpen}
         onClose={closeMobileMenu}
         filterOptions={filterOptions}
         selectedFilters={selectedFilters}
         toggleFilter={toggleFilter}
-        sortOptions={sortOptions}
-        selectedSort={selectedSort}
-        handleSortClick={handleSortClick}
         categoryCount={categoryCount}
         isEpisode={isEpisode}
       />
 
       {/* Active Filters Display */}
-      {hasActiveFilters && (
+      {hasActiveFilters && !isAnimeEpisode && (
         <div className="mt-4 sm:mt-6">
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <span className="text-white font-bold text-sm sm:text-base">

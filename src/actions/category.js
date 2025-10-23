@@ -16,6 +16,10 @@ const FILMS_SORT_CONFIGS = {
     sort: { createdAt: -1, rating: -1 },
     filter: { "category.isAsianmovies": true },
   },
+  animeMovies: {
+    sort: { createdAt: -1, rating: -1 },
+    filter: { "category.isAnimemovies": true },
+  },
   movieSeries: {
     type: "filmCollections",
     sort: { createdAt: -1 },
@@ -33,23 +37,13 @@ const SERIES_SORT_CONFIGS = {
     sort: { createdAt: -1, rating: -1 },
     filter: { "category.isAsianseries": true },
   },
+  animeSeries: {
+    sort: { createdAt: -1, rating: -1 },
+    filter: { "category.isAnimeseries": true },
+  },
   topSeries: {
     sort: { rating: -1, createdAt: -1 },
     filter: { rating: { $gte: 7 } },
-  },
-};
-
-// 🎯 Sort configurations for ANIMES
-const ANIMES_SORT_CONFIGS = {
-  animeMovies: {
-    type: "films",
-    sort: { createdAt: -1, rating: -1 },
-    filter: { "category.isAnimemovies": true },
-  },
-  animeSeries: {
-    type: "series",
-    sort: { createdAt: -1, rating: -1 },
-    filter: { "category.isAnimeseries": true },
   },
   latestAnimeEpisodes: {
     type: "episodes",
@@ -249,27 +243,20 @@ function buildFilmCollectionsAggregationPipeline(page) {
   ];
 }
 
-// 🚀 Main action - works for films, series, animes, episodes, and film collections
+// 🚀 Main action - works for films and series (including anime content)
 export const getContent = cache(
   async (contentType, filters = {}, sortId = null, page = 1) => {
     try {
-      if (!["films", "series", "animes"].includes(contentType)) {
-        throw new Error(
-          "Invalid content type. Must be 'films', 'series', or 'animes'"
-        );
+      // REMOVED "animes" validation
+      if (!["films", "series"].includes(contentType)) {
+        throw new Error("Invalid content type. Must be 'films' or 'series'");
       }
 
       const client = await clientPromise;
 
       // Determine sort configs based on content type
-      let sortConfigs;
-      if (contentType === "films") {
-        sortConfigs = FILMS_SORT_CONFIGS;
-      } else if (contentType === "series") {
-        sortConfigs = SERIES_SORT_CONFIGS;
-      } else {
-        sortConfigs = ANIMES_SORT_CONFIGS;
-      }
+      const sortConfigs =
+        contentType === "films" ? FILMS_SORT_CONFIGS : SERIES_SORT_CONFIGS;
 
       const sortConfig =
         sortId && sortConfigs[sortId]
@@ -294,12 +281,6 @@ export const getContent = cache(
         collectionName = "episodes";
         pipeline = buildEpisodesAggregationPipeline(sortConfig, page);
         resultContentType = "episodes";
-      }
-      // For animes with specific type override (animeMovies, animeSeries)
-      else if (contentType === "animes" && sortConfig.type) {
-        collectionName = sortConfig.type; // "films" or "series"
-        pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
-        resultContentType = sortConfig.type;
       }
       // Regular films/series query
       else {
@@ -400,6 +381,7 @@ export const getAnimeEpisodes = cache(async (page = 1) => {
                 seasonId: { $toString: "$seasonId" },
                 episodeNumber: 1,
                 duration: 1,
+                slug: 1,
                 services: {
                   $map: {
                     input: "$services",
