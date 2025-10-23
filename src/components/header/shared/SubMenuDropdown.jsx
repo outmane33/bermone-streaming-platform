@@ -57,7 +57,7 @@ export const SubMenuDropdown = ({
   return (
     <div
       className={`absolute top-full ${
-        isDesktop ? "mt-6 right-0 w-56" : "mt-4 right-[-50px] w-56"
+        isDesktop ? "mt-6 right-0 w-56" : "mt-4 right-[-30px] w-44"
       } z-50`}
     >
       {isDesktop && (
