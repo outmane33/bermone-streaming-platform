@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import clsx from "clsx";
 import { DESIGN_TOKENS, CATEGORIES } from "@/lib/data";
 import { searchContent } from "@/actions/search";
@@ -69,6 +69,7 @@ function useDebounce(value, delay) {
 
   return debouncedValue;
 }
+
 export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -82,6 +83,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -144,6 +146,7 @@ export default function Header() {
     setSearchQuery("");
     setSearchFocused(false);
     setSearchResults([]);
+    setMobileSearchOpen(false);
   };
 
   const closeAllOverlays = () => {
@@ -154,6 +157,14 @@ export default function Header() {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen((prev) => !prev);
+  };
+
+  const toggleMobileSearch = () => {
+    setMobileSearchOpen((prev) => !prev);
+    if (!mobileSearchOpen) {
+      setSearchQuery("");
+      setSearchResults([]);
+    }
   };
 
   // Check if overlay should be shown
@@ -182,44 +193,83 @@ export default function Header() {
             "rounded-lg relative z-10"
           )}
         >
-          {/* Logo & Mobile Menu Toggle */}
-          <div className="flex items-center justify-between w-full sm:w-auto gap-2">
-            <Logo />
-            <button
-              onClick={toggleMobileMenu}
-              className="sm:hidden p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
+          {/* Mobile: Search Open State */}
+          {mobileSearchOpen ? (
+            <div className="flex sm:hidden items-center gap-2 w-full">
+              <div className="flex-1">
+                <SearchBar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  searchFocused={searchFocused}
+                  setSearchFocused={setSearchFocused}
+                  isSearching={isSearching}
+                  autoFocus={true}
+                />
+              </div>
+              <button
+                onClick={toggleMobileSearch}
+                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+                aria-label="إغلاق البحث"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Logo & Mobile Controls */}
+              <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                <Logo />
+                <div className="flex sm:hidden items-center gap-2">
+                  <button
+                    onClick={toggleMobileSearch}
+                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                    aria-label="فتح البحث"
+                  >
+                    <Search size={20} />
+                  </button>
+                  <button
+                    onClick={toggleMobileMenu}
+                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                    aria-label={
+                      mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"
+                    }
+                    aria-expanded={mobileMenuOpen}
+                  >
+                    {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                  </button>
+                </div>
+              </div>
 
-          {/* Search Bar */}
-          <div className="w-full sm:flex-1 sm:max-w-xl">
-            <SearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              searchFocused={searchFocused}
-              setSearchFocused={setSearchFocused}
-              isSearching={isSearching}
-            />
-          </div>
+              {/* Search Bar - Desktop Only */}
+              <div className="hidden sm:block w-full sm:flex-1 sm:max-w-xl">
+                <SearchBar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  searchFocused={searchFocused}
+                  setSearchFocused={setSearchFocused}
+                  isSearching={isSearching}
+                />
+              </div>
+
+              {/* Action Buttons - Desktop */}
+              <div className="hidden sm:flex flex-shrink-0">
+                <ActionButtons />
+              </div>
+            </>
+          )}
 
           {/* Search Results */}
-          {searchFocused && searchQuery && (
+          {(searchFocused || mobileSearchOpen) && searchQuery && (
             <SearchResults
               searchResults={searchResults}
               onResultClick={handleSearchResultClick}
-              onClose={() => setSearchFocused(false)}
+              onClose={() => {
+                setSearchFocused(false);
+                setMobileSearchOpen(false);
+              }}
               isLoading={isSearching}
             />
           )}
-
-          {/* Action Buttons - Desktop */}
-          <div className="hidden sm:flex flex-shrink-0">
-            <ActionButtons />
-          </div>
         </div>
 
         {/* Navigation Bar */}

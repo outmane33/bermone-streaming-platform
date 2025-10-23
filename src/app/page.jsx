@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   getLatestAdded,
   getNewSeries,
@@ -44,11 +45,13 @@ export default async function Home({ searchParams }) {
 
   return (
     <div className="min-h-screen">
-      <FilterSection
-        initialData={initialData}
-        sortOptions={SORT_OPTIONS.home}
-        isEpisode={isEpisode}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <FilterSection
+          initialData={initialData}
+          sortOptions={SORT_OPTIONS.home}
+          isEpisode={isEpisode}
+        />
+      </Suspense>
     </div>
   );
 }
