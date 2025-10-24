@@ -178,10 +178,10 @@ export default function Filter({
           {!isEpisode && (
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="flex items-center gap-2 hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300"
+              className="flex items-center gap-2 hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300 "
             >
               <Menu size={18} className="text-gray-200" />
-              <span className="text-white font-semibold text-sm">الفلاتر</span>
+              <span className="text-white font-semibold text-sm ">الفلاتر</span>
               {activeFilterCount > 0 && (
                 <span className="px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-black rounded-full">
                   {activeFilterCount}

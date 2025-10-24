@@ -11,18 +11,7 @@ export default async function Carousel({
     return null;
   }
   // ✅ Prepare data على السيرفر
-  const optimizedData = carouselMida.map((media) => ({
-    id: media.id,
-    title: media.title,
-    poster: media.poster,
-    titleAr: media.titleAr,
-    isNew: media.isNew,
-    quality: media.quality,
-    rating: media.rating,
-    year: media.year,
-    duration: media.duration,
-    genre: media.genre,
-  }));
+  const optimizedData = carouselMida;
 
   // Pass للـ Client Component
   return (

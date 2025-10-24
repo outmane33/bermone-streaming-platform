@@ -5,12 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Card from "../card/Card";
 import { COMPONENT_STYLES, CONFIG } from "@/lib/data";
 
-export default function CarouselClient({
-  carouselMida,
-  title,
-  showTitle = true,
-  className = "",
-}) {
+export default function CarouselClient({ carouselMida, className = "" }) {
   const [scrollState, setScrollState] = useState({
     canScrollLeft: false,
     canScrollRight: true,
@@ -56,26 +51,26 @@ export default function CarouselClient({
     return () => window.removeEventListener("resize", handleResize);
   }, [carouselMida, checkScrollability]);
 
-  const ScrollButton = ({ direction, isVisible }) => {
-    if (!isVisible) return null;
-
+  const ScrollButton = ({ direction, isVisible, disabled }) => {
     const isLeft = direction === "left";
     const buttonConfig = isLeft
       ? COMPONENT_STYLES.scrollButton.left
       : COMPONENT_STYLES.scrollButton.right;
-
     const Icon = buttonConfig.icon;
     const styles = COMPONENT_STYLES.scrollButton;
 
     return (
       <button
-        onClick={() => scroll(direction)}
+        onClick={() => !disabled && scroll(direction)}
+        disabled={disabled}
         className={`
-          ${styles.base}
-          ${buttonConfig.position}
-          ${buttonConfig.gradient}
-          ${buttonConfig.shadow}
-        `}
+        ${styles.base}
+        ${buttonConfig.position}
+        ${buttonConfig.gradient}
+        ${buttonConfig.shadow}
+        ${disabled ? "opacity-30 cursor-not-allowed" : "opacity-100"}
+        transition-opacity duration-200
+      `}
         aria-label={isLeft ? "السابق" : "التالي"}
       >
         <Icon className="w-7 h-7 stroke-[3]" />
@@ -86,10 +81,15 @@ export default function CarouselClient({
   return (
     <div className={`relative overflow-x-hidden ${className}`}>
       <div className="relative group px-2">
-        <ScrollButton direction="left" isVisible={scrollState.canScrollLeft} />
+        <ScrollButton
+          direction="left"
+          isVisible={true}
+          disabled={!scrollState.canScrollLeft}
+        />
         <ScrollButton
           direction="right"
-          isVisible={scrollState.canScrollRight}
+          isVisible={true}
+          disabled={!scrollState.canScrollRight}
         />
 
         <div
@@ -98,7 +98,7 @@ export default function CarouselClient({
           className="flex gap-1 sm:gap-3 md:gap-4 overflow-x-hidden scrollbar-hide scroll-smooth pb-4"
         >
           {carouselMida.map((media) => (
-            <div key={media.id} className={COMPONENT_STYLES.card.width}>
+            <div key={media._id} className={COMPONENT_STYLES.card.width}>
               <Card media={media} />
             </div>
           ))}

@@ -1,4 +1,4 @@
-// SocialShare.jsx
+"use client";
 import { SOCIAL_LINKS } from "@/lib/data";
 
 function SocialButton({ icon: Icon, gradient, onClick, ariaLabel }) {

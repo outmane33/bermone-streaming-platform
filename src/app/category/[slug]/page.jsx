@@ -1,9 +1,7 @@
-// CategoryPage - app/category/[slug]/page.js
-import { Suspense } from "react";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getContent } from "@/actions/category";
 import { notFound } from "next/navigation";
-import FilterSectionSkeleton from "@/components/shared/filterSection/FilterSectionSkeleton";
+import { buildFilters, parsePageParams } from "@/lib/pageUtils";
 
 const VALID_SORT_IDS = [
   "foreignMovies",
@@ -17,7 +15,6 @@ const VALID_SORT_IDS = [
   "latestAnimeEpisodes",
 ];
 
-// Define valid query parameters
 const VALID_QUERY_PARAMS = [
   "sort",
   "page",
@@ -51,53 +48,37 @@ export default async function CategoryPage({ params, searchParams }) {
   const { slug } = await params;
   const searchParamsResolved = await searchParams;
 
-  // Validate slug - REMOVED "animes"
+  // Validate slug
   if (!["films", "series"].includes(slug)) {
     notFound();
   }
 
-  // Validate query parameters - check for invalid params
-  const queryKeys = Object.keys(searchParamsResolved || {});
-  const hasInvalidParams = queryKeys.some(
-    (key) => !VALID_QUERY_PARAMS.includes(key)
+  // Parse and validate parameters
+  const { sortId, page } = parsePageParams(
+    searchParamsResolved,
+    VALID_SORT_IDS,
+    VALID_QUERY_PARAMS
   );
 
-  if (hasInvalidParams) {
-    notFound();
-  }
+  // Build filters
+  const filters = buildFilters(searchParamsResolved, true);
 
-  const filters = {
-    genre: searchParamsResolved?.genre?.split(",").filter(Boolean) || [],
-    quality: searchParamsResolved?.quality?.split(",").filter(Boolean) || [],
-    year: searchParamsResolved?.year?.split(",").filter(Boolean) || [],
-    language: searchParamsResolved?.language?.split(",").filter(Boolean) || [],
-    country: searchParamsResolved?.country?.split(",").filter(Boolean) || [],
-  };
-
-  const sortId = searchParamsResolved?.sort || null;
-  const page = parseInt(searchParamsResolved?.page || "1", 10);
-
-  // Validate sortId - if provided, must be valid
-  if (sortId && !VALID_SORT_IDS.includes(sortId)) {
-    notFound();
-  }
-
+  // Fetch content
   const contentData = await getContent(slug, filters, sortId, page);
 
-  let isEpisode = sortId === "latestAnimeEpisodes";
-  let isFilmCollection = sortId === "movieSeries";
+  // Determine content types
+  const isEpisode = sortId === "latestAnimeEpisodes";
+  const isFilmCollection = sortId === "movieSeries";
 
   return (
     <div className="min-h-screen">
-      <Suspense fallback={<FilterSectionSkeleton />}>
-        <FilterSection
-          initialData={contentData}
-          contentType={slug}
-          isEpisode={isEpisode}
-          isFilmCollection={isFilmCollection}
-          isAnimeEpisode={isEpisode}
-        />
-      </Suspense>
+      <FilterSection
+        initialData={contentData}
+        contentType={slug}
+        isEpisode={isEpisode}
+        isFilmCollection={isFilmCollection}
+        isAnimeEpisode={isEpisode}
+      />
     </div>
   );
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import { Star, Clock, Play, ArrowDownToLine } from "lucide-react";
 import { HeroBadges } from "./HeroBadges";
 import HeroDetailsGrid from "./HeroDetailsGrid";
@@ -8,7 +6,6 @@ import Button from "./Button";
 import { GLASS_STYLES } from "@/lib/data";
 
 export default function HeroSection({ media, type = "movie" }) {
-  console.log(media);
   const category = media?.category?.isForeignmovies
     ? "افلام اجنبي"
     : media?.category?.isAsianmovies

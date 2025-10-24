@@ -42,7 +42,7 @@ export const BaseButton = ({
       <span
         className={cn(
           "font-semibold transition-colors duration-300 text-sm sm:text-base",
-          isActive ? "text-white" : "text-gray-200 group-hover:text-white"
+          isActive ? "text-white" : "text-white group-hover:text-white"
         )}
       >
         {label}

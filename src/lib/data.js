@@ -85,23 +85,21 @@ export const COMPONENT_STYLES = {
 
   card: {
     width:
-      "flex-none w-[calc(33.333%-16px)] sm:w-[calc(33.333%-16px)] md:w-[calc(25%-18px)] lg:w-[calc(20%-19.2px)] xl:w-[calc(16.666%-20px)]",
+      "flex-none w-[calc(50%-8px)] sm:w-[calc(50%-12px)] md:w-[calc(35%-18px)] lg:w-[calc(25%-19.2px)] xl:w-[calc(16.666%-20px)]",
   },
 
   scrollButton: {
-    base: "absolute top-1/2 -translate-y-1/2 z-10 text-white p-4 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 shadow-2xl border-2 border-white/20 cursor-pointer",
+    base: "absolute top-1/2 -translate-y-1/2 z-10 text-white p-4 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 cursor-pointer backdrop-blur-lg backdrop-saturate-150",
     left: {
-      position: "left-0",
-      gradient:
-        "bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400",
-      shadow: "shadow-cyan-500/50",
+      position: "left-2",
+      gradient: "bg-white/15 hover:bg-white/25 border-2 border-white/30",
+      shadow: "shadow-2xl shadow-black/30",
       icon: ChevronLeft,
     },
     right: {
-      position: "right-0",
-      gradient:
-        "bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-400 hover:to-cyan-400",
-      shadow: "shadow-purple-500/50",
+      position: "right-2",
+      gradient: "bg-white/15 hover:bg-white/25 border-2 border-white/30",
+      shadow: "shadow-2xl shadow-black/30",
       icon: ChevronRight,
     },
   },
@@ -254,7 +252,7 @@ export const SORT_OPTIONS = {
       id: "new-series",
       label: "مسلسلات جديدة",
       icon: "FolderDown",
-      gradient: "from-amber-500 via-orange-500 to-yellow-500",
+      gradient: "from-blue-500 via-cyan-500 to-teal-500",
     },
     {
       id: "new-movies",
@@ -266,7 +264,13 @@ export const SORT_OPTIONS = {
       id: "latest-episodes",
       label: "آخر الحلقات",
       icon: "CalendarSync",
-      gradient: "from-blue-500 via-cyan-500 to-teal-500",
+      gradient: "from-amber-500 via-orange-500 to-yellow-500",
+    },
+    {
+      id: "latest-added",
+      label: "الجديد المضاف",
+      icon: "CalendarSync",
+      gradient: "from-purple-500 via-violet-500 to-indigo-500",
     },
   ],
 };
@@ -395,7 +399,7 @@ export const SOCIAL_LINKS = [
 // ============================================
 export const getTextClasses = (isActive, hoverColor = "text-white") =>
   `transition-colors duration-300 ${
-    isActive ? "text-white" : `text-gray-200 group-hover:${hoverColor}`
+    isActive ? "text-white" : `text-white group-hover:${hoverColor}`
   }`;
 
 export const getIconClasses = (isActive) =>

@@ -5,9 +5,13 @@ import {
   getNewMovies,
   getLatestEpisodes,
 } from "@/actions/home";
+import { getFilms } from "@/actions/films";
+import { redirect } from "next/navigation";
 import { SORT_OPTIONS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
-import FilterSectionSkeleton from "@/components/shared/filterSection/FilterSectionSkeleton";
+import Carousel from "@/components/shared/carousel/Carousel";
+import { SkeletonCarousel } from "@/components/shared/skeletons/Skeletons";
+import { buildFilters } from "@/lib/pageUtils";
 
 export const metadata = {
   title: "Home - Stream Movies & Series",
@@ -19,40 +23,47 @@ export default async function Home({ searchParams }) {
   const sortId = params?.sort || "latest-added";
   const page = parseInt(params?.page || "1", 10);
 
-  // Build filters object from search params
-  const filters = {
-    genre: params?.genre?.split(",").filter(Boolean) || [],
-    year: params?.year?.split(",").filter(Boolean) || [],
-    language: params?.language?.split(",").filter(Boolean) || [],
-    country: params?.country?.split(",").filter(Boolean) || [],
-  };
+  // Redirect if no sort parameter
+  if (!params?.sort) {
+    redirect("/?sort=latest-added");
+  }
+
+  // Build filters (without quality for home page)
+  const filters = buildFilters(params, false);
+
   let initialData;
   let isEpisode = false;
 
   // Fetch data based on selected sort/section with filters
-  if (sortId === "latest-added") {
-    initialData = await getLatestAdded(filters, page);
-  } else if (sortId === "new-series") {
-    initialData = await getNewSeries(filters, page);
-  } else if (sortId === "new-movies") {
-    initialData = await getNewMovies(filters, page);
-  } else if (sortId === "latest-episodes") {
-    initialData = await getLatestEpisodes(filters, page);
-    isEpisode = true;
-  } else {
-    // Default to latest added
-    initialData = await getLatestAdded(filters, page);
+  switch (sortId) {
+    case "new-series":
+      initialData = await getNewSeries(filters, page);
+      break;
+    case "new-movies":
+      initialData = await getNewMovies(filters, page);
+      break;
+    case "latest-episodes":
+      initialData = await getLatestEpisodes(filters, page);
+      isEpisode = true;
+      break;
+    case "latest-added":
+    default:
+      initialData = await getLatestAdded(filters, page);
+      break;
   }
+
+  // Fetch carousel data
+  const newFilms = await getFilms({}, "new", 1);
 
   return (
     <div className="min-h-screen">
-      <Suspense fallback={<FilterSectionSkeleton />}>
-        <FilterSection
-          initialData={initialData}
-          sortOptions={SORT_OPTIONS.home}
-          isEpisode={isEpisode}
-        />
-      </Suspense>
+      <FilterSection
+        initialData={initialData}
+        sortOptions={SORT_OPTIONS.home}
+        isEpisode={isEpisode}
+        carouselMida={newFilms.documents}
+        page="home"
+      />
     </div>
   );
 }
