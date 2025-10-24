@@ -2,11 +2,8 @@
 // ICONS
 // ============================================
 import {
-  Home,
   Clapperboard,
   Tv,
-  Drama,
-  Blocks,
   Eye,
   Heart,
   FolderDown,
@@ -46,7 +43,8 @@ export const DESIGN_TOKENS = {
   },
 
   glass: {
-    light: "bg-white/10 backdrop-blur-md border border-white/20",
+    light:
+      "bg-white/15 backdrop-blur-lg backdrop-saturate-150 border border-white/30",
     medium: "bg-white/10 backdrop-blur-xl border border-white/40",
     hover: "hover:bg-white/20 hover:border-white/40",
   },
@@ -407,57 +405,14 @@ export const getIconClasses = (isActive) =>
     isActive ? "text-white" : "text-gray-400 group-hover:text-white"
   }`;
 
-// ============================================
-// DOWNLOAD OPTIONS
-// ============================================
-export const DOWNLOAD_QUALITIES = [
-  {
-    quality: "4K",
-    size: "8.5 GB",
-    gradient: "from-purple-600 via-pink-600 to-red-600",
-    iconName: "Film",
-  },
-  {
-    quality: "WEB-DL 1080p",
-    size: "4.2 GB",
-    gradient: "from-cyan-600 via-blue-600 to-purple-600",
-    iconName: "Film",
-  },
-  {
-    quality: "HD 720p",
-    size: "2.1 GB",
-    gradient: "from-green-600 via-emerald-600 to-cyan-600",
-    iconName: "Film",
-  },
-  {
-    quality: "BluRay",
-    size: "6.8 GB",
-    gradient: "from-blue-600 via-indigo-600 to-purple-600",
-    iconName: "Film",
-  },
-];
-
-export const SERVERS = [
-  {
-    name: "Server 1",
-    gradient: DESIGN_TOKENS.gradients.cyanLight,
-    iconName: "Server",
-  },
-  {
-    name: "Server 2",
-    gradient: DESIGN_TOKENS.gradients.pink,
-    iconName: "Server",
-  },
-  {
-    name: "Server 3",
-    gradient: DESIGN_TOKENS.gradients.green,
-    iconName: "Server",
-  },
-  {
-    name: "Server 4",
-    gradient: DESIGN_TOKENS.gradients.orange,
-    iconName: "Server",
-  },
+export const VALID_QUERY_PARAMS = [
+  "sort",
+  "page",
+  "genre",
+  "quality",
+  "year",
+  "language",
+  "country",
 ];
 
 // ============================================

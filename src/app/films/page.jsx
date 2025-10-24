@@ -1,19 +1,9 @@
-import { SORT_OPTIONS } from "@/lib/data";
+import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getFilms } from "@/actions/films";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
 
 const VALID_SORT_IDS = ["new", "old", "best", "popular"];
-const VALID_QUERY_PARAMS = [
-  "sort",
-  "page",
-  "genre",
-  "quality",
-  "year",
-  "language",
-  "country",
-];
-
 export const metadata = {
   title: "Films - Browse Movies",
   description: "Discover and filter through our collection of movies",

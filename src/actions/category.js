@@ -91,17 +91,6 @@ function buildEpisodesAggregationPipeline(sortConfig, page) {
               episodeNumber: 1,
               duration: 1,
               slug: 1,
-              services: {
-                $map: {
-                  input: "$services",
-                  as: "service",
-                  in: {
-                    serviceName: "$service.serviceName",
-                    qualities: "$service.qualities",
-                    _id: { $toString: "$service._id" },
-                  },
-                },
-              },
               createdAt: 1,
               updatedAt: 1,
               series: {
@@ -142,10 +131,6 @@ function buildContentAggregationPipeline(filters, sortConfig, page) {
     matchQuery.genre = { $in: filters.genre };
   }
 
-  if (filters.quality?.length > 0) {
-    matchQuery.quality = { $in: filters.quality };
-  }
-
   if (filters.year?.length > 0) {
     matchQuery.releaseYear = { $in: filters.year.map((y) => parseInt(y, 10)) };
   }
@@ -174,14 +159,12 @@ function buildContentAggregationPipeline(filters, sortConfig, page) {
               genre: 1,
               rating: 1,
               releaseYear: 1,
-              quality: 1,
               language: 1,
               country: 1,
               image: 1,
               slug: 1,
               category: 1,
               duration: 1,
-              views: 1,
               seasons: 1,
               totalEpisodes: 1,
               status: 1,
@@ -382,17 +365,6 @@ export const getAnimeEpisodes = cache(async (page = 1) => {
                 episodeNumber: 1,
                 duration: 1,
                 slug: 1,
-                services: {
-                  $map: {
-                    input: "$services",
-                    as: "service",
-                    in: {
-                      serviceName: "$service.serviceName",
-                      qualities: "$service.qualities",
-                      _id: { $toString: "$service._id" },
-                    },
-                  },
-                },
                 createdAt: 1,
                 updatedAt: 1,
                 series: {

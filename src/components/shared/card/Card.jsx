@@ -5,7 +5,6 @@ import CardWrapper from "./CardWrapper";
 // Shared components
 const TopBadges = ({
   isNew,
-  quality,
   rating,
   episodeNumber,
   seasonNumber,
@@ -34,13 +33,6 @@ const TopBadges = ({
         {isNew && (
           <span className={`${badgeStyles.base} ${badgeStyles.variants.new}`}>
             جديد
-          </span>
-        )}
-        {quality && (
-          <span
-            className={`${badgeStyles.base} bg-yellow-600/90 backdrop-blur-sm text-white border border-yellow-500/30`}
-          >
-            {quality}
           </span>
         )}
       </div>
@@ -230,11 +222,7 @@ export default function Card({
   return (
     <CardContainer href={`/${media?.slug}`} className={className}>
       <CardContent image={media.image} title={media.title}>
-        <TopBadges
-          isNew={media?.category?.isNew}
-          quality={media.quality}
-          rating={media.rating}
-        />
+        <TopBadges isNew={media?.category?.isNew} rating={media.rating} />
         <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
           <MetaInfo year={media.releaseYear} duration={media.duration} />
           <h3 className="text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text transition-all duration-300 text-right">

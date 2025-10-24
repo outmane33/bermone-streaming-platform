@@ -161,7 +161,6 @@ export const getSeasonBySlug = cache(async (slug) => {
         ? {
             _id: series._id.toString(),
             title: series.title,
-            originalTitle: series.originalTitle,
             description: series.description,
             genre: series.genre,
             releaseYear: series.releaseYear,
@@ -210,13 +209,6 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
         episodeNumber: episode.episodeNumber,
         duration: episode.duration,
         slug: episode.slug,
-        services:
-          episode.services?.map((service) => ({
-            quality: service.quality,
-            iframe: service.iframe,
-            downloadLink: service.downloadLink,
-            _id: service._id?.toString(),
-          })) || [],
         createdAt: episode.createdAt?.toISOString(),
         updatedAt: episode.updatedAt?.toISOString(),
       })),
@@ -288,13 +280,6 @@ export const getEpisodeBySlug = cache(async (slug) => {
         episodeNumber: data.episodeNumber,
         duration: data.duration,
         slug: data.slug,
-        services:
-          data.services?.map((service) => ({
-            quality: service.quality,
-            iframe: service.iframe,
-            downloadLink: service.downloadLink,
-            _id: service._id?.toString(),
-          })) || [],
         createdAt: data.createdAt?.toISOString(),
         updatedAt: data.updatedAt?.toISOString(),
       },
@@ -310,7 +295,6 @@ export const getEpisodeBySlug = cache(async (slug) => {
       series: {
         _id: data.series._id.toString(),
         title: data.series.title,
-        originalTitle: data.series.originalTitle,
         description: data.series.description,
         genre: data.series.genre,
         releaseYear: data.series.releaseYear,
@@ -360,32 +344,11 @@ export const getEpisodes = cache(async (page = 1) => {
             {
               $project: {
                 _id: { $toString: "$_id" },
+                slug: 1,
                 seriesId: { $toString: "$seriesId" },
                 seasonId: { $toString: "$seasonId" },
                 episodeNumber: 1,
                 duration: 1,
-                services: {
-                  $map: {
-                    input: "$services",
-                    as: "service",
-                    in: {
-                      serviceName: "$$service.serviceName",
-                      qualities: {
-                        $map: {
-                          input: "$$service.qualities",
-                          as: "quality",
-                          in: {
-                            quality: "$$quality.quality",
-                            iframe: "$$quality.iframe",
-                            downloadLink: "$$quality.downloadLink",
-                            _id: { $toString: "$$quality._id" }, // ← This was missing!
-                          },
-                        },
-                      },
-                      _id: { $toString: "$$service._id" },
-                    },
-                  },
-                },
                 createdAt: 1,
                 updatedAt: 1,
                 season: {

@@ -27,17 +27,18 @@ const ButtonBase = ({ children, className = "", ...props }) => (
 );
 
 const QualityButton = ({ quality, isSelected, onClick, disabled }) => {
+  const baseStyles = `p-4 rounded-xl backdrop-blur-md overflow-hidden border`;
   const states = isSelected
     ? "bg-white/20 border-white/40 scale-95 shadow-2xl border-2"
     : disabled
     ? "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
-    : "bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/40 hover:scale-95 hover:shadow-xl border";
+    : `${DESIGN_TOKENS.glass.light} ${DESIGN_TOKENS.glass.hover} hover:scale-95 hover:shadow-xl`;
 
   return (
     <ButtonBase
       onClick={onClick}
       disabled={disabled}
-      className={`p-4 rounded-xl backdrop-blur-md overflow-hidden ${states}`}
+      className={`${baseStyles} ${states}`}
       aria-label={`Select quality ${quality}`}
       aria-pressed={isSelected}
     >
@@ -61,26 +62,29 @@ const QualityButton = ({ quality, isSelected, onClick, disabled }) => {
 };
 
 const ServerButton = ({ server, isSelected, onClick, disabled }) => {
+  const baseStyles = `p-4 rounded-xl overflow-hidden border`;
   const states = isSelected
     ? "bg-white/20 border-white/40 scale-95 shadow-2xl border-2"
     : disabled
     ? "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
-    : "bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/40 hover:scale-95 hover:shadow-xl border";
+    : `${DESIGN_TOKENS.glass.light} ${DESIGN_TOKENS.glass.hover} hover:scale-95 hover:shadow-xl`;
 
   return (
     <ButtonBase
       onClick={onClick}
       disabled={disabled}
-      className={`p-4 rounded-xl overflow-hidden ${states}`}
+      className={`${baseStyles} ${states}`}
       aria-label={`Download from ${server}`}
       aria-pressed={isSelected}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 hover:opacity-20 transition-opacity" />
+      <div
+        className={`absolute inset-0 bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} opacity-0 hover:opacity-20 transition-opacity`}
+      />
       <div className="relative flex flex-col items-center gap-2">
         <div
-          className={`p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg transition-transform ${
-            isSelected ? "scale-110" : ""
-          }`}
+          className={`p-2 bg-gradient-to-r ${
+            DESIGN_TOKENS.gradients.cyan
+          } rounded-lg transition-transform ${isSelected ? "scale-110" : ""}`}
         >
           <Server className="w-5 h-5 text-white" />
         </div>
@@ -96,7 +100,9 @@ const ServerButton = ({ server, isSelected, onClick, disabled }) => {
 const Section = ({ title, icon: Icon, children, step }) => (
   <div className="relative mb-8">
     <div className="flex items-center gap-2 mb-4">
-      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold text-sm">
+      <div
+        className={`flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} text-white font-bold text-sm`}
+      >
         {step}
       </div>
       {Icon && <Icon className="w-5 h-5 text-white/80" />}
@@ -129,7 +135,6 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
     setDownloadLinks(null);
     setLoadingServices(true);
 
-    // Log action
     await logDownloadAction("QUALITY_SELECTED", {
       quality,
       slug,
@@ -138,9 +143,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
     });
 
     try {
-      // STEP 2: Fetch available services for this quality
       const result = await getServicesForQuality(slug, quality);
-
       if (result.success) {
         setAvailableServices(result.services);
       } else {
@@ -160,7 +163,6 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
     setShowDownloadButton(true);
     setDownloadLinks(null);
 
-    // Log action
     await logDownloadAction("SERVICE_SELECTED", {
       quality: qualities[selectedQuality],
       service: service.serviceName,
@@ -175,7 +177,6 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
     setLoadingLinks(true);
     setCountdown(3);
 
-    // Log action
     await logDownloadAction("DOWNLOAD_INITIATED", {
       quality: qualities[selectedQuality],
       service: availableServices[selectedService].serviceName,
@@ -184,7 +185,6 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
       timestamp: new Date().toISOString(),
     });
 
-    // Security countdown
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -195,11 +195,9 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
       });
     }, 1000);
 
-    // Wait 3 seconds before fetching links
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     try {
-      // Fetch download links
       const result = await getDownloadLinks(
         slug,
         qualities[selectedQuality],
@@ -209,7 +207,6 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
       if (result.success) {
         setDownloadLinks(result.links);
 
-        // Log success
         await logDownloadAction("LINKS_RETRIEVED", {
           quality: qualities[selectedQuality],
           service: availableServices[selectedService].serviceName,
@@ -222,7 +219,6 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
     } catch (error) {
       console.error("Error fetching download links:", error);
 
-      // Log error
       await logDownloadAction("LINKS_FETCH_FAILED", {
         quality: qualities[selectedQuality],
         service: availableServices[selectedService].serviceName,
@@ -291,8 +287,10 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
               className={`w-full p-6 rounded-xl ${
                 loadingLinks
                   ? "bg-white/10 cursor-wait"
-                  : "bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600"
-              } text-white font-bold text-lg flex items-center justify-center gap-3`}
+                  : `bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700`
+              } text-white font-bold text-lg flex items-center justify-center gap-3 ${
+                DESIGN_TOKENS.effects.hoverScale
+              }`}
             >
               {loadingLinks ? (
                 <>
@@ -319,7 +317,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
         <Section title="Download Links Ready" icon={Download} step={4}>
           <div className="space-y-3 animate-fadeIn">
             <div
-              className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-6 hover:${DESIGN_TOKENS.glass.strong} transition-all duration-300`}
+              className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-6 ${DESIGN_TOKENS.glass.hover} ${DESIGN_TOKENS.effects.transition}`}
             >
               <div className="flex items-center gap-3 mb-4">
                 <CheckCircle className="w-6 h-6 text-green-400" />
@@ -339,7 +337,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
                     href={downloadLinks.downloadLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-medium transition-colors shadow-lg"
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r ${DESIGN_TOKENS.gradients.purple} hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-medium transition-colors shadow-lg`}
                   >
                     <Download className="w-5 h-5" />
                     Download Now

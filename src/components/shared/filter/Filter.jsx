@@ -12,7 +12,7 @@ import { FilterButton } from "./FilterButton";
 import { DropdownMenu } from "./DropdownMenu";
 import { SortButton } from "./SortButton";
 import { MobileMenu } from "./MobileMenu";
-import { filterOptions } from "@/lib/data";
+import { DESIGN_TOKENS, filterOptions } from "@/lib/data";
 import { useClickOutside } from "@/lib/helpers";
 
 const INITIAL_FILTERS = {
@@ -38,7 +38,7 @@ export default function Filter({
     country: currentFilters?.country || [],
   }));
 
-  // ✅ FIX: Initialize with currentFilters.sort directly
+  //  Initialize with currentFilters.sort directly
   const [selectedSort, setSelectedSort] = useState(
     currentFilters?.sort || null
   );
@@ -52,14 +52,14 @@ export default function Filter({
     useCallback(() => setOpenDropdown(null), [])
   );
 
-  // ✅ FIX: Sync selectedSort with currentFilters.sort when it changes from parent
+  //  Sync selectedSort with currentFilters.sort when it changes from parent
   useEffect(() => {
     if (currentFilters?.sort !== undefined) {
       setSelectedSort(currentFilters.sort);
     }
   }, [currentFilters?.sort]);
 
-  // ✅ FIX: Sync selectedFilters with currentFilters when they change from parent
+  //  Sync selectedFilters with currentFilters when they change from parent
   useEffect(() => {
     setSelectedFilters({
       genre: currentFilters?.genre || [],
@@ -86,7 +86,7 @@ export default function Filter({
     };
   }, [mobileMenuOpen]);
 
-  // ✅ FIX: Only notify parent when user actually changes something (not on URL changes)
+  //  Only notify parent when user actually changes something (not on URL changes)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -134,7 +134,7 @@ export default function Filter({
 
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
-    // ✅ FIX: Keep sort when clearing other filters
+    //  Keep sort when clearing other filters
     // If you want to clear sort too, change to: setSelectedSort(null);
     // For now, keeping sort as it's likely intentional
   }, []);
@@ -172,7 +172,9 @@ export default function Filter({
       )}
 
       {/* Mobile Combined Section */}
-      <div className="lg:hidden bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-xl mb-3 p-3">
+      <div
+        className={`lg:hidden ${DESIGN_TOKENS.glass.light} rounded-lg shadow-xl mb-3 p-3`}
+      >
         <div className="flex items-center justify-between gap-2">
           {/* Filters Toggle */}
           {!isEpisode && (
@@ -209,7 +211,9 @@ export default function Filter({
 
       {/* Desktop Filter Bar */}
       {!isAnimeEpisode && (
-        <div className="hidden lg:flex items-center justify-between gap-1 xl:gap-2 flex-wrap bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-2xl px-3 sm:px-4 py-2 relative z-[20]">
+        <div
+          className={`hidden lg:flex items-center justify-between gap-1 xl:gap-2 flex-wrap ${DESIGN_TOKENS.glass.light}  rounded-lg shadow-2xl px-3 sm:px-4 py-2 relative z-[20]`}
+        >
           {!isEpisode ? (
             <div className="flex items-center gap-1 xl:gap-2 flex-wrap">
               {Object.keys(filterOptions).map((category) => (

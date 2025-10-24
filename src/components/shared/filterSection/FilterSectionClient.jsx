@@ -1,11 +1,14 @@
-// FilterSectionClient.tsx
+// FilterSectionClient.jsx
 "use client";
 
-import { useTransition, useMemo, useCallback, Suspense } from "react";
+import { useTransition, useMemo, useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { createContext, useContext } from "react";
 import Filter from "../filter/Filter";
 import Pagination from "../pagination/Pagination";
-import { SkeletonFilterBar, SkeletonPagination } from "../skeletons/Skeletons";
+
+const TransitionContext = createContext(false);
+export const useTransitionState = () => useContext(TransitionContext);
 
 export default function FilterSectionClient({
   sortOptions,
@@ -13,7 +16,7 @@ export default function FilterSectionClient({
   isAnimeEpisode = false,
   initialDocuments,
   initialPagination,
-  children, // Server-rendered cards
+  children,
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -79,8 +82,8 @@ export default function FilterSectionClient({
   );
 
   return (
-    <div className="space-y-8">
-      <Suspense fallback={<SkeletonFilterBar />}>
+    <TransitionContext.Provider value={isPending}>
+      <div className="space-y-8">
         <Filter
           sortOptions={sortOptions}
           onFilterChange={handleFilterChange}
@@ -88,22 +91,14 @@ export default function FilterSectionClient({
           isEpisode={isEpisode}
           isAnimeEpisode={isAnimeEpisode}
         />
-      </Suspense>
 
-      {initialDocuments?.length > 0 ? (
-        <div
-          className={`transition-opacity ${
-            isPending ? "opacity-50" : "opacity-100"
-          }`}
-        >
-          {children}
-        </div>
-      ) : (
-        <EmptyState onClear={() => router.push(pathname)} />
-      )}
+        {initialDocuments?.length > 0 ? (
+          children
+        ) : (
+          <EmptyState onClear={() => router.push(pathname)} />
+        )}
 
-      {initialDocuments?.length > 0 && (
-        <Suspense fallback={<SkeletonPagination />}>
+        {initialDocuments?.length > 0 && (
           <Pagination
             currentPage={initialPagination.currentPage}
             totalPages={initialPagination.totalPages}
@@ -113,9 +108,9 @@ export default function FilterSectionClient({
             hasNext={initialPagination.hasNext}
             hasPrev={initialPagination.hasPrev}
           />
-        </Suspense>
-      )}
-    </div>
+        )}
+      </div>
+    </TransitionContext.Provider>
   );
 }
 

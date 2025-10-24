@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { DESIGN_TOKENS } from "@/lib/data";
 
 export const SubMenuDropdown = ({
   items,
@@ -61,11 +62,13 @@ export const SubMenuDropdown = ({
       } z-50`}
     >
       {isDesktop && (
-        <div className="absolute -inset-1 bg-gradient-to-r bg-white/20 shadow-lg backdrop-blur-md rounded-xl blur-md opacity-50 " />
+        <div className="absolute -inset-1 bg-gradient-to-r bg-white/20 shadow-lg backdrop-blur-md rounded-xl blur-md opacity-50" />
       )}
-      <div className="relative bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl overflow-hidden ">
-        <div className={`h-1 bg-gradient-to-r  ${gradient}`} />
-        <div className={`p-2 ${!isDesktop && "max-h-70 overflow-y-auto "}`}>
+      <div
+        className={`relative ${DESIGN_TOKENS.glass.light} rounded-xl shadow-2xl overflow-hidden`}
+      >
+        <div className={`h-1 bg-gradient-to-r ${gradient}`} />
+        <div className={`p-2 ${!isDesktop && "max-h-70 overflow-y-auto"}`}>
           {items.map((item, index) => {
             // Handle both object format and string format for backward compatibility
             const label = typeof item === "string" ? item : item.label;
@@ -79,12 +82,12 @@ export const SubMenuDropdown = ({
                 href={path}
                 className={`relative group w-full text-right font-semibold ${
                   isDesktop ? "px-4 py-3" : "px-3 py-2.5"
-                } rounded-lg transition-all duration-200 ${
+                } rounded-lg ${DESIGN_TOKENS.effects.transition} ${
                   isDesktop ? "font-medium" : "text-sm font-medium"
                 } block ${
                   isActive
                     ? "bg-white/30 text-white shadow-lg font-bold cursor-default"
-                    : "text-gray-100 hover:text-white hover:bg-white/20 cursor-pointer"
+                    : `text-gray-100 hover:text-white ${DESIGN_TOKENS.glass.hover} cursor-pointer`
                 } ${isDesktop && !isActive && "hover:shadow-lg"}`}
                 onClick={(e) => {
                   if (isActive) {
@@ -110,7 +113,9 @@ export const SubMenuDropdown = ({
                 {isDesktop && (
                   <div className="relative flex items-center justify-between">
                     <div
-                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                      className={`w-2 h-2 rounded-full ${
+                        DESIGN_TOKENS.effects.transition
+                      } ${
                         isActive
                           ? "bg-white opacity-100 scale-110"
                           : "bg-white opacity-0 group-hover:opacity-100"

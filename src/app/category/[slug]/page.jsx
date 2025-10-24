@@ -78,6 +78,7 @@ export default async function CategoryPage({ params, searchParams }) {
         isEpisode={isEpisode}
         isFilmCollection={isFilmCollection}
         isAnimeEpisode={isEpisode}
+        slug={slug}
       />
     </div>
   );

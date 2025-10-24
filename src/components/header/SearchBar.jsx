@@ -1,4 +1,5 @@
 import { Search, Loader2 } from "lucide-react";
+import { DESIGN_TOKENS } from "@/lib/data";
 
 export const SearchBar = ({
   searchQuery,
@@ -8,7 +9,9 @@ export const SearchBar = ({
   isSearching,
 }) => (
   <div
-    className={`relative transition-all duration-300 w-full sm:min-w-[260px] sm:w-auto ${
+    className={`relative ${
+      DESIGN_TOKENS.effects.transition
+    } w-full sm:min-w-[260px] sm:w-auto ${
       searchFocused ? "sm:w-96" : "sm:w-72"
     }`}
   >
@@ -20,7 +23,7 @@ export const SearchBar = ({
         onChange={(e) => setSearchQuery(e.target.value)}
         onFocus={() => setSearchFocused(true)}
         onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-        className="w-full px-10 sm:px-14 py-2.5 sm:py-3 pr-10 sm:pr-12 text-white placeholder-gray-200 outline-none text-sm sm:text-base font-medium transition-all duration-300 rounded-xl bg-white/10 shadow-lg backdrop-blur-md border border-white/20"
+        className={`w-full px-10 sm:px-14 py-2.5 sm:py-3 pr-10 sm:pr-12 text-white placeholder-gray-200 outline-none text-sm sm:text-base font-medium ${DESIGN_TOKENS.effects.transition} rounded-xl ${DESIGN_TOKENS.glass.light} shadow-lg`}
         autoComplete="off"
       />
 

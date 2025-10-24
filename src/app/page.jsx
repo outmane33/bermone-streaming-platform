@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import {
   getLatestAdded,
   getNewSeries,
@@ -9,8 +8,6 @@ import { getFilms } from "@/actions/films";
 import { redirect } from "next/navigation";
 import { SORT_OPTIONS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
-import Carousel from "@/components/shared/carousel/Carousel";
-import { SkeletonCarousel } from "@/components/shared/skeletons/Skeletons";
 import { buildFilters } from "@/lib/pageUtils";
 
 export const metadata = {

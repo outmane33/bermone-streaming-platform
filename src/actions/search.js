@@ -16,7 +16,6 @@ const serializeSearchResult = (item, contentType) => ({
   rating: item.rating,
   genre: item.genre,
   slug: item.slug,
-  quality: item.quality,
   type: contentType === "film" ? "فيلم" : "مسلسل",
   contentType,
 });
@@ -31,7 +30,6 @@ const SEARCH_PROJECTION = {
   rating: 1,
   genre: 1,
   slug: 1,
-  quality: 1,
   language: 1,
   country: 1,
 };

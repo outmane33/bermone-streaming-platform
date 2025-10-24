@@ -1,4 +1,4 @@
-// app/your-page/page.tsx or FilterSection.tsx (Server Component)
+// FilterSection.jsx
 import { Suspense } from "react";
 import { DESIGN_TOKENS } from "@/lib/data";
 import Card from "../card/Card";
@@ -28,6 +28,7 @@ export default async function FilterSection({
       <Suspense fallback={<SkeletonCarousel />}>
         <Carousel carouselMida={carouselData.documents} />
       </Suspense>
+
       <FilterSectionClient
         sortOptions={sortOptions}
         isEpisode={isEpisode}
@@ -36,7 +37,7 @@ export default async function FilterSection({
         initialDocuments={documents}
         initialPagination={pagination}
       >
-        {documents?.length > 0 ? (
+        {documents?.length > 0 && (
           <div className={DESIGN_TOKENS.grid.container}>
             {documents.map((film) => (
               <Suspense key={film._id} fallback={<SkeletonCard />}>
@@ -49,7 +50,7 @@ export default async function FilterSection({
               </Suspense>
             ))}
           </div>
-        ) : null}
+        )}
       </FilterSectionClient>
     </>
   );

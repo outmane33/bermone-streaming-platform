@@ -22,19 +22,6 @@ export const serializeDocument = (doc) => {
     serialized._id = serializeObjectId(serialized._id);
   }
 
-  // Convert nested ObjectIds in services
-  if (serialized.services) {
-    serialized.services = serialized.services.map((service) => ({
-      ...service,
-      _id: serializeObjectId(service._id),
-      qualities: service.qualities?.map((q) =>
-        typeof q === "object" && q._id
-          ? { ...q, _id: serializeObjectId(q._id) }
-          : q
-      ),
-    }));
-  }
-
   // Convert related IDs
   if (serialized.seriesId)
     serialized.seriesId = serializeObjectId(serialized.seriesId);
@@ -87,10 +74,6 @@ export const buildMatchQuery = (filters = {}, additionalFilters = {}) => {
     matchQuery.genre = { $in: filters.genre };
   }
 
-  if (filters.quality?.length > 0) {
-    matchQuery.quality = { $in: filters.quality };
-  }
-
   if (filters.year?.length > 0) {
     matchQuery.releaseYear = { $in: filters.year.map((y) => parseInt(y, 10)) };
   }
@@ -130,14 +113,10 @@ export const buildContentAggregationPipeline = (
     genre: 1,
     rating: 1,
     releaseYear: 1,
-    quality: 1,
-    language: 1,
-    country: 1,
     image: 1,
     slug: 1,
     category: 1,
     duration: 1,
-    views: 1,
     ...projection,
   };
 
@@ -200,17 +179,6 @@ export const buildEpisodeAggregationPipeline = (
               episodeNumber: 1,
               duration: 1,
               slug: 1,
-              services: {
-                $map: {
-                  input: "$services",
-                  as: "service",
-                  in: {
-                    serviceName: "$$service.serviceName",
-                    qualities: "$$service.qualities",
-                    _id: { $toString: "$$service._id" },
-                  },
-                },
-              },
               createdAt: 1,
               updatedAt: 1,
               series: {

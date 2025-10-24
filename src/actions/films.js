@@ -30,7 +30,6 @@ export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
 
     const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
     const [result] = await collection.aggregate(pipeline).toArray();
-
     return {
       success: true,
       ...buildPaginationResponse(result, page),
@@ -203,15 +202,12 @@ export const getRelatedFilms = cache(
             genre: 1,
             rating: 1,
             releaseYear: 1,
-            quality: 1,
             language: 1,
             country: 1,
             image: 1,
             slug: 1,
             category: 1,
             duration: 1,
-            views: 1,
-            similarityScore: 1,
           },
         },
       ];
