@@ -1,9 +1,8 @@
 import React from "react";
-import { ChevronDown } from "lucide-react";
 import { ActiveGlow } from "./shared/ActiveGlow";
 import { HoverGlow } from "./shared/HoverGlow";
 import { SubMenuDropdown } from "./shared/SubMenuDropdown";
-import { getIconClasses, getTextClasses } from "@/lib/data";
+import { getIconClasses, getTextClasses, ICON_MAP } from "@/lib/data";
 import Link from "next/link";
 
 export const CategoryItem = ({
@@ -54,7 +53,7 @@ export const CategoryItem = ({
           {category.label}
         </span>
         {hasSubMenu && (
-          <ChevronDown
+          <ICON_MAP.ChevronDown
             size={16}
             className={`${
               !isDesktop && "ml-auto flex-shrink-0"

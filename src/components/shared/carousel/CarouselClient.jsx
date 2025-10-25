@@ -1,6 +1,5 @@
 // app/components/carousel/CarouselClient.jsx
 "use client";
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import Card from "../card/Card";
 import { COMPONENT_STYLES, CONFIG } from "@/lib/data";

@@ -1,4 +1,4 @@
-import { COMPONENT_STYLES } from "@/lib/data";
+import { COMPONENT_STYLES, DESIGN_TOKENS } from "@/lib/data";
 
 export default function Button({
   children,
@@ -26,7 +26,9 @@ export default function Button({
     >
       {/* Hover Effect Overlay for Primary Variant */}
       {variant === "primary" && !disabled && (
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
+        <div
+          className={`absolute inset-0 bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} opacity-0 group-hover:opacity-100 ${DESIGN_TOKENS.effects.transition} rounded-xl`}
+        />
       )}
 
       {/* Button Content */}

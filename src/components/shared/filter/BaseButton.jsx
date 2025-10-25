@@ -1,7 +1,7 @@
 // BaseButton.jsx - Shared button component
-import { ChevronDown } from "lucide-react";
 import { GradientBackground } from "./GradientBackground";
 import { cn } from "@/lib/helpers";
+import { DESIGN_TOKENS, getTextClasses, ICON_MAP } from "@/lib/data";
 
 export const BaseButton = ({
   icon: Icon,
@@ -17,13 +17,14 @@ export const BaseButton = ({
   <button
     onClick={onClick}
     className={cn(
-      "group relative flex items-center gap-2 rounded-lg transition-all duration-300 cursor-pointer transform",
+      "group relative flex items-center gap-2 rounded-lg cursor-pointer transform",
+      DESIGN_TOKENS.effects.transition,
       isMobile
         ? "w-full justify-between px-4 py-3"
         : "px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 lg:py-3",
       isActive
         ? "scale-105 sm:scale-110"
-        : "hover:scale-105 hover:-translate-y-0.5 opacity-70 hover:opacity-100"
+        : `${DESIGN_TOKENS.effects.hoverScale} ${DESIGN_TOKENS.effects.hoverLift} opacity-70 hover:opacity-100`
     )}
   >
     <GradientBackground
@@ -41,8 +42,8 @@ export const BaseButton = ({
       <Icon size={isMobile ? 20 : 18} className="text-gray-200" />
       <span
         className={cn(
-          "font-semibold transition-colors duration-300 text-sm sm:text-base",
-          isActive ? "text-white" : "text-white group-hover:text-white"
+          "font-semibold text-sm sm:text-base",
+          getTextClasses(isActive)
         )}
       >
         {label}
@@ -55,10 +56,11 @@ export const BaseButton = ({
     </div>
 
     {showChevron && (
-      <ChevronDown
+      <ICON_MAP.ChevronDown
         size={16}
         className={cn(
-          "transition-all duration-300 relative z-10",
+          "relative z-10",
+          DESIGN_TOKENS.effects.transition,
           isActive ? "text-white" : "text-gray-200 group-hover:text-white",
           isOpen && "rotate-180"
         )}

@@ -1,4 +1,5 @@
 import GlassCard from "./GlassCard";
+import { DESIGN_TOKENS } from "@/lib/data";
 
 export default function DetailCard({ icon, label, value, gradient }) {
   const Icon = icon;
@@ -7,14 +8,14 @@ export default function DetailCard({ icon, label, value, gradient }) {
     <GlassCard className="group relative bg-gradient-to-br from-white/10 to-white/5">
       {/* Hover Gradient Overlay */}
       <div
-        className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-15 transition-opacity duration-300 rounded-lg`}
+        className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-15 ${DESIGN_TOKENS.effects.transition} rounded-lg`}
       />
 
       {/* Content */}
       <div className="relative flex items-center gap-3">
         {/* Icon Container */}
         <div
-          className={`p-1.5 rounded-md bg-gradient-to-br ${gradient} shadow-md group-hover:shadow-lg transition-all duration-300 flex-shrink-0`}
+          className={`p-1.5 rounded-md bg-gradient-to-br ${gradient} shadow-md group-hover:shadow-lg ${DESIGN_TOKENS.effects.transition} flex-shrink-0`}
         >
           <Icon size={16} className="text-white" />
         </div>

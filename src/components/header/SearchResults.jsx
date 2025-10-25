@@ -1,12 +1,14 @@
-import { Loader2 } from "lucide-react";
-import { DESIGN_TOKENS } from "@/lib/data";
+import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import Card from "../shared/card/Card";
 import { Suspense } from "react";
 import { SkeletonCard } from "../shared/skeletons/Skeletons";
 
 const LoadingState = () => (
   <div className="px-4 py-12 text-center">
-    <Loader2 className="animate-spin text-cyan-400 mx-auto mb-3" size={32} />
+    <ICON_MAP.Loader2
+      className="animate-spin text-cyan-400 mx-auto mb-3"
+      size={32}
+    />
     <div className="text-gray-200 text-base">جاري البحث...</div>
   </div>
 );
@@ -66,7 +68,7 @@ export const SearchResults = ({
 
         {/* Results Grid */}
         <div className="p-3">
-          <div className={DESIGN_TOKENS.grid.container}>
+          <div className={`${DESIGN_TOKENS.grid.container} !px-0`}>
             {searchResults.map((item) => (
               <Suspense fallback={<SkeletonCard />} key={item.id}>
                 <Card

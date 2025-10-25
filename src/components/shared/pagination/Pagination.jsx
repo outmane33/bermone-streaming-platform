@@ -1,12 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
-import { COMPONENT_STYLES } from "@/lib/data";
+import { COMPONENT_STYLES, ICON_MAP } from "@/lib/data";
 
 const NavButton = ({ onClick, disabled, icon: Icon, className = "" }) => (
   <button
@@ -136,14 +130,14 @@ export default function ({ currentPage = 1, totalPages = 10, onPageChange }) {
         <NavButton
           onClick={() => handlePageChange(1)}
           disabled={page === 1}
-          icon={ChevronsLeft}
+          icon={ICON_MAP.ChevronsLeft}
           className="hidden sm:block"
         />
 
         <NavButton
           onClick={() => handlePageChange(page - 1)}
           disabled={page === 1}
-          icon={ChevronLeft}
+          icon={ICON_MAP.ChevronLeft}
         />
 
         <div className="hidden md:flex items-center gap-2">
@@ -157,13 +151,13 @@ export default function ({ currentPage = 1, totalPages = 10, onPageChange }) {
         <NavButton
           onClick={() => handlePageChange(page + 1)}
           disabled={page === totalPages}
-          icon={ChevronRight}
+          icon={ICON_MAP.ChevronRight}
         />
 
         <NavButton
           onClick={() => handlePageChange(totalPages)}
           disabled={page === totalPages}
-          icon={ChevronsRight}
+          icon={ICON_MAP.ChevronsRight}
           className="hidden sm:block"
         />
       </div>

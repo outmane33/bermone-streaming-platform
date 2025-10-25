@@ -13,6 +13,11 @@ import {
 } from "@/actions/series";
 import RelatedSection from "@/components/shared/realatedSection/RelatedSection";
 import HeroSection from "@/components/shared/heroSection/HeroSection";
+import { Suspense } from "react";
+import {
+  SkeletonHero,
+  SkeletonRelated,
+} from "@/components/shared/skeletons/Skeletons";
 
 const CONTENT_TYPES = {
   FILM: "film",
@@ -381,13 +386,16 @@ export default async function MediaPage({ params }) {
 
   return (
     <div className="space-y-6 mb-12">
-      <HeroSection media={serializedMedia} type={type} />
-
+      <Suspense fallback={<SkeletonHero />}>
+        <HeroSection media={serializedMedia} type={type} />
+      </Suspense>
       {relatedData.content.length > 0 && (
-        <RelatedSection
-          relatedMedia={relatedData.content}
-          title={relatedData.title}
-        />
+        <Suspense fallback={<SkeletonRelated />}>
+          <RelatedSection
+            relatedMedia={relatedData.content}
+            title={relatedData.title}
+          />
+        </Suspense>
       )}
     </div>
   );

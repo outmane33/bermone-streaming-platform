@@ -1,5 +1,4 @@
-import { Play, Star, Calendar, Clock, Film } from "lucide-react";
-import { COMPONENT_STYLES, DESIGN_TOKENS } from "@/lib/data";
+import { COMPONENT_STYLES, DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import CardWrapper from "./CardWrapper";
 
 // Shared components
@@ -17,9 +16,9 @@ const TopBadges = ({
       <div className="flex flex-col gap-2">
         {filmCount && (
           <span
-            className={`${badgeStyles.base} bg-gradient-to-r from-purple-600 to-pink-600 backdrop-blur-sm text-white border border-purple-500/30 flex items-center gap-1.5`}
+            className={`${badgeStyles.base} bg-gradient-to-r ${DESIGN_TOKENS.gradients.purple} backdrop-blur-sm text-white border border-purple-500/30 flex items-center gap-1.5`}
           >
-            <Film size={14} />
+            <ICON_MAP.Film size={14} />
             {filmCount} أفلام
           </span>
         )}
@@ -38,8 +37,13 @@ const TopBadges = ({
       </div>
 
       {rating && (
-        <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/20">
-          <Star size={14} className="text-yellow-400 fill-yellow-400" />
+        <div
+          className={`flex items-center gap-1 ${COMPONENT_STYLES.metaInfo.base} px-2.5 py-1.5 rounded-full`}
+        >
+          <ICON_MAP.Star
+            size={14}
+            className="text-yellow-400 fill-yellow-400"
+          />
           <span className="text-sm font-bold text-white">{rating}</span>
         </div>
       )}
@@ -54,13 +58,16 @@ const MetaInfo = ({ year, duration }) => {
     <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-gray-200 mb-1.5 md:mb-3">
       {year && (
         <div className={metaStyles.base}>
-          <Calendar size={10} className={`${metaStyles.icon} md:w-3 md:h-3`} />
+          <ICON_MAP.Calendar
+            size={10}
+            className={`${metaStyles.icon} md:w-3 md:h-3`}
+          />
           <span className="font-semibold">{year}</span>
         </div>
       )}
       {duration && (
         <div className={`${metaStyles.base} hidden md:flex`}>
-          <Clock size={12} className={metaStyles.icon} />
+          <ICON_MAP.Clock size={12} className={metaStyles.icon} />
           <span className="font-semibold">{duration}</span>
         </div>
       )}
@@ -76,7 +83,7 @@ const GenreTags = ({ genre }) => {
       {genre.map((g) => (
         <span
           key={g}
-          className="px-2.5 py-1 bg-white/15 backdrop-blur-md border border-white/30 rounded-lg text-xs text-white font-semibold hover:bg-white/25 transition-colors duration-200 shadow-lg"
+          className={`px-2.5 py-1 ${DESIGN_TOKENS.glass.light} rounded-lg text-xs text-white font-semibold ${DESIGN_TOKENS.glass.hover} transition-colors duration-200 shadow-lg`}
         >
           {g}
         </span>
@@ -87,11 +94,13 @@ const GenreTags = ({ genre }) => {
 
 const PlayButtonOverlay = () => (
   <div
-    className="absolute inset-0 z-20 md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden"
+    className={`absolute inset-0 z-20 md:flex items-center justify-center opacity-0 group-hover:opacity-100 ${DESIGN_TOKENS.effects.transition} hidden`}
     aria-hidden="true"
   >
-    <div className="p-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow-2xl shadow-cyan-500/50 transform transition-transform duration-300 group-hover:scale-110">
-      <Play size={28} className="text-white fill-white" />
+    <div
+      className={`p-4 rounded-full bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} shadow-2xl shadow-cyan-500/50 transform ${DESIGN_TOKENS.effects.transition} group-hover:scale-110`}
+    >
+      <ICON_MAP.Play size={28} className="text-white fill-white" />
     </div>
   </div>
 );
@@ -101,7 +110,7 @@ const CardContainer = ({ children, href, className = "" }) => (
   <CardWrapper href={href}>
     <div className="block cursor-pointer">
       <article
-        className={`group relative rounded-xl transition-all duration-500 hover:scale-105 ${className}`}
+        className={`group relative rounded-xl ${DESIGN_TOKENS.effects.transition} duration-500 ${DESIGN_TOKENS.effects.hoverScale} ${className}`}
       >
         {children}
       </article>
@@ -117,23 +126,23 @@ const CardContent = ({
   gradientColors = "cyan-purple",
 }) => {
   const gradients = {
-    "cyan-purple": "from-cyan-500/10 via-purple-500/10",
-    "purple-pink": "from-purple-500/10 via-pink-500/10",
+    "cyan-purple": `${DESIGN_TOKENS.gradients.cyan}/10 via-purple-500/10`,
+    "purple-pink": `${DESIGN_TOKENS.gradients.purple}/10 via-pink-500/10`,
   };
 
   return (
     <div
-      className={`relative ${DESIGN_TOKENS.glass.light} shadow-lg hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 h-full rounded-xl`}
+      className={`relative ${DESIGN_TOKENS.glass.light} shadow-lg hover:shadow-2xl hover:shadow-cyan-500/20 ${DESIGN_TOKENS.effects.transition} duration-500 h-full rounded-xl`}
     >
       <div className="relative overflow-hidden aspect-[3/4] rounded-xl">
         <div
-          className={`absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent group-hover:${gradients[gradientColors]} z-10 transition-all duration-500`}
+          className={`absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent group-hover:${gradients[gradientColors]} z-10 ${DESIGN_TOKENS.effects.transition} duration-500`}
         />
 
         <img
           src={image}
           alt={title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 rounded-xl"
+          className={`w-full h-full object-cover ${DESIGN_TOKENS.effects.transition} duration-700 group-hover:scale-110 rounded-xl`}
           loading="lazy"
         />
 
@@ -141,7 +150,9 @@ const CardContent = ({
         {children}
       </div>
 
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/0 to-purple-500/0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none" />
+      <div
+        className={`absolute inset-0 rounded-xl bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan}/0 to-purple-500/0 opacity-0 group-hover:opacity-20 ${DESIGN_TOKENS.effects.transition} duration-500 pointer-events-none`}
+      />
     </div>
   );
 };
@@ -186,7 +197,9 @@ export default function Card({
           <TopBadges filmCount={films.length} rating={avgRating} />
           <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
             <MetaInfo year={yearRange} />
-            <h3 className="text-sm md:text-lg font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 group-hover:bg-clip-text transition-all duration-300 text-right">
+            <h3
+              className={`text-sm md:text-lg font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 group-hover:bg-clip-text ${DESIGN_TOKENS.effects.transition} text-right`}
+            >
               {media?.name}
             </h3>
           </div>
@@ -209,7 +222,9 @@ export default function Card({
           />
           <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
             <MetaInfo duration={media?.duration} />
-            <h3 className="text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text transition-all duration-300 text-right">
+            <h3
+              className={`text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text ${DESIGN_TOKENS.effects.transition} text-right`}
+            >
               الحلقة {media?.episodeNumber}
             </h3>
           </div>
@@ -225,7 +240,9 @@ export default function Card({
         <TopBadges isNew={media?.category?.isNew} rating={media.rating} />
         <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
           <MetaInfo year={media.releaseYear} duration={media.duration} />
-          <h3 className="text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text transition-all duration-300 text-right">
+          <h3
+            className={`text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text ${DESIGN_TOKENS.effects.transition} text-right`}
+          >
             {media.title}
           </h3>
           <GenreTags genre={media.genre} />

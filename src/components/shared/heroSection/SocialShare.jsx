@@ -1,15 +1,15 @@
 "use client";
-import { SOCIAL_LINKS } from "@/lib/data";
+import { SOCIAL_LINKS, DESIGN_TOKENS } from "@/lib/data";
 
 function SocialButton({ icon: Icon, gradient, onClick, ariaLabel }) {
   return (
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className="group relative p-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:scale-110 cursor-pointer"
+      className={`group relative p-2 ${DESIGN_TOKENS.glass.light} ${DESIGN_TOKENS.glass.hover} rounded-lg ${DESIGN_TOKENS.effects.hoverLift} cursor-pointer`}
     >
       <div
-        className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-20 rounded-lg transition-opacity duration-300`}
+        className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-20 rounded-lg ${DESIGN_TOKENS.effects.transition}`}
       />
       <div className="relative text-gray-300 group-hover:text-white transition-colors">
         <Icon size={18} />
@@ -27,41 +27,23 @@ export default function SocialShare({
   shareDescription = "",
 }) {
   const handleShare = (platform) => {
-    // Call the optional callback
     onShare?.(platform);
 
     const encodedUrl = encodeURIComponent(shareUrl);
     const encodedTitle = encodeURIComponent(shareTitle);
-    const encodedDescription = encodeURIComponent(shareDescription);
     const fullText = encodeURIComponent(
       `${shareTitle}${shareDescription ? " - " + shareDescription : ""}`
     );
 
-    let shareLink = "";
+    const shareLinks = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+      telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+      whatsapp: `https://wa.me/?text=${fullText}%20${encodedUrl}`,
+    };
 
-    switch (platform.toLowerCase()) {
-      case "facebook":
-        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
-        break;
+    const shareLink = shareLinks[platform.toLowerCase()];
 
-      case "twitter":
-        shareLink = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
-        break;
-
-      case "telegram":
-        shareLink = `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`;
-        break;
-
-      case "whatsapp":
-        shareLink = `https://wa.me/?text=${fullText}%20${encodedUrl}`;
-        break;
-
-      default:
-        console.log("Unknown platform:", platform);
-        return;
-    }
-
-    // Open share link in a new window
     if (shareLink) {
       window.open(
         shareLink,
@@ -69,40 +51,6 @@ export default function SocialShare({
         "width=600,height=400,noopener,noreferrer"
       );
     }
-  };
-
-  // Helper function to copy to clipboard
-  const copyToClipboard = (text) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {
-          console.log("Link copied to clipboard");
-        })
-        .catch((err) => {
-          console.error("Failed to copy:", err);
-          fallbackCopy(text);
-        });
-    } else {
-      fallbackCopy(text);
-    }
-  };
-
-  // Fallback copy method for older browsers
-  const fallbackCopy = (text) => {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand("copy");
-      console.log("Link copied using fallback method");
-    } catch (err) {
-      console.error("Fallback copy failed:", err);
-    }
-    document.body.removeChild(textArea);
   };
 
   return (

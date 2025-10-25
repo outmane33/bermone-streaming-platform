@@ -1,6 +1,6 @@
 // DropdownMenu.jsx (optimized)
 import { memo } from "react";
-import { filterGradients } from "@/lib/data";
+import { filterGradients, DESIGN_TOKENS } from "@/lib/data";
 import { cn } from "@/lib/helpers";
 
 const OptionButton = memo(({ option, isSelected, onToggle, category }) => (
@@ -11,16 +11,20 @@ const OptionButton = memo(({ option, isSelected, onToggle, category }) => (
     }}
     aria-pressed={isSelected}
     className={cn(
-      "relative group w-full text-right px-3 py-2.5 rounded-lg transition-all duration-200 font-medium cursor-pointer",
+      "relative group w-full text-right px-3 py-2.5 rounded-lg font-medium cursor-pointer",
+      DESIGN_TOKENS.effects.transition,
+      "duration-200",
       isSelected
         ? "bg-white/30 text-white shadow-lg"
-        : "text-gray-100 hover:text-white hover:bg-white/20"
+        : `text-gray-100 hover:text-white ${DESIGN_TOKENS.glass.hover}`
     )}
   >
     <div className="relative flex items-center justify-between">
       <div
         className={cn(
-          "w-2 h-2 rounded-full transition-all duration-200",
+          "w-2 h-2 rounded-full",
+          DESIGN_TOKENS.effects.transition,
+          "duration-200",
           isSelected
             ? "bg-white opacity-100"
             : "bg-white opacity-0 group-hover:opacity-100"
@@ -93,7 +97,9 @@ export const DropdownMenu = memo(
     return (
       <div className="absolute top-full mt-2 right-0 w-80 z-20" role="menu">
         <div className="absolute -inset-1 bg-white/20 shadow-lg backdrop-blur-md rounded-xl blur-md opacity-50" />
-        <div className="relative bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl overflow-hidden">
+        <div
+          className={`relative ${DESIGN_TOKENS.glass.medium} rounded-xl shadow-2xl overflow-hidden`}
+        >
           <DropdownContent
             category={category}
             options={options}

@@ -1,16 +1,7 @@
 // components/download/SecureDownloadClient.js (Client Component)
 "use client";
 import React, { useState } from "react";
-import {
-  CheckCircle,
-  Film,
-  Server,
-  Download,
-  Loader2,
-  Lock,
-  Shield,
-} from "lucide-react";
-import { DESIGN_TOKENS } from "@/lib/data";
+import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import {
   getServicesForQuality,
   getDownloadLinks,
@@ -44,7 +35,7 @@ const QualityButton = ({ quality, isSelected, onClick, disabled }) => {
     >
       <div className="flex items-center justify-between relative">
         <div className="flex items-center gap-3">
-          <Film
+          <ICON_MAP.Film
             className={`w-5 h-5 ${
               isSelected ? "text-cyan-400" : "text-white/80"
             }`}
@@ -54,7 +45,7 @@ const QualityButton = ({ quality, isSelected, onClick, disabled }) => {
           </div>
         </div>
         {isSelected && (
-          <CheckCircle className="w-6 h-6 text-cyan-400 animate-pulse" />
+          <ICON_MAP.CheckCircle className="w-6 h-6 text-cyan-400 animate-pulse" />
         )}
       </div>
     </ButtonBase>
@@ -86,12 +77,12 @@ const ServerButton = ({ server, isSelected, onClick, disabled }) => {
             DESIGN_TOKENS.gradients.cyan
           } rounded-lg transition-transform ${isSelected ? "scale-110" : ""}`}
         >
-          <Server className="w-5 h-5 text-white" />
+          <ICON_MAP.Server className="w-5 h-5 text-white" />
         </div>
         <p className="text-white font-bold text-sm">{server}</p>
       </div>
       {isSelected && (
-        <CheckCircle className="absolute top-2 right-2 w-5 h-5 text-cyan-400 animate-pulse" />
+        <ICON_MAP.CheckCircle className="absolute top-2 right-2 w-5 h-5 text-cyan-400 animate-pulse" />
       )}
     </ButtonBase>
   );
@@ -235,7 +226,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
   return (
     <div className="relative">
       {/* STEP 1: Quality Selection */}
-      <Section title="Select Quality" icon={Film} step={1}>
+      <Section title="Select Quality" icon={ICON_MAP.Film} step={1}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {qualities.map((quality, idx) => (
             <QualityButton
@@ -251,10 +242,10 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
 
       {/* STEP 2: Service Selection */}
       {selectedQuality !== null && (
-        <Section title="Select Server" icon={Server} step={2}>
+        <Section title="Select Server" icon={ICON_MAP.Server} step={2}>
           {loadingServices ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+              <ICON_MAP.Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
               <span className="ml-3 text-white/80">Loading servers...</span>
             </div>
           ) : availableServices.length > 0 ? (
@@ -279,7 +270,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
 
       {/* STEP 3: Download Button */}
       {showDownloadButton && !downloadLinks && (
-        <Section title="Get Download Links" icon={Shield} step={3}>
+        <Section title="Get Download Links" icon={ICON_MAP.Shield} step={3}>
           <div className="animate-fadeIn">
             <ButtonBase
               onClick={handleDownloadClick}
@@ -294,7 +285,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
             >
               {loadingLinks ? (
                 <>
-                  <Lock className="w-6 h-6 animate-pulse" />
+                  <ICON_MAP.Lock className="w-6 h-6 animate-pulse" />
                   {countdown !== null ? (
                     <span>Verifying... {countdown}s</span>
                   ) : (
@@ -303,7 +294,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
                 </>
               ) : (
                 <>
-                  <Download className="w-6 h-6" />
+                  <ICON_MAP.Download className="w-6 h-6" />
                   <span>Get Download Links</span>
                 </>
               )}
@@ -314,13 +305,13 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
 
       {/* STEP 4: Download Links */}
       {downloadLinks && (
-        <Section title="Download Links Ready" icon={Download} step={4}>
+        <Section title="Download Links Ready" icon={ICON_MAP.Download} step={4}>
           <div className="space-y-3 animate-fadeIn">
             <div
               className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-6 ${DESIGN_TOKENS.glass.hover} ${DESIGN_TOKENS.effects.transition}`}
             >
               <div className="flex items-center gap-3 mb-4">
-                <CheckCircle className="w-6 h-6 text-green-400" />
+                <ICON_MAP.CheckCircle className="w-6 h-6 text-green-400" />
                 <div>
                   <p className="font-semibold text-white">
                     {downloadLinks.serviceName}
@@ -339,7 +330,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
                     rel="noopener noreferrer"
                     className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r ${DESIGN_TOKENS.gradients.purple} hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-medium transition-colors shadow-lg`}
                   >
-                    <Download className="w-5 h-5" />
+                    <ICON_MAP.Download className="w-5 h-5" />
                     Download Now
                   </a>
                 )}

@@ -6,13 +6,12 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { Menu } from "lucide-react";
 import { FilterTag } from "./FilterTag";
 import { FilterButton } from "./FilterButton";
 import { DropdownMenu } from "./DropdownMenu";
 import { SortButton } from "./SortButton";
 import { MobileMenu } from "./MobileMenu";
-import { DESIGN_TOKENS, filterOptions } from "@/lib/data";
+import { DESIGN_TOKENS, filterOptions, ICON_MAP } from "@/lib/data";
 import { useClickOutside } from "@/lib/helpers";
 
 const INITIAL_FILTERS = {
@@ -38,7 +37,6 @@ export default function Filter({
     country: currentFilters?.country || [],
   }));
 
-  //  Initialize with currentFilters.sort directly
   const [selectedSort, setSelectedSort] = useState(
     currentFilters?.sort || null
   );
@@ -52,14 +50,12 @@ export default function Filter({
     useCallback(() => setOpenDropdown(null), [])
   );
 
-  //  Sync selectedSort with currentFilters.sort when it changes from parent
   useEffect(() => {
     if (currentFilters?.sort !== undefined) {
       setSelectedSort(currentFilters.sort);
     }
   }, [currentFilters?.sort]);
 
-  //  Sync selectedFilters with currentFilters when they change from parent
   useEffect(() => {
     setSelectedFilters({
       genre: currentFilters?.genre || [],
@@ -86,14 +82,12 @@ export default function Filter({
     };
   }, [mobileMenuOpen]);
 
-  //  Only notify parent when user actually changes something (not on URL changes)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
 
-    // Check if this change came from user interaction, not from parent update
     const filtersChanged =
       JSON.stringify(selectedFilters) !==
       JSON.stringify({
@@ -105,7 +99,6 @@ export default function Filter({
 
     const sortChanged = selectedSort !== currentFilters?.sort;
 
-    // Only call onFilterChange if user actually changed something
     if (filtersChanged || sortChanged) {
       onFilterChange?.({ ...selectedFilters, sort: selectedSort });
     }
@@ -134,9 +127,6 @@ export default function Filter({
 
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
-    //  Keep sort when clearing other filters
-    // If you want to clear sort too, change to: setSelectedSort(null);
-    // For now, keeping sort as it's likely intentional
   }, []);
 
   const closeMobileMenu = useCallback(() => {
@@ -160,7 +150,6 @@ export default function Filter({
   );
 
   const hasActiveFilters = activeFilterCount > 0 || selectedSort;
-  const totalActiveCount = activeFilterCount + (selectedSort ? 1 : 0);
 
   return (
     <div className="mb-4 relative">
@@ -180,12 +169,14 @@ export default function Filter({
           {!isEpisode && (
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="flex items-center gap-2 hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300 "
+              className={`flex items-center gap-2 ${DESIGN_TOKENS.glass.hover} px-3 py-2 rounded-lg ${DESIGN_TOKENS.effects.transition}`}
             >
-              <Menu size={18} className="text-gray-200" />
-              <span className="text-white font-semibold text-sm ">الفلاتر</span>
+              <ICON_MAP.Menu size={18} className="text-gray-200" />
+              <span className="text-white font-semibold text-sm">الفلاتر</span>
               {activeFilterCount > 0 && (
-                <span className="px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-black rounded-full">
+                <span
+                  className={`px-2 py-0.5 bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} text-white text-xs font-black rounded-full`}
+                >
                   {activeFilterCount}
                 </span>
               )}
@@ -212,7 +203,7 @@ export default function Filter({
       {/* Desktop Filter Bar */}
       {!isAnimeEpisode && (
         <div
-          className={`hidden lg:flex items-center justify-between gap-1 xl:gap-2 flex-wrap ${DESIGN_TOKENS.glass.light}  rounded-lg shadow-2xl px-3 sm:px-4 py-2 relative z-[20]`}
+          className={`hidden lg:flex items-center justify-between gap-1 xl:gap-2 flex-wrap ${DESIGN_TOKENS.glass.light} rounded-lg shadow-2xl px-3 sm:px-4 py-2 relative z-[20]`}
         >
           {!isEpisode ? (
             <div className="flex items-center gap-1 xl:gap-2 flex-wrap">
@@ -278,10 +269,12 @@ export default function Filter({
             <span className="text-white font-bold text-sm sm:text-base">
               الفلاتر المحددة:
             </span>
-            <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/50 via-purple-500/50 to-transparent" />
+            <div
+              className={`flex-1 h-px bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan}/50 via-purple-500/50 to-transparent`}
+            />
             <button
               onClick={clearAllFilters}
-              className="px-2 sm:px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-white rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer"
+              className={`px-2 sm:px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-white rounded-lg text-xs sm:text-sm font-semibold ${DESIGN_TOKENS.effects.transition} duration-200 cursor-pointer`}
             >
               مسح الكل
             </button>

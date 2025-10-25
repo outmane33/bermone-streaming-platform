@@ -23,7 +23,69 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageCircle,
+  CheckCircle,
+  Film,
+  Server,
+  Download,
+  Loader2,
+  Lock,
+  Shield,
+  ChevronDown,
+  X,
+  Search,
+  MonitorPause,
+  Play,
+  Star,
+  Calendar,
+  Menu,
+  CalendarFold,
+  Folders,
+  ArrowDownToLine,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
+
+// ============================================
+// ICONS MAPPING
+// ============================================
+export const ICON_MAP = {
+  Eye,
+  Heart,
+  FolderDown,
+  Clock,
+  TvMinimal,
+  CalendarSync,
+  Popcorn,
+  Wallpaper,
+  AlignStartVertical,
+  TvMinimalPlay,
+  CalendarClock,
+  Languages,
+  Earth,
+  CheckCircle,
+  Film,
+  Server,
+  Download,
+  Loader2,
+  Lock,
+  Shield,
+  ChevronDown,
+  X,
+  Search,
+  MonitorPause,
+  Play,
+  Star,
+  Calendar,
+  Menu,
+  CalendarFold,
+  Clapperboard,
+  Folders,
+  ArrowDownToLine,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+};
 
 // ============================================
 // DESIGN SYSTEM
@@ -125,25 +187,6 @@ export const CONFIG = {
     percentage: 0.8,
     threshold: 10,
   },
-};
-
-// ============================================
-// ICONS MAPPING
-// ============================================
-export const ICON_MAP = {
-  Eye,
-  Heart,
-  FolderDown,
-  Clock,
-  TvMinimal,
-  CalendarSync,
-  Popcorn,
-  Wallpaper,
-  AlignStartVertical,
-  TvMinimalPlay,
-  CalendarClock,
-  Languages,
-  Earth,
 };
 
 export const getIcon = (iconName) => ICON_MAP[iconName];
@@ -405,6 +448,9 @@ export const getIconClasses = (isActive) =>
     isActive ? "text-white" : "text-gray-400 group-hover:text-white"
   }`;
 
+// ============================================
+// QUERY PARAMS
+// ============================================
 export const VALID_QUERY_PARAMS = [
   "sort",
   "page",

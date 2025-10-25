@@ -1,55 +1,46 @@
-import {
-  AlignStartVertical,
-  CalendarFold,
-  Clapperboard,
-  Clock,
-  Earth,
-  Folders,
-  Languages,
-} from "lucide-react";
 import DetailCard from "./DetailCardSmall";
-import { GRADIENTS } from "@/lib/data";
+import { GRADIENTS, ICON_MAP } from "@/lib/data";
 
 export default function HeroDetailsGrid({ media }) {
   const details = [
     {
-      icon: Folders,
+      icon: ICON_MAP.Folders,
       label: "التصنيف",
       value: media.category,
       gradient: GRADIENTS.purple,
     },
     {
-      icon: Clapperboard,
+      icon: ICON_MAP.Clapperboard,
       label: "الجودة",
       value: media.quality,
       gradient: GRADIENTS.green,
     },
     {
-      icon: CalendarFold,
+      icon: ICON_MAP.CalendarFold,
       label: "السنة",
       value: media.year,
       gradient: GRADIENTS.orange,
     },
     {
-      icon: AlignStartVertical,
+      icon: ICON_MAP.AlignStartVertical,
       label: "النوع",
       value: media.genre?.length > 0 ? media.genre.join(" • ") : null,
       gradient: GRADIENTS.rose,
     },
     {
-      icon: Earth,
+      icon: ICON_MAP.Earth,
       label: "البلد",
       value: media.country,
       gradient: GRADIENTS.violet,
     },
     {
-      icon: Clock,
+      icon: ICON_MAP.Clock,
       label: "المدة",
       value: media.duration,
       gradient: GRADIENTS.cyan,
     },
     {
-      icon: Languages,
+      icon: ICON_MAP.Languages,
       label: "اللغة",
       value: media.language,
       gradient: GRADIENTS.cyan,

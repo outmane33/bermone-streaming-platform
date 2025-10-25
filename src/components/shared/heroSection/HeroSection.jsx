@@ -1,9 +1,8 @@
-import { Star, Clock, Play, ArrowDownToLine } from "lucide-react";
 import { HeroBadges } from "./HeroBadges";
 import HeroDetailsGrid from "./HeroDetailsGrid";
 import SocialShare from "./SocialShare";
 import Button from "./Button";
-import { GLASS_STYLES } from "@/lib/data";
+import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 
 export default function HeroSection({ media, type = "movie" }) {
   const category = media?.category?.isForeignmovies
@@ -19,6 +18,7 @@ export default function HeroSection({ media, type = "movie" }) {
     : media?.category?.isAnimeseries
     ? "مسلسلات انمي"
     : null;
+
   // Map database fields to component structure
   const mappedMedia = {
     poster: media?.image,
@@ -32,13 +32,13 @@ export default function HeroSection({ media, type = "movie" }) {
     genre: media?.genre || null,
     country: media?.country,
     language: media?.language,
-    isLastEpisode: media?.isLastEpisode || false, // Add last episode flag
+    isLastEpisode: media?.isLastEpisode || false,
   };
 
   return (
     <div className="relative rounded-3xl">
       <div
-        className={`absolute inset-0 ${GLASS_STYLES.light} shadow-lg rounded-3xl`}
+        className={`absolute inset-0 ${DESIGN_TOKENS.glass.light} shadow-lg rounded-3xl`}
       />
 
       <div className="relative p-6 sm:p-10">
@@ -46,11 +46,13 @@ export default function HeroSection({ media, type = "movie" }) {
           {/* Poster */}
           <div className="flex-shrink-0 mx-auto lg:mx-0">
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-xl" />
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${DESIGN_TOKENS.gradients.cyan}/20 to-purple-500/20 rounded-xl`}
+              />
               <img
                 src={mappedMedia.poster}
                 alt={mappedMedia.title}
-                className="relative w-72 sm:w-80 lg:w-96 h-[400px] sm:h-[444px] lg:h-[533px] object-cover rounded-xl shadow-2xl border-4 border-white/10 transition-all duration-700"
+                className={`relative w-72 sm:w-80 lg:w-96 h-[400px] sm:h-[444px] lg:h-[533px] object-cover rounded-xl shadow-2xl border-4 border-white/10 ${DESIGN_TOKENS.effects.transition} duration-700`}
               />
             </div>
           </div>
@@ -73,7 +75,10 @@ export default function HeroSection({ media, type = "movie" }) {
 
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-2 bg-yellow-500/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-yellow-500/30">
-                  <Star size={24} className="text-yellow-400 fill-yellow-400" />
+                  <ICON_MAP.Star
+                    size={24}
+                    className="text-yellow-400 fill-yellow-400"
+                  />
                   <span className="text-2xl font-bold">
                     {mappedMedia.rating}
                   </span>
@@ -81,7 +86,7 @@ export default function HeroSection({ media, type = "movie" }) {
                 </div>
                 {mappedMedia?.duration && (
                   <div className="flex items-center gap-2 text-gray-300">
-                    <Clock size={18} />
+                    <ICON_MAP.Clock size={18} />
                     <span className="font-semibold">
                       {mappedMedia.duration}
                     </span>
@@ -95,16 +100,15 @@ export default function HeroSection({ media, type = "movie" }) {
             </p>
 
             <HeroDetailsGrid media={mappedMedia} />
-            {type === "movie" && (
-              <div className="flex flex-wrap gap-4">
-                <Button variant="primary" icon={Play}>
-                  مشاهدة الآن
-                </Button>
-                <Button variant="secondary" icon={ArrowDownToLine}>
-                  تحميل
-                </Button>
-              </div>
-            )}
+
+            <div className="flex flex-wrap gap-4">
+              <Button variant="primary" icon={ICON_MAP.Play}>
+                مشاهدة الآن
+              </Button>
+              <Button variant="secondary" icon={ICON_MAP.ArrowDownToLine}>
+                تحميل
+              </Button>
+            </div>
 
             <SocialShare />
           </div>

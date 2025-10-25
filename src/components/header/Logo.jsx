@@ -1,11 +1,11 @@
 // frontend/src/components/header/Logo.jsx
 import React from "react";
-import { MonitorPause } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { ICON_MAP } from "@/lib/data";
 
 export const Logo = () => (
-  <Link href="/">
+  <Link href="/?sort=latest-added">
     <motion.div
       className="relative group cursor-pointer"
       whileTap={{ scale: 0.95 }}
@@ -24,7 +24,7 @@ export const Logo = () => (
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         />
         <motion.div className="relative z-10">
-          <MonitorPause className="w-5 h-5 text-white" />
+          <ICON_MAP.MonitorPause className="w-5 h-5 text-white" />
         </motion.div>
         <motion.span className="relative z-10 text-xl font-bold text-white">
           Bermone

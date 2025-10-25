@@ -37,9 +37,6 @@ export async function generateMetadata({ params }) {
 
 export default async function DownloadPage({ params }) {
   const { slug } = await params;
-  //wait 10 seconds
-  await new Promise((resolve) => setTimeout(resolve, 10000));
-
   // STEP 1: Only fetch available qualities
   const result = await getAvailableQualities(slug);
 

@@ -1,9 +1,13 @@
 // FilterSectionClient.jsx
 "use client";
-
-import { useTransition, useMemo, useCallback } from "react";
+import {
+  useTransition,
+  useMemo,
+  useCallback,
+  createContext,
+  useContext,
+} from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { createContext, useContext } from "react";
 import Filter from "../filter/Filter";
 import Pagination from "../pagination/Pagination";
 

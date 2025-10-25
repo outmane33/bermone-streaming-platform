@@ -1,5 +1,4 @@
-import { Search, Loader2 } from "lucide-react";
-import { DESIGN_TOKENS } from "@/lib/data";
+import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 
 export const SearchBar = ({
   searchQuery,
@@ -30,9 +29,9 @@ export const SearchBar = ({
       {/* Loading or Search Icon */}
       <div className="absolute left-3 sm:left-4 text-gray-400">
         {isSearching ? (
-          <Loader2 className="animate-spin" size={20} />
+          <ICON_MAP.Loader2 className="animate-spin" size={20} />
         ) : (
-          <Search size={20} />
+          <ICON_MAP.Search size={20} />
         )}
       </div>
     </div>

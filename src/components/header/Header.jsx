@@ -2,9 +2,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { X, Search } from "lucide-react";
 import clsx from "clsx";
-import { DESIGN_TOKENS, CATEGORIES } from "@/lib/data";
+import { DESIGN_TOKENS, CATEGORIES, ICON_MAP } from "@/lib/data";
 import { searchContent } from "@/actions/search";
 import { Logo } from "./Logo";
 import { SearchBar } from "./SearchBar";
@@ -223,7 +222,7 @@ export default function Header() {
                 className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
                 aria-label="إغلاق البحث"
               >
-                <X size={20} />
+                <ICON_MAP.X size={20} />
               </button>
             </div>
           ) : (
@@ -237,7 +236,7 @@ export default function Header() {
                     className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
                     aria-label="فتح البحث"
                   >
-                    <Search size={20} />
+                    <ICON_MAP.Search size={20} />
                   </button>
                 </div>
               </div>
