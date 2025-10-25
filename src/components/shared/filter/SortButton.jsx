@@ -8,7 +8,7 @@ export const SortButton = ({ option, isSelected, onClick, isMobile }) => (
     label={option.label}
     gradient={option.gradient}
     isActive={isSelected}
-    onClick={onClick}
+    onClick={isSelected ? undefined : onClick}
     isMobile={isMobile}
   />
 );

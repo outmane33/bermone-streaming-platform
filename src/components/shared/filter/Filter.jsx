@@ -122,7 +122,7 @@ export default function Filter({
   }, []);
 
   const handleSortClick = useCallback((sortId) => {
-    setSelectedSort((prev) => (prev === sortId ? null : sortId));
+    setSelectedSort((prev) => (prev === sortId ? prev : sortId));
   }, []);
 
   const clearAllFilters = useCallback(() => {

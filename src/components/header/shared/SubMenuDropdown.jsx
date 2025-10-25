@@ -77,55 +77,61 @@ export const SubMenuDropdown = ({
             const isActive = isItemActive(path);
 
             return (
-              <Link
-                key={index}
-                href={path}
-                className={`relative group w-full text-right font-semibold ${
-                  isDesktop ? "px-4 py-3" : "px-3 py-2.5"
-                } rounded-lg ${DESIGN_TOKENS.effects.transition} ${
-                  isDesktop ? "font-medium" : "text-sm font-medium"
-                } block ${
-                  isActive
-                    ? "bg-white/30 text-white shadow-lg font-bold cursor-default"
-                    : `text-gray-100 hover:text-white ${DESIGN_TOKENS.glass.hover} cursor-pointer`
-                } ${isDesktop && !isActive && "hover:shadow-lg"}`}
-                onClick={(e) => {
-                  if (isActive) {
-                    e.preventDefault();
-                    handleSubMenuClick();
-                  } else {
-                    handleSubMenuClick();
-                  }
-                }}
-              >
-                {/* Active indicator gradient background */}
-                {isActive && (
-                  <>
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-20 rounded-lg`}
-                    />
-                    <div
-                      className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} opacity-30 rounded-lg blur-sm`}
-                    />
-                  </>
-                )}
+              <div key={index}>
+                <Link
+                  href={path}
+                  className={`relative group w-full text-right font-semibold ${
+                    isDesktop ? "px-4 py-3" : "px-3 py-2.5"
+                  } rounded-lg ${DESIGN_TOKENS.effects.transition} ${
+                    isDesktop ? "font-medium" : "text-sm font-medium"
+                  } block ${
+                    isActive
+                      ? "bg-white/30 text-white shadow-lg font-bold cursor-default"
+                      : `text-gray-100 hover:text-white ${DESIGN_TOKENS.glass.hover} cursor-pointer`
+                  } ${isDesktop && !isActive && "hover:shadow-lg"}`}
+                  onClick={(e) => {
+                    if (isActive) {
+                      e.preventDefault();
+                      handleSubMenuClick();
+                    } else {
+                      handleSubMenuClick();
+                    }
+                  }}
+                >
+                  {/* Active indicator gradient background */}
+                  {isActive && (
+                    <>
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-20 rounded-lg`}
+                      />
+                      <div
+                        className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} opacity-30 rounded-lg blur-sm`}
+                      />
+                    </>
+                  )}
 
-                {isDesktop && (
-                  <div className="relative flex items-center justify-between">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        DESIGN_TOKENS.effects.transition
-                      } ${
-                        isActive
-                          ? "bg-white opacity-100 scale-110"
-                          : "bg-white opacity-0 group-hover:opacity-100"
-                      }`}
-                    />
-                    <span className="relative">{label}</span>
-                  </div>
+                  {isDesktop && (
+                    <div className="relative flex items-center justify-between">
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          DESIGN_TOKENS.effects.transition
+                        } ${
+                          isActive
+                            ? "bg-white opacity-100 scale-110"
+                            : "bg-white opacity-0 group-hover:opacity-100"
+                        }`}
+                      />
+                      <span className="relative">{label}</span>
+                    </div>
+                  )}
+                  {!isDesktop && <span className="relative">{label}</span>}
+                </Link>
+
+                {/* Separator line - don't show after last item */}
+                {index < items.length - 1 && (
+                  <div className="my-1 mx-2 h-px bg-white/20" />
                 )}
-                {!isDesktop && <span className="relative">{label}</span>}
-              </Link>
+              </div>
             );
           })}
         </div>
