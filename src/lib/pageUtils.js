@@ -1,6 +1,7 @@
 // lib/pageUtils.js
 
 import { notFound } from "next/navigation";
+import { FILTER_CONFIG } from "@/lib/data";
 
 /**
  * Validates query parameters against allowed list
@@ -20,6 +21,29 @@ export function validateQueryParams(searchParams, validParams) {
 export function validateSortId(sortId, validSortIds) {
   if (sortId && !validSortIds.includes(sortId)) {
     notFound();
+  }
+}
+
+/**
+ * Validates filter values against allowed options
+ */
+export function validateFilterValues(params) {
+  const filterKeys = ["genre", "year", "language", "country"];
+
+  for (const key of filterKeys) {
+    if (params?.[key]) {
+      const values = params[key].split(",").filter(Boolean);
+      const allowedOptions = FILTER_CONFIG[key]?.options || [];
+
+      // Check if all values are in the allowed options
+      const hasInvalidValues = values.some(
+        (value) => !allowedOptions.includes(value)
+      );
+
+      if (hasInvalidValues) {
+        notFound();
+      }
+    }
   }
 }
 
@@ -47,6 +71,9 @@ export function buildFilters(params, includeQuality = true) {
 export function parsePageParams(params, validSortIds, validQueryParams) {
   // Validate query parameters
   validateQueryParams(params, validQueryParams);
+
+  // Validate filter values
+  validateFilterValues(params);
 
   // Extract and validate sort
   const sortId = params?.sort || null;

@@ -6,9 +6,16 @@ import {
 } from "@/actions/home";
 import { getFilms } from "@/actions/films";
 import { redirect } from "next/navigation";
-import { SORT_OPTIONS } from "@/lib/data";
+import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
-import { buildFilters } from "@/lib/pageUtils";
+import { buildFilters, parsePageParams } from "@/lib/pageUtils";
+
+const VALID_SORT_IDS = [
+  "latest-added",
+  "latest-episodes",
+  "new-movies",
+  "new-series",
+];
 
 export const metadata = {
   title: "Home - Stream Movies & Series",
@@ -17,13 +24,18 @@ export const metadata = {
 
 export default async function Home({ searchParams }) {
   const params = await searchParams;
-  const sortId = params?.sort || "latest-added";
-  const page = parseInt(params?.page || "1", 10);
 
   // Redirect if no sort parameter
   if (!params?.sort) {
     redirect("/?sort=latest-added");
   }
+
+  // Parse and validate parameters
+  const { sortId, page } = parsePageParams(
+    params,
+    VALID_SORT_IDS,
+    VALID_QUERY_PARAMS
+  );
 
   // Build filters (without quality for home page)
   const filters = buildFilters(params, false);

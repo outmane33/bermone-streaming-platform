@@ -324,6 +324,9 @@ export const SORT_OPTIONS = {
   ],
 };
 
+// ============================================
+// FILTER CONFIG
+// ============================================
 export const FILTER_CONFIG = {
   genre: {
     label: "النوع",
@@ -572,7 +575,6 @@ export const VALID_QUERY_PARAMS = [
   "sort",
   "page",
   "genre",
-  "quality",
   "year",
   "language",
   "country",
