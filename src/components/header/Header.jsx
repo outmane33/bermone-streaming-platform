@@ -255,7 +255,7 @@ export default function Header() {
               {/* Navigation Bar */}
               <nav aria-label="القائمة الرئيسية">
                 {/* Categories Grid - Always visible, responsive */}
-                <div className="grid grid-cols-2 justify-items-center lg:flex lg:items-center lg:justify-between gap-2 lg:gap-1 xl:gap-2 flex-wrap">
+                <div className="grid grid-cols-3 justify-items-center lg:flex lg:items-center lg:justify-between gap-2 lg:gap-1 xl:gap-2 flex-wrap">
                   {CATEGORIES.map((category) => (
                     <CategoryItem
                       key={category.id}

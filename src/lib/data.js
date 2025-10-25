@@ -196,6 +196,14 @@ export const getIcon = (iconName) => ICON_MAP[iconName];
 // ============================================
 export const CATEGORIES = [
   {
+    id: "home",
+    icon: Clapperboard,
+    label: "الرئيسية",
+    href: "/?sort=latest-added",
+    gradient: "from-amber-500 via-orange-500 to-yellow-500",
+  },
+
+  {
     id: "movies",
     icon: Clapperboard,
     label: "الافلام",
