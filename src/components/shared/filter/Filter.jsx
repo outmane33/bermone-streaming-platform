@@ -36,7 +36,7 @@ export default function Filter({
     language: currentFilters?.language || [],
     country: currentFilters?.country || [],
   }));
-
+  const MAX_SELECTIONS_PER_CATEGORY = 3;
   const [selectedSort, setSelectedSort] = useState(
     currentFilters?.sort || null
   );
@@ -112,9 +112,16 @@ export default function Filter({
   const toggleFilter = useCallback((category, value) => {
     setSelectedFilters((prev) => {
       const categoryValues = prev[category];
+      const isSelected = categoryValues.includes(value);
+
+      // If trying to add and already at max limit, don't add
+      if (!isSelected && categoryValues.length >= MAX_SELECTIONS_PER_CATEGORY) {
+        return prev;
+      }
+
       return {
         ...prev,
-        [category]: categoryValues.includes(value)
+        [category]: isSelected
           ? categoryValues.filter((item) => item !== value)
           : [...categoryValues, value],
       };
@@ -162,14 +169,32 @@ export default function Filter({
 
       {/* Mobile Combined Section */}
       <div
-        className={`lg:hidden ${DESIGN_TOKENS.glass.light} rounded-lg shadow-xl mb-3 p-3`}
+        className={`lg:hidden ${DESIGN_TOKENS.glass.light} rounded-lg shadow-xl mb-3 p-3 sm:p-6`}
       >
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col gap-3">
+          {/* Sort Options - Always Visible */}
+          {sortOptions?.length > 0 && (
+            <div
+              className="grid grid-cols-2 md:grid-cols-4 items-center gap-2"
+              dir="rtl"
+            >
+              {sortOptions.map((option) => (
+                <SortButton
+                  key={option.id}
+                  option={option}
+                  isSelected={selectedSort === option.id}
+                  onClick={() => handleSortClick(option.id)}
+                  isMobile
+                />
+              ))}
+            </div>
+          )}
+
           {/* Filters Toggle */}
           {!isEpisode && (
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className={`flex items-center gap-2 ${DESIGN_TOKENS.glass.hover} px-3 py-2 rounded-lg ${DESIGN_TOKENS.effects.transition}`}
+              className={`flex items-center justify-center gap-2 ${DESIGN_TOKENS.glass.hover} py-2 rounded-lg ${DESIGN_TOKENS.effects.transition}`}
             >
               <ICON_MAP.Menu size={18} className="text-gray-200" />
               <span className="text-white font-semibold text-sm">الفلاتر</span>
@@ -181,21 +206,6 @@ export default function Filter({
                 </span>
               )}
             </button>
-          )}
-
-          {/* Sort Options - Always Visible */}
-          {sortOptions?.length > 0 && (
-            <div className="grid grid-cols-2 items-center gap-2" dir="rtl">
-              {sortOptions.map((option) => (
-                <SortButton
-                  key={option.id}
-                  option={option}
-                  isSelected={selectedSort === option.id}
-                  onClick={() => handleSortClick(option.id)}
-                  isMobile
-                />
-              ))}
-            </div>
           )}
         </div>
       </div>
