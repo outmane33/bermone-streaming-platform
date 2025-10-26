@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getFilms } from "@/actions/films";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
+import { SkeletonFilterSection } from "@/components/shared/filterSection/SkeletonFilterSection";
 
 const VALID_SORT_IDS = ["new", "old", "best", "popular"];
 export const metadata = {
@@ -27,11 +29,13 @@ export default async function FilmsPage({ searchParams }) {
 
   return (
     <div className="min-h-screen">
-      <FilterSection
-        initialData={filmsData}
-        sortOptions={SORT_OPTIONS.films}
-        page={"films"}
-      />
+      <Suspense fallback={<SkeletonFilterSection />}>
+        <FilterSection
+          initialData={filmsData}
+          sortOptions={SORT_OPTIONS.films}
+          page={"films"}
+        />
+      </Suspense>
     </div>
   );
 }

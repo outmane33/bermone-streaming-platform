@@ -2,6 +2,8 @@ import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getContent } from "@/actions/category";
 import { notFound } from "next/navigation";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
+import { Suspense } from "react";
+import { SkeletonFilterSection } from "@/components/shared/filterSection/SkeletonFilterSection";
 
 const VALID_SORT_IDS = [
   "foreignMovies",
@@ -72,14 +74,16 @@ export default async function CategoryPage({ params, searchParams }) {
 
   return (
     <div className="min-h-screen">
-      <FilterSection
-        initialData={contentData}
-        contentType={slug}
-        isEpisode={isEpisode}
-        isFilmCollection={isFilmCollection}
-        isAnimeEpisode={isEpisode}
-        slug={slug}
-      />
+      <Suspense fallback={<SkeletonFilterSection />}>
+        <FilterSection
+          initialData={contentData}
+          contentType={slug}
+          isEpisode={isEpisode}
+          isFilmCollection={isFilmCollection}
+          isAnimeEpisode={isEpisode}
+          slug={slug}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getSeries, getEpisodes } from "@/actions/series";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
+import { Suspense } from "react";
+import { SkeletonFilterSection } from "@/components/shared/filterSection/SkeletonFilterSection";
 
 const VALID_SORT_IDS = ["latest", "new", "best", "popular", "all"];
 
@@ -35,12 +37,14 @@ export default async function SeriesPage({ searchParams }) {
 
   return (
     <div className="min-h-screen">
-      <FilterSection
-        initialData={data}
-        sortOptions={SORT_OPTIONS.series}
-        isEpisode={isLatest}
-        page={"series"}
-      />
+      <Suspense fallback={<SkeletonFilterSection />}>
+        <FilterSection
+          initialData={data}
+          sortOptions={SORT_OPTIONS.series}
+          isEpisode={isLatest}
+          page={"series"}
+        />
+      </Suspense>
     </div>
   );
 }

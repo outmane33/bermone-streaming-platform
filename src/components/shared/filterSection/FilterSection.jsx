@@ -1,8 +1,6 @@
 // FilterSection.jsx
-import { Suspense } from "react";
 import { DESIGN_TOKENS } from "@/lib/data";
 import Card from "../card/Card";
-import { SkeletonCard, SkeletonCarousel } from "../skeletons/Skeletons";
 import FilterSectionClient from "./FilterSectionClient";
 import Carousel from "../carousel/Carousel";
 import { getFilms } from "@/actions/films";
@@ -25,10 +23,7 @@ export default async function FilterSection({
 
   return (
     <>
-      <Suspense fallback={<SkeletonCarousel />}>
-        <Carousel carouselMida={carouselData.documents} />
-      </Suspense>
-
+      <Carousel carouselMida={carouselData.documents} />
       <FilterSectionClient
         sortOptions={sortOptions}
         isEpisode={isEpisode}
@@ -40,14 +35,12 @@ export default async function FilterSection({
         {documents?.length > 0 && (
           <div className={DESIGN_TOKENS.grid.container}>
             {documents.map((film) => (
-              <Suspense key={film._id} fallback={<SkeletonCard />}>
-                <Card
-                  key={film._id}
-                  media={film}
-                  isEpisode={isEpisode}
-                  isFilmCollection={isFilmCollection}
-                />
-              </Suspense>
+              <Card
+                key={film._id}
+                media={film}
+                isEpisode={isEpisode}
+                isFilmCollection={isFilmCollection}
+              />
             ))}
           </div>
         )}

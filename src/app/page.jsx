@@ -9,6 +9,8 @@ import { redirect } from "next/navigation";
 import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
+import { Suspense } from "react";
+import { SkeletonFilterSection } from "@/components/shared/filterSection/SkeletonFilterSection";
 
 const VALID_SORT_IDS = [
   "latest-added",
@@ -66,13 +68,15 @@ export default async function Home({ searchParams }) {
 
   return (
     <div className="min-h-screen">
-      <FilterSection
-        initialData={initialData}
-        sortOptions={SORT_OPTIONS.home}
-        isEpisode={isEpisode}
-        carouselMida={newFilms.documents}
-        page="home"
-      />
+      <Suspense fallback={<SkeletonFilterSection />}>
+        <FilterSection
+          initialData={initialData}
+          sortOptions={SORT_OPTIONS.home}
+          isEpisode={isEpisode}
+          carouselMida={newFilms.documents}
+          page="home"
+        />
+      </Suspense>
     </div>
   );
 }

@@ -1,9 +1,8 @@
-// app/[slug]/download/page.js (Server Component)
+import { Suspense } from "react";
 import { Download } from "lucide-react";
 import { DESIGN_TOKENS } from "@/lib/data";
-import { getAvailableQualities } from "@/actions/download";
-import { notFound } from "next/navigation";
-import SecureDownloadClient from "@/components/download/SecureDownloadClient";
+import DownloadContentWrapper from "@/components/download/DownloadContentWrapper";
+import DownloadSkeleton from "@/components/download/DownloadSkeleton";
 
 const BlurBg = ({ position = "top", size = "96" }) => {
   const posClass = position === "top" ? "top-0 left-0" : "bottom-0 right-0";
@@ -21,13 +20,6 @@ const BlurBg = ({ position = "top", size = "96" }) => {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const result = await getAvailableQualities(slug);
-
-  if (!result.success) {
-    return {
-      title: "Download Not Found",
-    };
-  }
 
   return {
     title: `Download - ${decodeURIComponent(slug)}`,
@@ -37,12 +29,6 @@ export async function generateMetadata({ params }) {
 
 export default async function DownloadPage({ params }) {
   const { slug } = await params;
-  // STEP 1: Only fetch available qualities
-  const result = await getAvailableQualities(slug);
-
-  if (!result.success || result.qualities.length === 0) {
-    notFound();
-  }
 
   return (
     <div className="relative overflow-hidden w-full">
@@ -57,7 +43,7 @@ export default async function DownloadPage({ params }) {
             <BlurBg position="top" size="32" />
             <BlurBg position="bottom" size="40" />
 
-            {/* Header */}
+            {/* Header - Shows immediately */}
             <div className="relative mb-6">
               <div className="flex items-center gap-3 mb-3">
                 <div
@@ -80,12 +66,10 @@ export default async function DownloadPage({ params }) {
               />
             </div>
 
-            {/* Client Component - Pass only qualities and slug */}
-            <SecureDownloadClient
-              qualities={result.qualities}
-              slug={slug}
-              contentType={result.type}
-            />
+            {/* Content - Streams in */}
+            <Suspense fallback={<DownloadSkeleton />}>
+              <DownloadContentWrapper slug={slug} />
+            </Suspense>
           </div>
         </div>
       </div>
