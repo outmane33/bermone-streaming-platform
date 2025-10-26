@@ -23,7 +23,6 @@ export const SkeletonCard = () => (
 
 export const SkeletonCarousel = () => (
   <div className="mb-8">
-    <div className={`h-6 ${SKELETON.bg} rounded w-32 mb-4 ${SKELETON.base}`} />
     <div className="flex gap-4 overflow-hidden">
       {[...Array(5)].map((_, i) => (
         <div

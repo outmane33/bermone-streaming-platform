@@ -1,9 +1,10 @@
-// search.js - REFACTORED
+// search.js
 "use server";
 
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
-import { buildMatchQuery, buildSearchRegex, SEARCH_LIMIT } from "./db-utils";
+import sanitize from "mongo-sanitize";
+import { buildSearchRegex, SEARCH_LIMIT } from "./db-utils";
 
 // 🎯 Helper function to serialize search results
 const serializeSearchResult = (item, contentType) => ({
@@ -38,12 +39,15 @@ const SEARCH_PROJECTION = {
  * 🔍 Search for films and series in the database
  */
 export const searchContent = cache(async (query) => {
+  // 🔒 تنظيف المدخلات
+  const cleanQuery = sanitize(query);
   // Return empty if query is too short
-  if (!query || query.trim().length < 2) {
+  if (!cleanQuery || cleanQuery.trim().length < 2) {
     return {
       success: true,
       films: [],
       series: [],
+      results: [],
       total: 0,
     };
   }
@@ -52,7 +56,7 @@ export const searchContent = cache(async (query) => {
     const client = await clientPromise;
     const db = client.db();
 
-    const searchRegex = buildSearchRegex(query);
+    const searchRegex = buildSearchRegex(cleanQuery);
 
     // Build search query
     const searchQuery = {
@@ -112,139 +116,6 @@ export const searchContent = cache(async (query) => {
       series: [],
       results: [],
       total: 0,
-    };
-  }
-});
-
-/**
- * 🔍 Advanced search with filters
- */
-export const advancedSearch = cache(
-  async (query, filters = {}, limit = SEARCH_LIMIT) => {
-    if (!query || query.trim().length < 2) {
-      return {
-        success: true,
-        results: [],
-        total: 0,
-      };
-    }
-
-    try {
-      const client = await clientPromise;
-      const db = client.db();
-
-      const searchRegex = buildSearchRegex(query);
-
-      // Build base search query
-      const baseSearchQuery = {
-        $or: [
-          { title: searchRegex },
-          { originalTitle: searchRegex },
-          { description: searchRegex },
-        ],
-      };
-
-      // Combine search with filters
-      const searchQuery = buildMatchQuery(filters, baseSearchQuery);
-
-      // Search both collections
-      const [films, series] = await Promise.all([
-        db
-          .collection("films")
-          .find(searchQuery)
-          .limit(limit)
-          .sort({ rating: -1, views: -1 })
-          .project(SEARCH_PROJECTION)
-          .toArray(),
-
-        db
-          .collection("series")
-          .find(searchQuery)
-          .limit(limit)
-          .sort({ rating: -1, views: -1 })
-          .project(SEARCH_PROJECTION)
-          .toArray(),
-      ]);
-
-      // Serialize and combine results
-      const allResults = [
-        ...films.map((film) => serializeSearchResult(film, "film")),
-        ...series.map((serie) => serializeSearchResult(serie, "series")),
-      ].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-
-      return {
-        success: true,
-        results: allResults,
-        total: allResults.length,
-        query: query.trim(),
-        filters,
-      };
-    } catch (error) {
-      console.error("❌ Error in advanced search:", error);
-
-      return {
-        success: false,
-        error: error.message,
-        results: [],
-        total: 0,
-      };
-    }
-  }
-);
-
-/**
- * 🔍 Get search suggestions (autocomplete)
- */
-export const getSearchSuggestions = cache(async (query, limit = 10) => {
-  if (!query || query.trim().length < 2) {
-    return {
-      success: true,
-      suggestions: [],
-    };
-  }
-
-  try {
-    const client = await clientPromise;
-    const db = client.db();
-
-    const searchRegex = buildSearchRegex(query, true); // startsWith = true
-
-    // Get suggestions from both collections
-    const [filmTitles, seriesTitles] = await Promise.all([
-      db
-        .collection("films")
-        .find({ title: searchRegex })
-        .limit(limit)
-        .project({ title: 1 })
-        .toArray(),
-
-      db
-        .collection("series")
-        .find({ title: searchRegex })
-        .limit(limit)
-        .project({ title: 1 })
-        .toArray(),
-    ]);
-
-    // Combine and deduplicate suggestions
-    const suggestions = [
-      ...new Set([
-        ...filmTitles.map((f) => f.title),
-        ...seriesTitles.map((s) => s.title),
-      ]),
-    ].slice(0, limit);
-
-    return {
-      success: true,
-      suggestions,
-    };
-  } catch (error) {
-    console.error("❌ Error getting search suggestions:", error);
-
-    return {
-      success: false,
-      error: error.message,
-      suggestions: [],
     };
   }
 });

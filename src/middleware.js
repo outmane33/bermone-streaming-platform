@@ -1,9 +1,115 @@
-// middleware.js - ضعه في الجذر (نفس مستوى app/)
-
+// middleware.js - في الجذر (نفس مستوى app/)
 import { NextResponse } from "next/server";
+
+// ==================== 🛡️ حماية البوتات ====================
+
+// قائمة User Agents المحظورة
+const BLOCKED_BOTS = [
+  "python-requests",
+  "python",
+  "curl",
+  "wget",
+  "scrapy",
+  "selenium",
+  "puppeteer",
+  "playwright",
+  "axios/",
+  "node-fetch",
+  "httpx",
+  "go-http-client",
+  "java/",
+  "bot/",
+  "crawler",
+  "spider",
+  "scraper",
+];
+
+/**
+ * التحقق من User Agent المشبوه
+ */
+function isBotUserAgent(userAgent) {
+  if (!userAgent || userAgent.length < 10) return true;
+
+  const ua = userAgent.toLowerCase();
+  return BLOCKED_BOTS.some((bot) => ua.includes(bot));
+}
+
+/**
+ * التحقق من Headers المفقودة (المتصفحات الحقيقية ترسلها)
+ */
+function hasMissingBrowserHeaders(request) {
+  const accept = request.headers.get("accept");
+  const acceptLanguage = request.headers.get("accept-language");
+
+  // المتصفحات الحقيقية دائماً ترسل Accept header
+  if (!accept) return true;
+
+  // معظم المتصفحات ترسل Accept-Language
+  if (!acceptLanguage) return true;
+
+  return false;
+}
+
+// ==================== الـ Middleware الرئيسي ====================
 
 export function middleware(request) {
   const { pathname, search } = request.nextUrl;
+
+  // ==================== 🛡️ 1. فحص البوتات أولاً ====================
+
+  // تخطي الملفات الثابتة من الفحص
+  const isStaticFile =
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.match(
+      /\.(ico|png|jpg|jpeg|gif|svg|webp|css|js|woff|woff2|ttf|eot)$/i
+    );
+
+  if (!isStaticFile) {
+    const userAgent = request.headers.get("user-agent") || "";
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+
+    // فحص 1: User Agent مشبوه
+    if (isBotUserAgent(userAgent)) {
+      console.log(`🚫 [BOT BLOCKED] IP: ${ip}`);
+      console.log(`   User-Agent: ${userAgent.substring(0, 60)}...`);
+
+      return new NextResponse("Access Denied - Bot Detected", {
+        status: 403,
+        headers: {
+          "Content-Type": "text/plain",
+          "X-Robots-Tag": "noindex",
+        },
+      });
+    }
+
+    // فحص 2: Headers مفقودة (سلوك مشبوه)
+    if (hasMissingBrowserHeaders(request)) {
+      console.log(`⚠️ [SUSPICIOUS] Missing headers from IP: ${ip}`);
+      console.log(`   User-Agent: ${userAgent.substring(0, 60)}...`);
+
+      // يمكنك حظره أو تسجيله فقط
+      // return new NextResponse('Forbidden', { status: 403 });
+    }
+
+    // فحص 3: حماية API Routes (إذا كنت تستخدمها)
+    if (pathname.startsWith("/api/")) {
+      const referer = request.headers.get("referer");
+      const origin = request.headers.get("origin");
+
+      // طلب API بدون referer أو origin = مشبوه
+      if (!referer && !origin) {
+        console.log(`⚠️ [API WARNING] Direct API access from IP: ${ip}`);
+        // يمكنك حظره إذا أردت:
+        // return new NextResponse('Forbidden', { status: 403 });
+      }
+    }
+  }
+
+  // ==================== 2. الكود الأصلي (Category Return URL) ====================
 
   // فقط category pages و films page و series page
   if (
@@ -63,6 +169,16 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
+// ==================== الإعدادات ====================
+
 export const config = {
-  matcher: ["/category/:path*", "/films", "/series", "/"],
+  // نفس matcher الأصلي + حماية على كل المسارات
+  matcher: [
+    "/category/:path*",
+    "/films",
+    "/series",
+    "/",
+    // إضافة: حماية API إذا كنت تستخدمها
+    "/api/:path*",
+  ],
 };
