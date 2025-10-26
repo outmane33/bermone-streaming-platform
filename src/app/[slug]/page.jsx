@@ -166,7 +166,7 @@ const serializers = {
     if (!forHero) {
       return {
         _id: data._id,
-        title: `Season ${data.seasonNumber}`,
+        title: `الموسم ${data.seasonNumber}`,
         image: data.image,
         rating: data.rating,
         releaseYear: data.releaseYear,
@@ -180,7 +180,7 @@ const serializers = {
     const { season, series } = data;
     return {
       _id: season._id,
-      title: `${series.title} - Season ${season.seasonNumber}`,
+      title: `${series.title} - الموسم ${season.seasonNumber}`,
       originalTitle: series.originalTitle,
       description: series.description,
       genre: series.genre || [],
@@ -202,7 +202,7 @@ const serializers = {
       return {
         _id: data.episode._id,
         slug: data.episode.slug,
-        title: `Episode ${data.episode.episodeNumber}`,
+        title: `الحلقة ${data.episode.episodeNumber}`,
         image: data.seasonImage,
         duration: data.episode.duration,
         episodeNumber: data.episode.episodeNumber,
@@ -275,7 +275,7 @@ const relatedHandlers = {
         success && films
           ? films.map((f) => serializers[CONTENT_TYPES.FILM](f))
           : [],
-      title: "Related Films",
+      title: "ربّما يعجبك ايضاََ",
     };
   },
 
@@ -286,7 +286,7 @@ const relatedHandlers = {
         success && seasons
           ? seasons.map((s) => serializers[CONTENT_TYPES.SEASON](s))
           : [],
-      title: "Seasons",
+      title: "المواسم",
     };
   },
 
@@ -302,7 +302,7 @@ const relatedHandlers = {
               })
             )
           : [],
-      title: "Episodes",
+      title: "الحلقات",
     };
   },
 

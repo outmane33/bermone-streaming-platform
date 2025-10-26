@@ -335,6 +335,15 @@ export const getEpisodes = cache(async (page = 1) => {
       },
       { $unwind: { path: "$season", preserveNullAndEmptyArrays: true } },
       {
+        $lookup: {
+          from: "series",
+          localField: "seriesId",
+          foreignField: "_id",
+          as: "series",
+        },
+      },
+      { $unwind: { path: "$series", preserveNullAndEmptyArrays: true } },
+      {
         $facet: {
           metadata: [{ $count: "total" }],
           data: [
@@ -356,6 +365,10 @@ export const getEpisodes = cache(async (page = 1) => {
                   seasonNumber: "$season.seasonNumber",
                   image: "$season.image",
                   title: "$season.title",
+                },
+                series: {
+                  _id: { $toString: "$series._id" },
+                  title: "$series.title",
                 },
               },
             },

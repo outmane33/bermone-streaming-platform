@@ -10,6 +10,7 @@ import {
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Filter from "../filter/Filter";
 import Pagination from "../pagination/Pagination";
+import LoadingOverlay from "../skeletons/LoadingOverlay";
 
 const TransitionContext = createContext(false);
 export const useTransitionState = () => useContext(TransitionContext);
@@ -87,6 +88,7 @@ export default function FilterSectionClient({
 
   return (
     <TransitionContext.Provider value={isPending}>
+      <LoadingOverlay isVisible={isPending} message="جاري تحميل النتائج..." />
       <div className="space-y-8">
         <Filter
           sortOptions={sortOptions}

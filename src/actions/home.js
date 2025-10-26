@@ -233,6 +233,7 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
 
     const pipeline = [
       { $match: episodeMatch },
+      // Lookup season data
       {
         $lookup: {
           from: "seasons",
@@ -242,6 +243,15 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
         },
       },
       { $unwind: { path: "$season", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "series",
+          localField: "seriesId",
+          foreignField: "_id",
+          as: "series",
+        },
+      },
+      { $unwind: { path: "$series", preserveNullAndEmptyArrays: true } },
       {
         $facet: {
           metadata: [{ $count: "total" }],
@@ -264,6 +274,10 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
                   seasonNumber: "$season.seasonNumber",
                   image: "$season.image",
                   title: "$season.title",
+                },
+                series: {
+                  _id: { $toString: "$series._id" },
+                  title: "$series.title",
                 },
               },
             },

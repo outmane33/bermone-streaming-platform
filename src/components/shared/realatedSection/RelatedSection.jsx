@@ -6,7 +6,10 @@ export default function RelatedSection({ relatedMedia, title }) {
     <div className="relative">
       {/* Section Header */}
       <div className="mb-8">
-        <h2 className="text-3xl sm:text-4xl font-black text-white bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-right">
+        <h2
+          className="text-3xl sm:text-4xl font-black text-white bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-right"
+          dir="rtl"
+        >
           {title}
         </h2>
         <div className="h-1 bg-gradient-to-l from-cyan-500 via-purple-500 to-transparent rounded-full mt-3"></div>

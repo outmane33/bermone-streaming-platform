@@ -165,7 +165,7 @@ export default function Card({
 }) {
   if (!media) return null;
 
-  const content = media?.slug.includes("مسلسل") ? "مسلسل" : "فيلم";
+  const content = media?.slug?.includes("مسلسل") ? "مسلسل" : "فيلم";
 
   // Film collection
   if (isFilmCollection) {
@@ -226,8 +226,10 @@ export default function Card({
             <MetaInfo duration={media?.duration} />
             <h3
               className={`text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text ${DESIGN_TOKENS.effects.transition} text-right`}
+              dir="rtl"
             >
-              الحلقة {media?.episodeNumber}
+              مسلسل {media?.series?.title} الموسم {media?.season?.seasonNumber}{" "}
+              الحلقة {media?.episodeNumber} مترجمة
             </h3>
           </div>
         </CardContent>
