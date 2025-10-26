@@ -1,9 +1,8 @@
-// middleware.js - في الجذر (نفس مستوى app/)
+// middleware.js - حماية متقدمة ضد Puppeteer
 import { NextResponse } from "next/server";
 
-// ==================== 🛡️ حماية البوتات المتقدمة ====================
+// ==================== 🛡️ كشف Puppeteer المتقدم ====================
 
-// قائمة User Agents المحظورة
 const BLOCKED_BOTS = [
   "python-requests",
   "python",
@@ -27,7 +26,6 @@ const BLOCKED_BOTS = [
   "automation",
 ];
 
-// علامات Headless browsers في User Agent
 const HEADLESS_INDICATORS = [
   "headlesschrome",
   "headless",
@@ -37,155 +35,214 @@ const HEADLESS_INDICATORS = [
   "chrome-lighthouse",
 ];
 
-/**
- * التحقق من User Agent المشبوه
- */
 function isBotUserAgent(userAgent) {
   if (!userAgent || userAgent.length < 10) return true;
-
   const ua = userAgent.toLowerCase();
-
-  // فحص البوتات المعروفة
-  if (BLOCKED_BOTS.some((bot) => ua.includes(bot))) {
+  if (BLOCKED_BOTS.some((bot) => ua.includes(bot))) return true;
+  if (HEADLESS_INDICATORS.some((indicator) => ua.includes(indicator)))
     return true;
-  }
-
-  // فحص علامات Headless
-  if (HEADLESS_INDICATORS.some((indicator) => ua.includes(indicator))) {
-    return true;
-  }
-
   return false;
 }
 
 /**
- * التحقق من Headers المفقودة
+ * 🎯 الكشف المتقدم عن Puppeteer - الطريقة الصحيحة
  */
-function hasMissingBrowserHeaders(request) {
-  const accept = request.headers.get("accept");
-  const acceptLanguage = request.headers.get("accept-language");
-
-  if (!accept) return true;
-  if (!acceptLanguage) return true;
-
-  return false;
-}
-
-/**
- * 🔍 كشف Puppeteer/Selenium المتقدم
- * فحص headers خاصة بـ automation tools
- */
-function detectAutomationTool(request) {
-  const headers = {
-    // Chrome DevTools Protocol (Puppeteer uses this)
-    cdp: request.headers.get("chrome-devtools-protocol"),
-
-    // Selenium-specific headers
-    selenium: request.headers.get("selenium"),
-    webdriver: request.headers.get("webdriver"),
-
-    // Browser automation headers
-    automation: request.headers.get("automation"),
-
-    // Connection header (automation tools sometimes send different values)
-    connection: request.headers.get("connection"),
-
-    // Accept-Encoding (check for unusual patterns)
-    acceptEncoding: request.headers.get("accept-encoding"),
-
-    // Sec-CH-UA headers (new Chrome feature, automation tools may not send them correctly)
-    secChUa: request.headers.get("sec-ch-ua"),
-    secChUaMobile: request.headers.get("sec-ch-ua-mobile"),
-    secChUaPlatform: request.headers.get("sec-ch-ua-platform"),
-
-    // User-Agent
-    userAgent: request.headers.get("user-agent") || "",
-  };
+function detectPuppeteerAdvanced(request) {
+  const headers = {};
+  request.headers.forEach((value, key) => {
+    headers[key.toLowerCase()] = value;
+  });
 
   const suspicionScore = {
     score: 0,
     reasons: [],
   };
 
-  // 1. فحص Chrome DevTools Protocol
-  if (headers.cdp) {
+  const userAgent = headers["user-agent"] || "";
+  const ua = userAgent.toLowerCase();
+
+  // ==================== 🔴 فحوصات حاسمة ====================
+
+  // 1. فحص Chrome DevTools Protocol (Puppeteer يستخدمه دائماً)
+  if (headers["chrome-devtools-protocol"] || headers["cdp-session-id"]) {
     suspicionScore.score += 100;
     suspicionScore.reasons.push("CDP header detected");
     return suspicionScore;
   }
 
-  // 2. فحص Selenium/WebDriver headers
-  if (headers.selenium || headers.webdriver) {
+  // 2. فحص WebDriver (حتى في non-headless mode)
+  if (headers["webdriver"] || headers["selenium"]) {
     suspicionScore.score += 100;
-    suspicionScore.reasons.push("Automation header detected");
+    suspicionScore.reasons.push("WebDriver detected");
     return suspicionScore;
   }
 
-  // 3. فحص User Agent patterns
-  const ua = headers.userAgent.toLowerCase();
-
-  // Headless Chrome pattern
-  if (ua.includes("chrome") && ua.includes("headless")) {
-    suspicionScore.score += 100;
-    suspicionScore.reasons.push("Headless Chrome detected");
-    return suspicionScore;
+  // 3. فحص Navigator.webdriver fingerprint
+  // Puppeteer يضيف خصائص معينة حتى مع --disable-blink-features=AutomationControlled
+  if (headers["sec-ch-ua-bitness"] && headers["sec-ch-ua-full-version"]) {
+    // المتصفحات الطبيعية ترسل هذه مع sec-ch-ua-platform
+    if (!headers["sec-ch-ua-platform"]) {
+      suspicionScore.score += 50;
+      suspicionScore.reasons.push("Incomplete Client Hints");
+    }
   }
 
-  // 4. فحص Sec-CH-UA headers (متصفحات حديثة ترسلها)
-  // إذا كان Chrome ولا يرسل Sec-CH-UA = مشبوه
-  if (ua.includes("chrome") && !headers.secChUa) {
-    suspicionScore.score += 40;
-    suspicionScore.reasons.push("Missing Sec-CH-UA headers");
+  // 4. فحص Permissions-Policy (Puppeteer لا يرسلها بشكل صحيح)
+  const secFetchDest = headers["sec-fetch-dest"];
+  const secFetchMode = headers["sec-fetch-mode"];
+  const secFetchSite = headers["sec-fetch-site"];
+
+  // Puppeteer غالباً يفشل في إرسال Sec-Fetch headers بشكل متسق
+  if (ua.includes("chrome/")) {
+    // Chrome version check
+    const chromeMatch = ua.match(/chrome\/(\d+)/);
+    if (chromeMatch) {
+      const version = parseInt(chromeMatch[1]);
+      // Chrome 76+ يرسل Sec-Fetch headers
+      if (version >= 76) {
+        if (!secFetchDest || !secFetchMode || !secFetchSite) {
+          suspicionScore.score += 45;
+          suspicionScore.reasons.push("Missing Sec-Fetch headers (Chrome 76+)");
+        }
+      }
+    }
   }
 
-  // 5. فحص Connection header غير عادية
-  if (headers.connection && headers.connection.toLowerCase() === "upgrade") {
-    suspicionScore.score += 20;
-    suspicionScore.reasons.push("Unusual connection header");
-  }
-
-  // 6. فحص Accept-Encoding غير عادية
-  // المتصفحات الحديثة ترسل: gzip, deflate, br
-  if (headers.acceptEncoding && !headers.acceptEncoding.includes("br")) {
+  // 5. فحص Accept-Language pattern
+  const acceptLang = headers["accept-language"];
+  if (!acceptLang) {
+    suspicionScore.score += 30;
+    suspicionScore.reasons.push("No Accept-Language");
+  } else if (acceptLang === "en-US" || acceptLang === "en") {
+    // Puppeteer default
     suspicionScore.score += 15;
-    suspicionScore.reasons.push("Outdated accept-encoding");
+    suspicionScore.reasons.push("Default Puppeteer language");
   }
 
-  // 7. Chrome version patterns
-  // Puppeteer often uses specific Chrome versions
+  // 6. فحص Accept header pattern
+  const accept = headers["accept"];
+  if (!accept) {
+    suspicionScore.score += 30;
+    suspicionScore.reasons.push("No Accept header");
+  } else if (accept === "*/*") {
+    // Puppeteer sometimes sends this
+    suspicionScore.score += 25;
+    suspicionScore.reasons.push("Generic Accept header");
+  }
+
+  // 7. فحص Connection header
+  // Puppeteer يرسل "keep-alive" بحروف صغيرة دائماً
+  const connection = headers["connection"];
+  if (connection && connection === "keep-alive") {
+    // المتصفحات الحديثة عادة لا ترسل هذا Header
+    suspicionScore.score += 10;
+    suspicionScore.reasons.push("Explicit keep-alive");
+  }
+
+  // 8. فحص Chrome version patterns
   const chromeMatch = ua.match(/chrome\/(\d+)/i);
   if (chromeMatch) {
     const version = parseInt(chromeMatch[1]);
-    // Puppeteer usually uses older Chrome versions
-    if (version < 100 && ua.includes("chrome")) {
-      suspicionScore.score += 10;
+
+    if (version < 90) {
+      suspicionScore.score += 20;
       suspicionScore.reasons.push("Old Chrome version");
     }
   }
 
-  // 8. فحص platform consistency
-  // مثلاً: يدعي أنه Windows لكن Sec-CH-UA-Platform تقول Mac
-  if (headers.secChUaPlatform) {
-    const platform = headers.secChUaPlatform.toLowerCase();
-    if (ua.includes("windows") && !platform.includes("windows")) {
-      suspicionScore.score += 30;
-      suspicionScore.reasons.push("Platform mismatch");
+  // 9. فحص Upgrade-Insecure-Requests
+  // المتصفحات الحقيقية ترسل هذا
+  if (!headers["upgrade-insecure-requests"]) {
+    suspicionScore.score += 15;
+    suspicionScore.reasons.push("No Upgrade-Insecure-Requests");
+  }
+
+  // 10. فحص Sec-CH-UA headers (Chrome Client Hints)
+  const secChUa = headers["sec-ch-ua"];
+  const secChUaMobile = headers["sec-ch-ua-mobile"];
+  const secChUaPlatform = headers["sec-ch-ua-platform"];
+
+  if (ua.includes("chrome/")) {
+    const chromeMatch = ua.match(/chrome\/(\d+)/);
+    if (chromeMatch) {
+      const version = parseInt(chromeMatch[1]);
+      // Chrome 89+ يرسل Client Hints
+      if (version >= 89) {
+        if (!secChUa || !secChUaMobile || !secChUaPlatform) {
+          suspicionScore.score += 40;
+          suspicionScore.reasons.push("Missing Client Hints (Chrome 89+)");
+        }
+      }
     }
   }
+
+  // 11. فحص Accept-Encoding pattern
+  const acceptEncoding = headers["accept-encoding"];
+  if (!acceptEncoding) {
+    suspicionScore.score += 25;
+    suspicionScore.reasons.push("No Accept-Encoding");
+  } else {
+    // المتصفحات الحديثة ترسل: gzip, deflate, br
+    if (!acceptEncoding.includes("br")) {
+      suspicionScore.score += 15;
+      suspicionScore.reasons.push("No Brotli support");
+    }
+  }
+
+  // 12. فحص DNT (Do Not Track)
+  // Puppeteer لا يرسل DNT headers عادة
+  // هذا فحص ضعيف لكنه يساعد
+
+  // 13. فحص Cache-Control patterns
+  const cacheControl = headers["cache-control"];
+  if (cacheControl === "no-cache") {
+    // Puppeteer sometimes sends this
+    suspicionScore.score += 10;
+    suspicionScore.reasons.push("Suspicious Cache-Control");
+  }
+
+  // 14. فحص Referer patterns
+  const referer = headers["referer"];
+  if (!referer && secFetchSite === "same-origin") {
+    // إذا كان من نفس الموقع ولا يوجد referer
+    suspicionScore.score += 15;
+    suspicionScore.reasons.push("Missing referer (same-origin)");
+  }
+
+  // 15. فحص viewport size patterns (لا يمكن فحصه من server-side)
+  // لكن يمكننا فحص إذا كانت القيم غير طبيعية لاحقاً
 
   return suspicionScore;
 }
 
 /**
- * 🎯 فحص سلوك مشبوه من IP
- * (يحتاج Redis/Upstash في الإنتاج)
+ * 🌐 فحص rate limiting بسيط (في الذاكرة)
  */
-async function checkRequestPattern(ip, pathname) {
-  // في الإنتاج: استخدم Redis للتتبع
-  // const requestCount = await redis.incr(`requests:${ip}:${Date.now()}`);
-  // if (requestCount > 50) return { suspicious: true };
+const requestTracker = new Map();
 
-  return { suspicious: false };
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const timeWindow = 60 * 1000; // 1 دقيقة
+  const maxRequests = 50; // 30 طلب في الدقيقة
+
+  if (!requestTracker.has(ip)) {
+    requestTracker.set(ip, []);
+  }
+
+  const requests = requestTracker.get(ip);
+
+  // حذف الطلبات القديمة
+  const recentRequests = requests.filter((time) => now - time < timeWindow);
+  requestTracker.set(ip, recentRequests);
+
+  if (recentRequests.length >= maxRequests) {
+    return { blocked: true, count: recentRequests.length };
+  }
+
+  recentRequests.push(now);
+  requestTracker.set(ip, recentRequests);
+
+  return { blocked: false, count: recentRequests.length };
 }
 
 // ==================== الـ Middleware الرئيسي ====================
@@ -193,9 +250,7 @@ async function checkRequestPattern(ip, pathname) {
 export function middleware(request) {
   const { pathname, search } = request.nextUrl;
 
-  // ==================== 🛡️ 1. فحص البوتات والأتمتة ====================
-
-  // تخطي الملفات الثابتة من الفحص
+  // تخطي الملفات الثابتة
   const isStaticFile =
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
@@ -210,12 +265,26 @@ export function middleware(request) {
       request.headers.get("x-real-ip") ||
       "unknown";
 
-    // فحص 1: User Agent مشبوه
+    // ==================== فحص 1: Rate Limiting ====================
+    const rateLimit = checkRateLimit(ip);
+    if (rateLimit.blocked) {
+      console.log(
+        `🚫 [RATE LIMIT] IP: ${ip} (${rateLimit.count} requests/min)`
+      );
+      return new NextResponse("Too Many Requests", {
+        status: 429,
+        headers: {
+          "Content-Type": "text/plain",
+          "Retry-After": "60",
+        },
+      });
+    }
+
+    // ==================== فحص 2: User Agent ====================
     if (isBotUserAgent(userAgent)) {
       console.log(`🚫 [BOT BLOCKED] IP: ${ip}`);
-      console.log(`   User-Agent: ${userAgent.substring(0, 80)}`);
-
-      return new NextResponse("Access Denied - Bot Detected", {
+      console.log(`   User-Agent: ${userAgent.substring(0, 100)}`);
+      return new NextResponse("Access Denied", {
         status: 403,
         headers: {
           "Content-Type": "text/plain",
@@ -224,14 +293,15 @@ export function middleware(request) {
       });
     }
 
-    // فحص 2: كشف أدوات الأتمتة (Puppeteer/Selenium)
-    const automationCheck = detectAutomationTool(request);
+    // ==================== فحص 3: كشف Puppeteer المتقدم ====================
+    const puppeteerCheck = detectPuppeteerAdvanced(request);
 
-    if (automationCheck.score >= 60) {
-      console.log(`🤖 [AUTOMATION BLOCKED] IP: ${ip}`);
-      console.log(`   Score: ${automationCheck.score}`);
-      console.log(`   Reasons: ${automationCheck.reasons.join(", ")}`);
-      console.log(`   User-Agent: ${userAgent.substring(0, 80)}`);
+    // حظر فوري للدرجات العالية
+    if (puppeteerCheck.score >= 50) {
+      console.log(`🤖 [PUPPETEER BLOCKED] IP: ${ip}`);
+      console.log(`   Score: ${puppeteerCheck.score}`);
+      console.log(`   Reasons: ${puppeteerCheck.reasons.join(", ")}`);
+      console.log(`   User-Agent: ${userAgent.substring(0, 100)}`);
 
       return new NextResponse("Access Denied - Automation Detected", {
         status: 403,
@@ -242,21 +312,14 @@ export function middleware(request) {
       });
     }
 
-    // تحذير للحالات المشبوهة (score بين 30-60)
-    if (automationCheck.score >= 30) {
-      console.log(`⚠️ [SUSPICIOUS] IP: ${ip}, Score: ${automationCheck.score}`);
-      console.log(`   Reasons: ${automationCheck.reasons.join(", ")}`);
+    // تحذير للحالات المشبوهة
+    if (puppeteerCheck.score >= 25) {
+      console.log(`⚠️ [SUSPICIOUS] IP: ${ip}, Score: ${puppeteerCheck.score}`);
+      console.log(`   Reasons: ${puppeteerCheck.reasons.join(", ")}`);
+      // يمكنك تقليل threshold الحظر إلى 25 إذا أردت
     }
 
-    // فحص 3: Headers مفقودة
-    if (hasMissingBrowserHeaders(request)) {
-      console.log(`⚠️ [SUSPICIOUS] Missing headers from IP: ${ip}`);
-
-      // يمكنك حظره:
-      // return new NextResponse('Forbidden', { status: 403 });
-    }
-
-    // فحص 4: حماية API Routes
+    // ==================== فحص 4: حماية API ====================
     if (pathname.startsWith("/api/")) {
       const referer = request.headers.get("referer");
       const origin = request.headers.get("origin");
@@ -269,9 +332,7 @@ export function middleware(request) {
     }
   }
 
-  // ==================== 2. الكود الأصلي (Category Return URL) ====================
-
-  // فقط category pages و films page و series page
+  // ==================== Category Return URL Logic ====================
   if (
     !pathname.startsWith("/category/") &&
     pathname !== "/films" &&
@@ -281,7 +342,6 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
-  // جلب الـ URL المحفوظ من الكوكي
   const returnUrl = request.cookies.get("categoryReturnUrl")?.value;
 
   if (returnUrl) {
@@ -292,7 +352,6 @@ export function middleware(request) {
       if (returnUrlObj.pathname === pathname) {
         const savedParams = returnUrlObj.searchParams;
         const currentParams = new URLSearchParams(search);
-
         const savedPage = savedParams.get("page");
         const savedSort = savedParams.get("sort");
         const currentPage = currentParams.get("page");
@@ -300,9 +359,7 @@ export function middleware(request) {
 
         if (savedPage && !currentPage) {
           const sortMatches = savedSort === currentSort;
-
           if (sortMatches) {
-            console.log("🔄 Middleware redirecting to:", decodedUrl);
             const response = NextResponse.redirect(
               new URL(decodedUrl, request.url)
             );
@@ -324,8 +381,6 @@ export function middleware(request) {
 
   return NextResponse.next();
 }
-
-// ==================== الإعدادات ====================
 
 export const config = {
   matcher: ["/category/:path*", "/films", "/series", "/", "/api/:path*"],

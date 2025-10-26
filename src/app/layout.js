@@ -1,7 +1,7 @@
 import Header from "@/components/header/Header";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AntiBotProtection from "@/components/AntiBotProtection";
+import PuppeteerDetection from "@/components/PuppeteerDetection";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,8 +24,8 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AntiBotProtection />
         <div className="max-w-[1440px] mx-auto min-h-screen">
+          <PuppeteerDetection />
           <Header />
           {children}
         </div>
