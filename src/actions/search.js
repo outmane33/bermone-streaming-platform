@@ -4,7 +4,8 @@
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
 import sanitize from "mongo-sanitize";
-import { buildSearchRegex, SEARCH_LIMIT } from "./db-utils";
+import { buildSearchRegex } from "./db-utils";
+import { SEARCH_LIMIT } from "@/lib/data";
 
 // 🎯 Helper function to serialize search results
 const serializeSearchResult = (item, contentType) => ({
@@ -39,9 +40,32 @@ const SEARCH_PROJECTION = {
  * 🔍 Search for films and series in the database
  */
 export const searchContent = cache(async (query) => {
-  // 🔒 تنظيف المدخلات
-  const cleanQuery = sanitize(query);
-  // Return empty if query is too short
+  // ✅ 1. Type validation
+  if (!query || typeof query !== "string") {
+    return { success: true, films: [], series: [], results: [], total: 0 };
+  }
+
+  const trimmedQuery = query.trim();
+
+  // ✅ 2. Minimum length check
+  if (trimmedQuery.length < 2) {
+    return { success: true, films: [], series: [], results: [], total: 0 };
+  }
+
+  // ✅ 3. Maximum length check (prevent DoS)
+  if (trimmedQuery.length > 100) {
+    return { success: false, error: "Query too long" };
+  }
+
+  // ✅ 4. Forbidden patterns check (prevent injection)
+  const FORBIDDEN_PATTERNS = /(\$|\.\.\/|<script|javascript:|onerror=)/i;
+  if (FORBIDDEN_PATTERNS.test(trimmedQuery)) {
+    return { success: false, error: "Invalid search query" };
+  }
+
+  // ✅ 5. Sanitize input
+  const cleanQuery = sanitize(trimmedQuery);
+
   if (!cleanQuery || cleanQuery.trim().length < 2) {
     return {
       success: true,
@@ -104,14 +128,14 @@ export const searchContent = cache(async (query) => {
       series: serializedSeries,
       results: allResults,
       total: allResults.length,
-      query: query.trim(),
+      query: trimmedQuery, // Return original trimmed query
     };
   } catch (error) {
     console.error("❌ Error searching content:", error);
 
     return {
       success: false,
-      error: error.message,
+      error: "An error occurred while searching",
       films: [],
       series: [],
       results: [],

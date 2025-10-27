@@ -8,8 +8,9 @@ import {
   buildPaginationResponse,
   buildErrorResponse,
   serializeDocument,
-  ITEMS_PER_PAGE,
 } from "./db-utils";
+import { validatePage } from "@/lib/validation";
+import { ITEMS_PER_PAGE } from "@/lib/data";
 
 // 🚀 Get latest added (films + series combined)
 export const getLatestAdded = cache(async (filters = {}, page = 1) => {
@@ -17,7 +18,8 @@ export const getLatestAdded = cache(async (filters = {}, page = 1) => {
     const client = await clientPromise;
     const db = client.db();
 
-    const skip = (page - 1) * ITEMS_PER_PAGE;
+    const validPage = validatePage(page);
+    const skip = (validPage - 1) * ITEMS_PER_PAGE;
     const matchQuery = buildMatchQuery(filters);
 
     // Get total count with filters
@@ -85,7 +87,8 @@ export const getNewSeries = cache(async (filters = {}, page = 1) => {
     const client = await clientPromise;
     const collection = client.db().collection("series");
 
-    const skip = (page - 1) * ITEMS_PER_PAGE;
+    const validPage = validatePage(page);
+    const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
     // Combine category filter with user filters
     const matchQuery = buildMatchQuery(filters, {
@@ -140,7 +143,8 @@ export const getNewMovies = cache(async (filters = {}, page = 1) => {
     const client = await clientPromise;
     const collection = client.db().collection("films");
 
-    const skip = (page - 1) * ITEMS_PER_PAGE;
+    const validPage = validatePage(page);
+    const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
     // Combine category filter with user filters
     const matchQuery = buildMatchQuery(filters, {
@@ -195,7 +199,8 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
     const client = await clientPromise;
     const db = client.db();
 
-    const skip = (page - 1) * ITEMS_PER_PAGE;
+    const validPage = validatePage(page);
+    const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
     // For episodes, we need to filter by series properties
     let seriesIds = null;

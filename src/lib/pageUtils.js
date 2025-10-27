@@ -2,6 +2,7 @@
 
 import { notFound } from "next/navigation";
 import { FILTER_CONFIG } from "@/lib/data";
+import { validatePage } from "./validation";
 
 /**
  * Validates query parameters against allowed list
@@ -58,8 +59,14 @@ export function buildFilters(params, includeQuality = true) {
     country: params?.country?.split(",").filter(Boolean) || [],
   };
 
-  if (includeQuality) {
-    filters.quality = params?.quality?.split(",").filter(Boolean) || [];
+  const MAX_FILTER_ITEMS = 3;
+  if (
+    filters.genre.length > MAX_FILTER_ITEMS ||
+    filters.year.length > MAX_FILTER_ITEMS ||
+    filters.language.length > MAX_FILTER_ITEMS ||
+    filters.country.length > MAX_FILTER_ITEMS
+  ) {
+    throw new Error("Too many filter values");
   }
 
   return filters;
@@ -80,7 +87,7 @@ export function parsePageParams(params, validSortIds, validQueryParams) {
   validateSortId(sortId, validSortIds);
 
   // Extract page
-  const page = parseInt(params?.page || "1", 10);
+  const page = validatePage(params?.page || "1");
 
   return { sortId, page };
 }

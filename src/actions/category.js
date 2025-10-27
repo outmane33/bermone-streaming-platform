@@ -1,10 +1,10 @@
 "use server";
 
+import { ITEMS_PER_PAGE } from "@/lib/data";
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
 
 // 🎯 Constants
-const ITEMS_PER_PAGE = 18;
 
 // 🎯 Sort configurations for FILMS
 const FILMS_SORT_CONFIGS = {

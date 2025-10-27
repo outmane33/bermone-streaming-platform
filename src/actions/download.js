@@ -3,6 +3,7 @@
 
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
+import crypto from "crypto";
 
 // 🎯 Helper to detect episode vs film from slug
 const isEpisodeSlug = (slug) => {

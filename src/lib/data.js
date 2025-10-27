@@ -43,6 +43,7 @@ import {
   ArrowDownToLine,
   ChevronsLeft,
   ChevronsRight,
+  Home,
 } from "lucide-react";
 
 // ============================================
@@ -197,7 +198,7 @@ export const getIcon = (iconName) => ICON_MAP[iconName];
 export const CATEGORIES = [
   {
     id: "home",
-    icon: Clapperboard,
+    icon: Home,
     label: "الرئيسية",
     href: "/?sort=latest-added",
     gradient: "from-amber-500 via-orange-500 to-yellow-500",
@@ -579,6 +580,17 @@ export const VALID_QUERY_PARAMS = [
   "language",
   "country",
 ];
+
+// ============================================
+// CONSTANTS
+// ============================================
+export const ITEMS_PER_PAGE = 18;
+export const CURRENT_YEAR = new Date().getFullYear();
+export const SEARCH_LIMIT = 20;
+export const MAX_SEASONS = 20;
+export const MAX_EPISODES = 30;
+export const MAX_RELATED = 12;
+export const MAX_RESPONSE_SIZE = 1000;
 
 // ============================================
 // DEPRECATED (For backward compatibility)

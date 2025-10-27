@@ -3,14 +3,15 @@
 
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
+import sanitize from "mongo-sanitize";
 import {
   BASE_SORT_CONFIGS,
   buildContentAggregationPipeline,
   buildPaginationResponse,
-  buildErrorResponse,
   toObjectId,
   serializeDocument,
 } from "./db-utils";
+import { MAX_RELATED, ITEMS_PER_PAGE } from "@/lib/data";
 
 // 🎯 Film-specific sort configurations (extend base configs)
 const FILMS_SORT_CONFIGS = {
@@ -35,8 +36,20 @@ export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
       ...buildPaginationResponse(result, page),
     };
   } catch (error) {
-    console.error("❌ Error fetching films:", error);
-    return buildErrorResponse("films", error, page);
+    console.error("❌ Error fetching films:", error); // Keep for server logs
+    return {
+      success: false,
+      error: "An error occurred while fetching films", // ✅ Generic message
+      documents: [],
+      pagination: {
+        currentPage: page,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: ITEMS_PER_PAGE,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
   }
 });
 
@@ -46,8 +59,8 @@ export const getFilmBySlug = cache(async (slug) => {
     const client = await clientPromise;
     const collection = client.db().collection("films");
 
-    const decodedSlug = decodeURIComponent(slug);
-    const film = await collection.findOne({ slug: decodedSlug });
+    const cleanSlug = sanitize(decodeURIComponent(slug));
+    const film = await collection.findOne({ slug: cleanSlug });
 
     if (!film) {
       return {
@@ -65,7 +78,7 @@ export const getFilmBySlug = cache(async (slug) => {
     console.error("❌ Error fetching film by slug:", error);
     return {
       success: false,
-      error: error.message,
+      error: "An error occurred while fetching the film", // ✅ Generic
       film: null,
     };
   }
@@ -96,6 +109,7 @@ export const getFilmCollection = cache(async (filmId) => {
       .collection("films")
       .find({ _id: { $in: collection.films } })
       .sort({ releaseYear: 1 })
+      .limit(100)
       .toArray();
 
     return {
@@ -112,7 +126,7 @@ export const getFilmCollection = cache(async (filmId) => {
     console.error("❌ Error fetching film collection:", error);
     return {
       success: false,
-      error: error.message,
+      error: "An error occurred while fetching the collection", // ✅ Generic
       collection: null,
       films: [],
     };
@@ -122,6 +136,10 @@ export const getFilmCollection = cache(async (filmId) => {
 // 🎯 Get related films based on similarity
 export const getRelatedFilms = cache(
   async (filmId, filmData = {}, limit = 12) => {
+    const safeLimit = Math.min(
+      Math.max(parseInt(limit, 10) || 12, 1),
+      MAX_RELATED
+    );
     try {
       const client = await clientPromise;
       const collection = client.db().collection("films");
@@ -194,7 +212,7 @@ export const getRelatedFilms = cache(
           },
         },
         { $sort: { similarityScore: -1, rating: -1, views: -1 } },
-        { $limit: limit },
+        { $limit: safeLimit },
         {
           $project: {
             _id: { $toString: "$_id" },
@@ -223,7 +241,7 @@ export const getRelatedFilms = cache(
       console.error("❌ Error fetching related films:", error);
       return {
         success: false,
-        error: error.message,
+        error: "An error occurred while fetching related films",
         films: [],
       };
     }
