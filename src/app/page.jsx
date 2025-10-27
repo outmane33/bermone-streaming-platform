@@ -67,7 +67,7 @@ export default async function Home({ searchParams }) {
   const newFilms = await getFilms({}, "new", 1);
 
   return (
-    <div className="min-h-screen">
+    <div className="relative min-h-screen pb-10">
       <Suspense fallback={<SkeletonFilterSection />}>
         <FilterSection
           initialData={initialData}
