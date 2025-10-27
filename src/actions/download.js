@@ -3,7 +3,6 @@
 
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
-import crypto from "crypto";
 
 // 🎯 Helper to detect episode vs film from slug
 const isEpisodeSlug = (slug) => {
@@ -135,7 +134,6 @@ export const getDownloadLinks = cache(
       const decodedSlug = decodeURIComponent(slug);
       const collectionName = getCollectionName(decodedSlug);
 
-      // Use aggregation to get ONLY the specific download link
       const result = await db
         .collection(collectionName)
         .aggregate([
@@ -168,13 +166,13 @@ export const getDownloadLinks = cache(
 
       const downloadLink = result[0].downloadLink;
 
-      console.log("✅ [STEP 3] Download link retrieved successfully");
-      console.log("   downloadLink:", downloadLink);
+      // 🔍 ADD DEBUG LOG
+      console.log("✅ [STEP 3] Download link retrieved:", downloadLink);
 
       return {
         success: true,
         links: {
-          downloadLink: downloadLink,
+          encodedDownloadLink: downloadLink, // ✅ This should be the Base64 string
           quality: selectedQuality,
           serviceName: selectedService,
         },

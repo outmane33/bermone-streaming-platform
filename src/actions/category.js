@@ -1,10 +1,9 @@
 "use server";
-
+import { cache } from "react";
+import sanitize from "mongo-sanitize";
 import { ITEMS_PER_PAGE } from "@/lib/data";
 import clientPromise from "@/lib/mongodb";
-import { cache } from "react";
-
-// 🎯 Constants
+import { validatePage } from "@/lib/validation";
 
 // 🎯 Sort configurations for FILMS
 const FILMS_SORT_CONFIGS = {
@@ -54,7 +53,8 @@ const SERIES_SORT_CONFIGS = {
 
 // 🎯 Build MongoDB aggregation query for EPISODES (anime episodes)
 function buildEpisodesAggregationPipeline(sortConfig, page) {
-  const skip = (page - 1) * ITEMS_PER_PAGE;
+  const validPage = validatePage(page);
+  const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
   return [
     {
@@ -116,7 +116,9 @@ function buildEpisodesAggregationPipeline(sortConfig, page) {
 
 // 🎯 Build MongoDB aggregation query for FILMS/SERIES
 function buildContentAggregationPipeline(filters, sortConfig, page) {
-  const skip = (page - 1) * ITEMS_PER_PAGE;
+  const cleanFilters = sanitize(filters);
+  const validPage = validatePage(page);
+  const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
   const matchQuery = {};
 
@@ -127,20 +129,22 @@ function buildContentAggregationPipeline(filters, sortConfig, page) {
 
   Object.assign(matchQuery, sortFilter);
 
-  if (filters.genre?.length > 0) {
-    matchQuery.genre = { $in: filters.genre };
+  if (cleanFilters.genre?.length > 0) {
+    matchQuery.genre = { $in: cleanFilters.genre };
   }
 
-  if (filters.year?.length > 0) {
-    matchQuery.releaseYear = { $in: filters.year.map((y) => parseInt(y, 10)) };
+  if (cleanFilters.year?.length > 0) {
+    matchQuery.releaseYear = {
+      $in: cleanFilters.year.map((y) => parseInt(y, 10)),
+    };
   }
 
-  if (filters.language?.length > 0) {
-    matchQuery.language = { $in: filters.language };
+  if (cleanFilters.language?.length > 0) {
+    matchQuery.language = { $in: cleanFilters.language };
   }
 
-  if (filters.country?.length > 0) {
-    matchQuery.country = { $in: filters.country };
+  if (cleanFilters.country?.length > 0) {
+    matchQuery.country = { $in: cleanFilters.country };
   }
 
   return [
@@ -178,7 +182,8 @@ function buildContentAggregationPipeline(filters, sortConfig, page) {
 
 // 🎯 Build MongoDB aggregation query for FILM COLLECTIONS
 function buildFilmCollectionsAggregationPipeline(page) {
-  const skip = (page - 1) * ITEMS_PER_PAGE;
+  const validPage = validatePage(page);
+  const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
   return [
     {
@@ -230,16 +235,22 @@ function buildFilmCollectionsAggregationPipeline(page) {
 export const getContent = cache(
   async (contentType, filters = {}, sortId = null, page = 1) => {
     try {
-      // REMOVED "animes" validation
       if (!["films", "series"].includes(contentType)) {
         throw new Error("Invalid content type. Must be 'films' or 'series'");
       }
+
+      // Validate page
+      const validPage = validatePage(page);
 
       const client = await clientPromise;
 
       // Determine sort configs based on content type
       const sortConfigs =
         contentType === "films" ? FILMS_SORT_CONFIGS : SERIES_SORT_CONFIGS;
+
+      if (sortId && !sortConfigs[sortId]) {
+        throw new Error("Invalid sort ID");
+      }
 
       const sortConfig =
         sortId && sortConfigs[sortId]
@@ -256,19 +267,23 @@ export const getContent = cache(
       // 🎬 Special handling for film collections
       if (sortConfig.type === "filmCollections") {
         collectionName = "filmcollections";
-        pipeline = buildFilmCollectionsAggregationPipeline(page);
+        pipeline = buildFilmCollectionsAggregationPipeline(validPage);
         resultContentType = "filmCollections";
       }
       // 🎬 Special handling for episodes-based sorts
       else if (sortConfig.type === "episodes") {
         collectionName = "episodes";
-        pipeline = buildEpisodesAggregationPipeline(sortConfig, page);
+        pipeline = buildEpisodesAggregationPipeline(sortConfig, validPage);
         resultContentType = "episodes";
       }
       // Regular films/series query
       else {
         collectionName = contentType;
-        pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
+        pipeline = buildContentAggregationPipeline(
+          filters,
+          sortConfig,
+          validPage
+        );
         resultContentType = contentType;
       }
 
@@ -283,12 +298,12 @@ export const getContent = cache(
         documents,
         contentType: resultContentType,
         pagination: {
-          currentPage: page,
+          currentPage: validPage,
           totalPages: Math.ceil(totalItems / ITEMS_PER_PAGE),
           totalItems,
           itemsPerPage: ITEMS_PER_PAGE,
-          hasNext: page < Math.ceil(totalItems / ITEMS_PER_PAGE),
-          hasPrev: page > 1,
+          hasNext: validPage < Math.ceil(totalItems / ITEMS_PER_PAGE),
+          hasPrev: validPage > 1,
         },
       };
     } catch (error) {
@@ -296,7 +311,7 @@ export const getContent = cache(
 
       return {
         success: false,
-        error: error.message,
+        error: "Failed to fetch content",
         documents: [],
         contentType,
         pagination: {
@@ -311,114 +326,3 @@ export const getContent = cache(
     }
   }
 );
-
-// 🎯 Backward compatibility
-export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
-  return getContent("films", filters, sortId, page);
-});
-
-export const getSeries = cache(
-  async (filters = {}, sortId = null, page = 1) => {
-    return getContent("series", filters, sortId, page);
-  }
-);
-
-// 🎬 Get Latest Anime Episodes - standalone function
-export const getAnimeEpisodes = cache(async (page = 1) => {
-  try {
-    const client = await clientPromise;
-    const collection = client.db().collection("episodes");
-    const skip = (page - 1) * ITEMS_PER_PAGE;
-
-    const pipeline = [
-      {
-        $lookup: {
-          from: "series",
-          localField: "seriesId",
-          foreignField: "_id",
-          as: "series",
-        },
-      },
-      { $unwind: { path: "$series", preserveNullAndEmptyArrays: false } },
-      {
-        $lookup: {
-          from: "seasons",
-          localField: "seasonId",
-          foreignField: "_id",
-          as: "season",
-        },
-      },
-      { $unwind: { path: "$season", preserveNullAndEmptyArrays: true } },
-      { $match: { "series.category.isAnimeseries": true } },
-      {
-        $facet: {
-          metadata: [{ $count: "total" }],
-          data: [
-            { $sort: { createdAt: -1 } },
-            { $skip: skip },
-            { $limit: ITEMS_PER_PAGE },
-            {
-              $project: {
-                _id: { $toString: "$_id" },
-                seriesId: { $toString: "$seriesId" },
-                seasonId: { $toString: "$seasonId" },
-                episodeNumber: 1,
-                duration: 1,
-                slug: 1,
-                createdAt: 1,
-                updatedAt: 1,
-                series: {
-                  _id: { $toString: "$series._id" },
-                  title: "$series.title",
-                  image: "$series.image",
-                  slug: "$series.slug",
-                  rating: "$series.rating",
-                  genre: "$series.genre",
-                },
-                season: {
-                  _id: { $toString: "$season._id" },
-                  seasonNumber: "$season.seasonNumber",
-                  image: "$season.image",
-                },
-              },
-            },
-          ],
-        },
-      },
-    ];
-
-    const [result] = await collection.aggregate(pipeline).toArray();
-    const totalItems = result.metadata[0]?.total || 0;
-    const documents = result.data || [];
-
-    return {
-      success: true,
-      documents,
-      contentType: "episodes",
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalItems / ITEMS_PER_PAGE),
-        totalItems,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: page < Math.ceil(totalItems / ITEMS_PER_PAGE),
-        hasPrev: page > 1,
-      },
-    };
-  } catch (error) {
-    console.error("❌ Error fetching anime episodes:", error);
-    return {
-      success: false,
-      error: error.message,
-      documents: [],
-      contentType: "episodes",
-      pagination: {
-        currentPage: page,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: false,
-        hasPrev: false,
-      },
-    };
-  }
-});

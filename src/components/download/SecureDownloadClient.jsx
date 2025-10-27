@@ -8,6 +8,34 @@ import {
   logDownloadAction,
 } from "@/actions/download";
 
+const decodeDownloadLink = (encodedLink) => {
+  try {
+    // Check if it's already a plain URL
+    if (
+      encodedLink.startsWith("http://") ||
+      encodedLink.startsWith("https://")
+    ) {
+      console.log("⚠️ Link is already decoded");
+      return encodedLink;
+    }
+
+    // Try to decode Base64
+    const decoded = atob(encodedLink);
+
+    // Verify it's a valid URL after decoding
+    if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
+      return decoded;
+    } else {
+      console.error("❌ Decoded value is not a valid URL:", decoded);
+      return null;
+    }
+  } catch (error) {
+    console.error("❌ Failed to decode link:", error);
+    console.error("❌ Raw value:", encodedLink);
+    return null;
+  }
+};
+
 const ButtonBase = ({ children, className = "", ...props }) => (
   <button
     className={`${DESIGN_TOKENS.effects.transition} ${className}`}
@@ -323,16 +351,47 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                {downloadLinks.downloadLink && (
-                  <a
-                    href={downloadLinks.downloadLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r ${DESIGN_TOKENS.gradients.purple} hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-medium transition-colors shadow-lg`}
+                {downloadLinks.encodedDownloadLink ? (
+                  <button
+                    onClick={() => {
+                      console.log("🎯 Button clicked!");
+                      console.log(
+                        "🎯 Encoded link:",
+                        downloadLinks.encodedDownloadLink
+                      );
+
+                      // Use the helper function with error handling
+                      const decodedUrl = decodeDownloadLink(
+                        downloadLinks.encodedDownloadLink
+                      );
+                      console.log("🎯 Decoded URL:", decodedUrl);
+
+                      if (decodedUrl) {
+                        window.open(
+                          decodedUrl,
+                          "_blank",
+                          "noopener,noreferrer"
+                        );
+
+                        logDownloadAction("DOWNLOAD_CLICKED", {
+                          quality: downloadLinks.quality,
+                          service: downloadLinks.serviceName,
+                          slug,
+                          timestamp: new Date().toISOString(),
+                        });
+                      } else {
+                        console.error("❌ Failed to decode download link");
+                      }
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r ${DESIGN_TOKENS.gradients.purple} hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-medium transition-colors shadow-lg cursor-pointer`}
                   >
                     <ICON_MAP.Download className="w-5 h-5" />
                     Download Now
-                  </a>
+                  </button>
+                ) : (
+                  <div className="text-red-400">
+                    ❌ No download link available
+                  </div>
                 )}
               </div>
             </div>

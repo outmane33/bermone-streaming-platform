@@ -88,6 +88,7 @@ export const searchContent = cache(async (query) => {
         { title: searchRegex },
         { originalTitle: searchRegex },
         { description: searchRegex },
+        { dbId: searchRegex },
       ],
     };
 

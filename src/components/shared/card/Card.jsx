@@ -1,5 +1,6 @@
 import { COMPONENT_STYLES, DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import CardWrapper from "./CardWrapper";
+import Image from "next/image";
 
 // Shared components
 const TopBadges = ({
@@ -139,10 +140,13 @@ const CardContent = ({
           className={`absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent group-hover:${gradients[gradientColors]} z-10 ${DESIGN_TOKENS.effects.transition} duration-500`}
         />
 
-        <img
+        {/* ✅ FIXED: Added fill and sizes props */}
+        <Image
           src={image}
           alt={title}
-          className={`w-full h-full object-cover ${DESIGN_TOKENS.effects.transition} duration-700 group-hover:scale-110 rounded-xl`}
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+          className={`object-cover ${DESIGN_TOKENS.effects.transition} duration-700 group-hover:scale-110 rounded-xl`}
           loading="lazy"
         />
 

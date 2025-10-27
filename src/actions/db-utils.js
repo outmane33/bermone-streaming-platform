@@ -2,6 +2,7 @@
 import { ObjectId } from "mongodb";
 import sanitize from "mongo-sanitize";
 import { CURRENT_YEAR, ITEMS_PER_PAGE, MAX_RESPONSE_SIZE } from "@/lib/data";
+import { validatePage } from "@/lib/validation";
 
 // 🔄 Serialization Helpers
 export const serializeObjectId = (id) => {
@@ -149,7 +150,9 @@ export const buildEpisodeAggregationPipeline = (
   page,
   additionalMatch = {}
 ) => {
-  const skip = (page - 1) * ITEMS_PER_PAGE;
+  // Validate page
+  const validPage = validatePage(page);
+  const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
   return [
     {
@@ -243,7 +246,7 @@ export const buildErrorResponse = (contentType, error, page = 1) => {
   // Return generic message to client
   return {
     success: false,
-    error: `An error occurred while fetching ${contentType}`, // ✅ Generic
+    error: `An error occurred while fetching ${contentType}`,
     documents: [],
     contentType,
     pagination: {
