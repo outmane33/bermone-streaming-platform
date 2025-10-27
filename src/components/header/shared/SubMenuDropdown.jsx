@@ -25,16 +25,16 @@ export const SubMenuDropdown = ({
     const [itemBasePath, itemQuery] = itemPath.split("?");
     const currentBasePath = pathname;
 
-    // If item has query params, check base path and query params match
+    // First check: base paths must match
+    if (itemBasePath !== currentBasePath) {
+      return false;
+    }
+
+    // If item has query params, check if they match current URL params
     if (itemQuery) {
       const itemParams = new URLSearchParams(itemQuery);
 
-      // Check if base paths match
-      if (itemBasePath !== currentBasePath) {
-        return false;
-      }
-
-      // Check if all item params match current URL params
+      // Check if all item params exist and match in current URL
       for (const [key, value] of itemParams) {
         if (searchParams.get(key) !== value) {
           return false;
@@ -43,16 +43,9 @@ export const SubMenuDropdown = ({
       return true;
     }
 
-    // If no query params on item, match base path only when there are no query params in URL
-    if (
-      !itemQuery &&
-      itemBasePath === currentBasePath &&
-      !searchParams.toString()
-    ) {
-      return true;
-    }
-
-    return false;
+    // If item has NO query params, it matches the base path regardless of URL params
+    // This allows /films to be active for both /films and /films?genre=action
+    return true;
   };
 
   return (
