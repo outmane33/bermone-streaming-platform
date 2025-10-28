@@ -1,3 +1,4 @@
+/* ============================== globals.css ============================== */
 @import "tailwindcss";
 
 :root {
@@ -50,24 +51,20 @@
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   perspective: 1000px;
-  /* Isolate rendering to improve performance */
   contain: strict;
 }
 
-/* Desktop: full blur + animation */
-@media (min-width: 769px) {
-  .animate-blob {
+/* Desktop: full effect */
+@media (min-width: 1024px) {
+  .animate-blob.desktop-blob {
     animation: blobDesktop 20s ease-in-out infinite;
   }
 }
 
-/* Mobile: animation ON but NO blur (blur is too expensive) */
-@media (max-width: 768px) {
+/* Tablet & Mobile: simplified (no blur, no blend mode) */
+@media (max-width: 1023px) {
   .animate-blob {
     animation: blobMobile 15s ease-in-out infinite;
-  }
-  .mobile-no-blur {
-    filter: none !important;
   }
 }
 
@@ -86,7 +83,7 @@
 
 html {
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  /* Removed deprecated -webkit-overflow-scrolling: touch */
 }
 
 body {
