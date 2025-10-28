@@ -19,10 +19,6 @@
   }
 }
 
-/* ================================================ */
-/* Ultra Optimized Blob Animation */
-/* ================================================ */
-
 @keyframes blobDesktop {
   0%,
   100% {
@@ -54,39 +50,28 @@
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   perspective: 1000px;
+  /* Isolate rendering to improve performance */
+  contain: strict;
 }
 
-/* Desktop: حركة كاملة */
+/* Desktop: full blur + animation */
 @media (min-width: 769px) {
   .animate-blob {
     animation: blobDesktop 20s ease-in-out infinite;
   }
 }
 
-/* Mobile: حركة مبسطة جداً */
+/* Mobile: animation ON but NO blur (blur is too expensive) */
 @media (max-width: 768px) {
   .animate-blob {
     animation: blobMobile 15s ease-in-out infinite;
   }
+  .mobile-no-blur {
+    filter: none !important;
+  }
 }
 
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-3000 {
-  animation-delay: 3s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-.animation-delay-6000 {
-  animation-delay: 6s;
-}
-
-/* إيقاف الحركة تماماً للأجهزة الضعيفة */
+/* Reduced motion: disable everything */
 @media (prefers-reduced-motion: reduce) {
   .animate-blob {
     animation: none !important;
@@ -94,13 +79,11 @@
   }
 }
 
-/* تحسين الأداء العام */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* منع المشاكل في التمرير */
 html {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;

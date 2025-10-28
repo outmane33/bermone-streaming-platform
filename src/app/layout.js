@@ -27,37 +27,37 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black overflow-x-hidden`}
       >
-        {/* Optimized gradient background - نسخة خفيفة للموبايل */}
+        {/* Optimized animated background */}
         <div className="fixed inset-0 -z-10 pointer-events-none">
-          {/* على الموبايل: 2 عناصر فقط بدون blur قوي */}
+          {/* Mobile: 2 blobs, NO blur */}
           <div className="block md:hidden">
             <div
-              className="absolute top-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-2xl animate-blob"
+              className="absolute top-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full animate-blob mobile-no-blur"
               aria-hidden="true"
             ></div>
             <div
-              className="absolute bottom-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-2xl animate-blob animation-delay-4000"
+              className="absolute bottom-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full animate-blob animation-delay-4000 mobile-no-blur"
               aria-hidden="true"
             ></div>
           </div>
 
-          {/* على الشاشات المتوسطة: 3 عناصر */}
+          {/* Tablet: 3 blobs, light blur */}
           <div className="hidden md:block lg:hidden">
             <div
-              className="absolute top-0 -left-4 w-80 h-80 bg-purple-500 rounded-full mix-blend-screen blur-3xl opacity-20 animate-blob"
+              className="absolute top-0 -left-4 w-80 h-80 bg-purple-500 rounded-full mix-blend-screen blur-2xl opacity-20 animate-blob"
               aria-hidden="true"
             ></div>
             <div
-              className="absolute top-0 -right-4 w-80 h-80 bg-blue-500 rounded-full mix-blend-screen blur-3xl opacity-20 animate-blob animation-delay-2000"
+              className="absolute top-0 -right-4 w-80 h-80 bg-blue-500 rounded-full mix-blend-screen blur-2xl opacity-20 animate-blob animation-delay-2000"
               aria-hidden="true"
             ></div>
             <div
-              className="absolute -bottom-8 left-20 w-80 h-80 bg-pink-500 rounded-full mix-blend-screen blur-3xl opacity-20 animate-blob animation-delay-4000"
+              className="absolute -bottom-8 left-20 w-80 h-80 bg-pink-500 rounded-full mix-blend-screen blur-2xl opacity-20 animate-blob animation-delay-4000"
               aria-hidden="true"
             ></div>
           </div>
 
-          {/* على الشاشات الكبيرة: كل العناصر */}
+          {/* Desktop: full effect */}
           <div className="hidden lg:block">
             <div
               className="absolute top-0 -left-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-screen blur-3xl opacity-20 animate-blob"
