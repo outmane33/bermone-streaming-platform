@@ -20,31 +20,54 @@
 }
 
 /* ================================================ */
-/* Optimized Blob Animation */
+/* Ultra Optimized Blob Animation */
 /* ================================================ */
 
-@keyframes blob {
+@keyframes blobDesktop {
   0%,
   100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
   25% {
-    transform: translate(20px, -50px) scale(1.1);
+    transform: translate3d(20px, -50px, 0) scale(1.1);
   }
   50% {
-    transform: translate(-20px, 20px) scale(0.9);
+    transform: translate3d(-20px, 20px, 0) scale(0.9);
   }
   75% {
-    transform: translate(50px, 50px) scale(1.05);
+    transform: translate3d(50px, 50px, 0) scale(1.05);
+  }
+}
+
+@keyframes blobMobile {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-10px, 10px, 0) scale(0.95);
   }
 }
 
 .animate-blob {
-  animation: blob 20s infinite;
   will-change: transform;
-  /* تحسين الأداء على GPU */
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Desktop: حركة كاملة */
+@media (min-width: 769px) {
+  .animate-blob {
+    animation: blobDesktop 20s ease-in-out infinite;
+  }
+}
+
+/* Mobile: حركة مبسطة جداً */
+@media (max-width: 768px) {
+  .animate-blob {
+    animation: blobMobile 15s ease-in-out infinite;
+  }
 }
 
 .animation-delay-2000 {
@@ -63,18 +86,11 @@
   animation-delay: 6s;
 }
 
-/* تقليل التمويه على الشاشات الصغيرة */
-@media (max-width: 768px) {
-  .animate-blob {
-    filter: blur(40px) !important;
-    opacity: 0.15 !important;
-  }
-}
-
-/* إيقاف الحركة للأجهزة التي تطلب تقليل الحركة */
+/* إيقاف الحركة تماماً للأجهزة الضعيفة */
 @media (prefers-reduced-motion: reduce) {
   .animate-blob {
     animation: none !important;
+    transform: translate3d(0, 0, 0) !important;
   }
 }
 
@@ -82,4 +98,14 @@
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* منع المشاكل في التمرير */
+html {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  overflow-x: hidden;
 }
