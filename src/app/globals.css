@@ -18,7 +18,11 @@
     --foreground: #ededed;
   }
 }
+
 /* ================================================ */
+/* Optimized Blob Animation */
+/* ================================================ */
+
 @keyframes blob {
   0%,
   100% {
@@ -37,6 +41,10 @@
 
 .animate-blob {
   animation: blob 20s infinite;
+  will-change: transform;
+  /* تحسين الأداء على GPU */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .animation-delay-2000 {
@@ -53,4 +61,25 @@
 
 .animation-delay-6000 {
   animation-delay: 6s;
+}
+
+/* تقليل التمويه على الشاشات الصغيرة */
+@media (max-width: 768px) {
+  .animate-blob {
+    filter: blur(40px) !important;
+    opacity: 0.15 !important;
+  }
+}
+
+/* إيقاف الحركة للأجهزة التي تطلب تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob {
+    animation: none !important;
+  }
+}
+
+/* تحسين الأداء العام */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

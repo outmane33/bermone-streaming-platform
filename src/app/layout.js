@@ -5,11 +5,13 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap", // تحسين تحميل الخطوط
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata = {
@@ -23,16 +25,34 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black overflow-x-hidden`}
       >
-        {/* Animated gradient background */}
-        <div className="fixed inset-0 -z-10">
+        {/* Animated gradient background - محسّن للأداء */}
+        <div className="fixed inset-0 -z-10 pointer-events-none">
           {/* Main gradient orbs */}
-          <div className="absolute top-0 -left-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob"></div>
-          <div className="absolute top-0 -right-4 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-6000"></div>
+          <div
+            className="absolute top-0 -left-4 w-72 h-72 md:w-96 md:h-96 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob"
+            aria-hidden="true"
+          ></div>
 
-          {/* Additional subtle orbs for depth */}
-          <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-indigo-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-3000"></div>
+          <div
+            className="absolute top-0 -right-4 w-72 h-72 md:w-96 md:h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"
+            aria-hidden="true"
+          ></div>
+
+          <div
+            className="absolute -bottom-8 left-20 w-72 h-72 md:w-96 md:h-96 bg-pink-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-4000"
+            aria-hidden="true"
+          ></div>
+
+          {/* العنصر الرابع والخامس يظهران فقط على الشاشات الكبيرة */}
+          <div
+            className="hidden md:block absolute bottom-20 right-20 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-6000"
+            aria-hidden="true"
+          ></div>
+
+          <div
+            className="hidden lg:block absolute top-1/2 left-1/2 w-72 h-72 bg-indigo-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-3000"
+            aria-hidden="true"
+          ></div>
         </div>
 
         <div className="max-w-[1440px] mx-auto min-h-screen relative">
