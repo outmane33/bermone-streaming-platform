@@ -1,4 +1,4 @@
-// Header.jsx
+// src/components/header/Header.jsx
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
@@ -75,7 +75,7 @@ export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isDesktop, setIsDesktop] = useState(true);
-  const isTouchDevice = useIsTouchDevice(); // ✅ Detect touch
+  const isTouchDevice = useIsTouchDevice();
 
   const [activeCategory, setActiveCategory] = useState(() =>
     getActiveCategoryFromPath(pathname)
@@ -90,11 +90,9 @@ export default function Header() {
   const [mobileSubmenuOpen, setMobileSubmenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // ✅ Increase debounce on mobile
   const debounceDelay = isTouchDevice ? 500 : 300;
   const debouncedSearchQuery = useDebounce(searchQuery, debounceDelay);
 
-  // ✅ Throttled resize handler
   const checkScreenSize = useCallback(() => {
     setIsDesktop(window.innerWidth >= 768);
   }, []);
@@ -165,27 +163,34 @@ export default function Header() {
     setMobileSearchOpen(false);
   };
 
+  // ✅ FIXED: Now closes mobile search too
   const closeAllOverlays = () => {
     setOpenMenuId(null);
     setSearchFocused(false);
     setMobileMenuOpen(false);
+    setMobileSearchOpen(false); // 👈 critical fix
   };
 
   const toggleMobileMenu = () => setMobileMenuOpen((prev) => !prev);
   const toggleMobileSearch = () => {
-    setMobileSearchOpen((prev) => !prev);
-    if (!mobileSearchOpen) {
+    const newState = !mobileSearchOpen;
+    setMobileSearchOpen(newState);
+    if (newState) {
       setSearchQuery("");
       setSearchResults([]);
     }
   };
 
+  // ✅ FIXED: Include mobileSearchOpen in overlay condition
   const showOverlay =
-    openMenuId || (searchFocused && searchQuery) || mobileMenuOpen;
+    openMenuId ||
+    mobileMenuOpen ||
+    mobileSearchOpen ||
+    (searchFocused && searchQuery);
 
   return (
     <div className="relative w-full">
-      {/* ✅ Overlay: no backdrop-blur on mobile */}
+      {/* Overlay now appears when mobile search is open */}
       {showOverlay && (
         <div
           className={`fixed inset-0 z-30 transition-opacity duration-300 ${
@@ -215,7 +220,7 @@ export default function Header() {
                   searchFocused={searchFocused}
                   setSearchFocused={setSearchFocused}
                   isSearching={isSearching}
-                  isTouchDevice={isTouchDevice} // ✅ passed
+                  isTouchDevice={isTouchDevice}
                 />
               </div>
               <button
@@ -248,7 +253,7 @@ export default function Header() {
                   searchFocused={searchFocused}
                   setSearchFocused={setSearchFocused}
                   isSearching={isSearching}
-                  isTouchDevice={isTouchDevice} // ✅ passed
+                  isTouchDevice={isTouchDevice}
                 />
               </div>
 
@@ -280,7 +285,6 @@ export default function Header() {
                 setMobileSearchOpen(false);
               }}
               isLoading={isSearching}
-              isTouchDevice={isTouchDevice} // ✅ passed
             />
           )}
         </div>
@@ -291,7 +295,6 @@ export default function Header() {
         onClose={() => setMobileSubmenuOpen(false)}
         category={selectedCategory}
         items={selectedCategory?.subMenu || []}
-        isTouchDevice={isTouchDevice} // ✅ passed (we'll use it inside)
       />
     </div>
   );
