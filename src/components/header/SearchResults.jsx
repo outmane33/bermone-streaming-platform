@@ -62,6 +62,7 @@ export const SearchResults = ({
         className={`relative rounded-xl shadow-2xl overflow-auto max-h-[70vh] ${
           isTouchDevice ? "bg-black/70" : DESIGN_TOKENS.glass.medium
         }`}
+        style={{ WebkitOverflowScrolling: "touch" }} // ✅ smoother iOS scroll
       >
         <div
           className={`sticky top-0 px-4 py-2 z-10 ${

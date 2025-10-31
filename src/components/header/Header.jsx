@@ -1,6 +1,6 @@
 // Header.jsx
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { DESIGN_TOKENS, CATEGORIES, ICON_MAP } from "@/lib/data";
@@ -10,6 +10,7 @@ import { SearchBar } from "./SearchBar";
 import { SearchResults } from "./SearchResults";
 import { CategoryItem } from "./CategoryItem";
 import { MobileSubmenuModal } from "./MobileSubmenuModal";
+import useIsTouchDevice from "@/hooks/useIsTouchDevice";
 
 // Helper function to get active category from pathname
 const getActiveCategoryFromPath = (pathname) => {
@@ -17,39 +18,27 @@ const getActiveCategoryFromPath = (pathname) => {
     return "home";
   }
 
-  // Special pages that don't belong to any category
   if (pathname === "/category/trending" || pathname === "/category/recent") {
     return null;
   }
 
-  // Check each category for matches
   for (const category of CATEGORIES) {
-    // Check if category has direct href match
     if (category.href && category.href === pathname) {
       return category.id;
     }
 
-    // Check subMenu items
     if (category.subMenu && category.subMenu.length > 0) {
       for (const subItem of category.subMenu) {
-        // Extract path without query params for comparison
         const [subItemPath] = subItem.path.split("?");
         const [currentPath] = pathname.split("?");
 
-        // Exact match with full path (including query params)
-        if (subItem.path === pathname) {
-          return category.id;
-        }
-
-        // Match base path (without query params)
-        if (subItemPath === currentPath) {
+        if (subItem.path === pathname || subItemPath === currentPath) {
           return category.id;
         }
       }
     }
   }
 
-  // Default to home if no match found
   return "home";
 };
 
@@ -70,10 +59,23 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
+// Simple throttle utility
+function throttle(func, delay) {
+  let timeoutId;
+  return (...args) => {
+    if (timeoutId) return;
+    timeoutId = setTimeout(() => {
+      func(...args);
+      timeoutId = null;
+    }, delay);
+  };
+}
+
 export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isDesktop, setIsDesktop] = useState(true);
+  const isTouchDevice = useIsTouchDevice(); // ✅ Detect touch
 
   const [activeCategory, setActiveCategory] = useState(() =>
     getActiveCategoryFromPath(pathname)
@@ -88,26 +90,30 @@ export default function Header() {
   const [mobileSubmenuOpen, setMobileSubmenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // Debounce search query
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  // ✅ Increase debounce on mobile
+  const debounceDelay = isTouchDevice ? 500 : 300;
+  const debouncedSearchQuery = useDebounce(searchQuery, debounceDelay);
 
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsDesktop(window.innerWidth >= 768); // or your breakpoint
-    };
-
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-
-    return () => window.removeEventListener("resize", checkScreenSize);
+  // ✅ Throttled resize handler
+  const checkScreenSize = useCallback(() => {
+    setIsDesktop(window.innerWidth >= 768);
   }, []);
 
-  // Update active category when pathname changes
+  const throttledCheckScreenSize = useCallback(
+    throttle(checkScreenSize, 150),
+    []
+  );
+
+  useEffect(() => {
+    checkScreenSize();
+    window.addEventListener("resize", throttledCheckScreenSize);
+    return () => window.removeEventListener("resize", throttledCheckScreenSize);
+  }, [checkScreenSize, throttledCheckScreenSize]);
+
   useEffect(() => {
     setActiveCategory(getActiveCategoryFromPath(pathname));
   }, [pathname]);
 
-  // Fetch search results when debounced query changes
   useEffect(() => {
     const fetchSearchResults = async () => {
       if (!debouncedSearchQuery.trim() || debouncedSearchQuery.length < 2) {
@@ -117,16 +123,9 @@ export default function Header() {
       }
 
       setIsSearching(true);
-
       try {
         const response = await searchContent(debouncedSearchQuery);
-
-        if (response.success) {
-          setSearchResults(response.results || []);
-        } else {
-          console.error("Search error:", response.error);
-          setSearchResults([]);
-        }
+        setSearchResults(response.success ? response.results || [] : []);
       } catch (error) {
         console.error("Error fetching search results:", error);
         setSearchResults([]);
@@ -138,12 +137,9 @@ export default function Header() {
     fetchSearchResults();
   }, [debouncedSearchQuery]);
 
-  // Handlers
   const handleCategoryClick = (categoryId) => {
     const category = CATEGORIES.find((c) => c.id === categoryId);
-
     if (category?.subMenu) {
-      // On mobile, open modal instead of dropdown
       if (!isDesktop) {
         setSelectedCategory(category);
         setMobileSubmenuOpen(true);
@@ -175,10 +171,7 @@ export default function Header() {
     setMobileMenuOpen(false);
   };
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen((prev) => !prev);
-  };
-
+  const toggleMobileMenu = () => setMobileMenuOpen((prev) => !prev);
   const toggleMobileSearch = () => {
     setMobileSearchOpen((prev) => !prev);
     if (!mobileSearchOpen) {
@@ -187,23 +180,23 @@ export default function Header() {
     }
   };
 
-  // Check if overlay should be shown
   const showOverlay =
     openMenuId || (searchFocused && searchQuery) || mobileMenuOpen;
 
   return (
     <div className="relative w-full">
-      {/* Overlay */}
+      {/* ✅ Overlay: no backdrop-blur on mobile */}
       {showOverlay && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 transition-opacity duration-300"
+          className={`fixed inset-0 z-30 transition-opacity duration-300 ${
+            isTouchDevice ? "bg-black/60" : "bg-black/70 backdrop-blur-sm"
+          }`}
           onClick={closeAllOverlays}
           aria-hidden="true"
         />
       )}
 
       <div className="relative z-40 w-full py-2 lg:py-4">
-        {/* Top Bar */}
         <div
           className={clsx(
             "flex flex-col md:flex-row items-stretch sm:items-center justify-between",
@@ -213,7 +206,6 @@ export default function Header() {
             "rounded-lg relative z-10"
           )}
         >
-          {/* Mobile: Search Open State */}
           {mobileSearchOpen ? (
             <div className="flex sm:hidden items-center gap-2 w-full">
               <div className="flex-1">
@@ -223,7 +215,7 @@ export default function Header() {
                   searchFocused={searchFocused}
                   setSearchFocused={setSearchFocused}
                   isSearching={isSearching}
-                  autoFocus={true}
+                  isTouchDevice={isTouchDevice} // ✅ passed
                 />
               </div>
               <button
@@ -236,8 +228,7 @@ export default function Header() {
             </div>
           ) : (
             <>
-              {/* Logo & Mobile Controls */}
-              <div className="flex items-center justify-between ">
+              <div className="flex items-center justify-between">
                 <Logo />
                 <div className="flex sm:hidden items-center gap-2">
                   <button
@@ -250,7 +241,6 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* Search Bar - Desktop Only */}
               <div className="hidden sm:block w-full sm:flex-1 sm:max-w-xl">
                 <SearchBar
                   searchQuery={searchQuery}
@@ -258,12 +248,11 @@ export default function Header() {
                   searchFocused={searchFocused}
                   setSearchFocused={setSearchFocused}
                   isSearching={isSearching}
+                  isTouchDevice={isTouchDevice} // ✅ passed
                 />
               </div>
 
-              {/* Navigation Bar */}
               <nav aria-label="القائمة الرئيسية">
-                {/* Categories Grid - Always visible, responsive */}
                 <div className="grid grid-cols-3 justify-items-center lg:flex lg:items-center lg:justify-between gap-2 lg:gap-1 xl:gap-2 flex-wrap">
                   {CATEGORIES.map((category) => (
                     <CategoryItem
@@ -282,7 +271,6 @@ export default function Header() {
             </>
           )}
 
-          {/* Search Results */}
           {(searchFocused || mobileSearchOpen) && searchQuery && (
             <SearchResults
               searchResults={searchResults}
@@ -292,16 +280,18 @@ export default function Header() {
                 setMobileSearchOpen(false);
               }}
               isLoading={isSearching}
+              isTouchDevice={isTouchDevice} // ✅ passed
             />
           )}
         </div>
       </div>
-      {/* Mobile Submenu Modal */}
+
       <MobileSubmenuModal
         isOpen={mobileSubmenuOpen}
         onClose={() => setMobileSubmenuOpen(false)}
         category={selectedCategory}
         items={selectedCategory?.subMenu || []}
+        isTouchDevice={isTouchDevice} // ✅ passed (we'll use it inside)
       />
     </div>
   );
