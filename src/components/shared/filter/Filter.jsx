@@ -72,8 +72,6 @@ export default function Filter({
     currentFilters?.country,
   ]);
 
-  // REMOVED: Duplicate scroll lock - now handled in MobileMenu component
-
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;

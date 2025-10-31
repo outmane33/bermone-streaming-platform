@@ -8,7 +8,7 @@
 
 /* Optional: still support light mode if needed later */
 @media (prefers-color-scheme: light) {
-  /* You can leave this empty, or override if you ever want light mode */
+  /* You can leave this empty */
 }
 
 @theme inline {
@@ -21,7 +21,25 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  min-height: 100vh;
+  min-height: 100dvh; /* dynamic viewport height for mobile */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* prevent horizontal scroll */
+  position: relative;
+  min-height: 100vh; /* fallback */
+  min-height: 100dvh; /* modern browsers */
+}
+
+/* Fixed background using pseudo-element (mobile-safe) */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-image: radial-gradient(
       circle at 20% 30%,
       rgba(99, 102, 241, 0.15) 0%,
@@ -37,9 +55,7 @@ body {
       rgba(59, 130, 246, 0.1) 0%,
       transparent 50%
     );
-  background-attachment: local;
   background-repeat: no-repeat;
   background-size: cover;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  z-index: -1;
 }
