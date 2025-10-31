@@ -120,8 +120,8 @@ const PlayButtonOverlay = ({ isTouchDevice }) => {
 };
 
 // Unified card container component
-const CardContainer = ({ children, href, className = "" }) => (
-  <CardWrapper href={href}>
+const CardContainer = ({ children, href, className = "", onNavigate }) => (
+  <CardWrapper href={href} onNavigate={onNavigate}>
     <div className="block cursor-pointer">
       <article
         className={`group relative rounded-xl transition duration-500 hover:scale-[1.02] ${className}`}
@@ -188,6 +188,7 @@ export default function Card({
   className = "",
   isEpisode = false,
   isFilmCollection = false,
+  onNavigate,
 }) {
   const isTouchDevice = useIsTouchDevice(); // 👈 detect once per component
 
@@ -218,7 +219,11 @@ export default function Card({
       : null;
 
     return (
-      <CardContainer href={`/${oldestFilm.slug}`} className={className}>
+      <CardContainer
+        href={`/${oldestFilm.slug}`}
+        className={className}
+        onNavigate={onNavigate}
+      >
         <CardContent
           image={media?.image || films[0]?.image}
           title={media?.name}
@@ -250,7 +255,11 @@ export default function Card({
   // Episode
   if (isEpisode) {
     return (
-      <CardContainer href={`/${media?.slug}`} className={className}>
+      <CardContainer
+        href={`/${media?.slug}`}
+        className={className}
+        onNavigate={onNavigate}
+      >
         <CardContent
           image={media?.season?.image || media?.image}
           title={`الحلقة ${media?.episodeNumber}`}
@@ -282,7 +291,11 @@ export default function Card({
 
   // Regular media
   return (
-    <CardContainer href={`/${media?.slug}`} className={className}>
+    <CardContainer
+      href={`/${media?.slug}`}
+      className={className}
+      onNavigate={onNavigate}
+    >
       <CardContent
         image={media.image}
         title={media.title}

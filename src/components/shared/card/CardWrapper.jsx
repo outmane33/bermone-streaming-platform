@@ -1,10 +1,11 @@
+// CardWrapper.jsx
 "use client";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import LoadingOverlay from "../skeletons/LoadingOverlay";
 
-export default function CardWrapper({ href, children }) {
+export default function CardWrapper({ href, children, onNavigate }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function CardWrapper({ href, children }) {
   const handleClick = (e) => {
     e.preventDefault();
 
-    // Save current URL to cookie
+    // Save return URL
     const params = searchParams.toString();
     if (params) {
       const currentUrl = `${pathname}?${params}`;
@@ -23,21 +24,32 @@ export default function CardWrapper({ href, children }) {
       )}; path=/; max-age=600`;
     }
 
-    // Show loading state
+    // Notify parent (e.g., SearchResults) that navigation is starting
+    if (onNavigate) onNavigate();
+
     setIsNavigating(true);
 
-    // Navigate with transition
     startTransition(() => {
       router.push(href);
     });
   };
+
+  useEffect(() => {
+    let timeoutId;
+    if (isNavigating) {
+      timeoutId = setTimeout(() => setIsNavigating(false), 500);
+    }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      setIsNavigating(false);
+    };
+  }, [isNavigating]);
 
   return (
     <>
       <Link href={href} onClick={handleClick}>
         {children}
       </Link>
-
       <LoadingOverlay isVisible={isNavigating} />
     </>
   );

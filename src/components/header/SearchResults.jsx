@@ -82,6 +82,7 @@ export const SearchResults = ({
                 media={item}
                 isTouchDevice={isTouchDevice}
                 className="!h-auto"
+                onNavigate={onResultClick}
               />
             ))}
           </div>
