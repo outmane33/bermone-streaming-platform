@@ -1,3 +1,4 @@
+// src/components/shared/heroSection/HeroSection.jsx
 import { HeroBadges } from "./HeroBadges";
 import HeroDetailsGrid from "./HeroDetailsGrid";
 import SocialShare from "./SocialShare";
@@ -19,7 +20,6 @@ export default function HeroSection({ media, type = "movie" }) {
     ? "مسلسلات انمي"
     : null;
 
-  // Map database fields to component structure
   const mappedMedia = {
     poster: media?.image,
     title: media?.title || media?.originalTitle,
@@ -28,7 +28,7 @@ export default function HeroSection({ media, type = "movie" }) {
     rating: media?.rating || 0,
     duration: media?.duration,
     story: media?.description,
-    category: category,
+    category,
     genre: media?.genre || null,
     country: media?.country,
     language: media?.language,
@@ -38,7 +38,9 @@ export default function HeroSection({ media, type = "movie" }) {
   return (
     <div className="relative rounded-3xl">
       <div
-        className={`absolute inset-0 ${DESIGN_TOKENS.glass.light} shadow-lg rounded-3xl`}
+        className={`absolute inset-0 
+          bg-white/5 md:bg-white/10 md:backdrop-blur-md
+          shadow-lg rounded-3xl`}
       />
 
       <div className="relative p-6 sm:p-10">
@@ -52,7 +54,7 @@ export default function HeroSection({ media, type = "movie" }) {
               <img
                 src={mappedMedia.poster}
                 alt={mappedMedia.title}
-                className={`relative w-72 sm:w-80 lg:w-96 h-[400px] sm:h-[444px] lg:h-[533px] object-cover rounded-xl shadow-2xl border-4 border-white/10 ${DESIGN_TOKENS.effects.transition} duration-700`}
+                className={`relative w-72 sm:w-80 lg:w-96 h-[400px] sm:h-[444px] lg:h-[533px] object-cover rounded-xl shadow-2xl border-4 border-white/10 transition-transform duration-300`}
               />
             </div>
           </div>
@@ -110,7 +112,10 @@ export default function HeroSection({ media, type = "movie" }) {
               </Button>
             </div>
 
-            <SocialShare />
+            <SocialShare
+              shareTitle={mappedMedia.title}
+              shareDescription={mappedMedia.story}
+            />
           </div>
         </div>
       </div>

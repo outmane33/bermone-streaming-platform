@@ -1,3 +1,4 @@
+// src/components/shared/heroSection/Button.jsx
 import { COMPONENT_STYLES, DESIGN_TOKENS } from "@/lib/data";
 
 export default function Button({
@@ -24,14 +25,18 @@ export default function Button({
         ${className}
       `}
     >
-      {/* Hover Effect Overlay for Primary Variant */}
+      {/* Hover overlay only on desktop (md+) */}
       {variant === "primary" && !disabled && (
         <div
-          className={`absolute inset-0 bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} opacity-0 group-hover:opacity-100 ${DESIGN_TOKENS.effects.transition} rounded-xl`}
+          className={`
+            absolute inset-0 rounded-xl
+            bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan}
+            opacity-0 md:group-hover:opacity-100
+            ${DESIGN_TOKENS.effects.transition}
+          `}
         />
       )}
 
-      {/* Button Content */}
       <div className="relative flex items-center gap-3 justify-center">
         {Icon && (
           <Icon

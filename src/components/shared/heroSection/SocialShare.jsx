@@ -1,4 +1,7 @@
+// src/components/shared/heroSection/SocialShare.jsx
 "use client";
+
+import { useState, useEffect } from "react";
 import { SOCIAL_LINKS, DESIGN_TOKENS } from "@/lib/data";
 
 function SocialButton({ icon: Icon, gradient, onClick, ariaLabel }) {
@@ -6,12 +9,15 @@ function SocialButton({ icon: Icon, gradient, onClick, ariaLabel }) {
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className={`group relative p-2 ${DESIGN_TOKENS.glass.light} ${DESIGN_TOKENS.glass.hover} rounded-lg ${DESIGN_TOKENS.effects.hoverLift} cursor-pointer`}
+      className={`group relative p-2 
+        bg-white/5 md:${DESIGN_TOKENS.glass.light.split(" ").join(" md:")}
+        rounded-lg cursor-pointer transition-colors
+      `}
     >
       <div
         className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-20 rounded-lg ${DESIGN_TOKENS.effects.transition}`}
       />
-      <div className="relative text-gray-300 group-hover:text-white transition-colors">
+      <div className="relative text-gray-300 group-hover:text-white">
         <Icon size={18} />
       </div>
     </button>
@@ -22,10 +28,15 @@ export default function SocialShare({
   title = "شارك مع اصدقائك :",
   onShare,
   className = "",
-  shareUrl = typeof window !== "undefined" ? window.location.href : "",
   shareTitle = "",
   shareDescription = "",
 }) {
+  const [shareUrl, setShareUrl] = useState("");
+
+  useEffect(() => {
+    setShareUrl(window.location.href);
+  }, []);
+
   const handleShare = (platform) => {
     onShare?.(platform);
 
@@ -43,7 +54,6 @@ export default function SocialShare({
     };
 
     const shareLink = shareLinks[platform.toLowerCase()];
-
     if (shareLink) {
       window.open(
         shareLink,
@@ -52,6 +62,8 @@ export default function SocialShare({
       );
     }
   };
+
+  if (!shareUrl) return null;
 
   return (
     <div

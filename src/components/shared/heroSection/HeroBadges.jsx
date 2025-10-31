@@ -1,3 +1,4 @@
+// src/components/shared/heroSection/HeroBadges.jsx
 import { COMPONENT_STYLES } from "@/lib/data";
 
 function Badge({ children, variant = "default", className = "" }) {
