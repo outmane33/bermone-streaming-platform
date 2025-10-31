@@ -1,9 +1,14 @@
-/* globals.css */
 @import "tailwindcss";
 
+/* Force dark mode always */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+/* Optional: still support light mode if needed later */
+@media (prefers-color-scheme: light) {
+  /* You can leave this empty, or override if you ever want light mode */
 }
 
 @theme inline {
@@ -13,19 +18,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-/* Optimized background — scrolls with content (mobile-friendly) */
 body {
   background-color: var(--background);
   color: var(--foreground);
   min-height: 100vh;
-  /* Apply subtle gradients that scroll with the page */
   background-image: radial-gradient(
       circle at 20% 30%,
       rgba(99, 102, 241, 0.15) 0%,
@@ -41,13 +37,9 @@ body {
       rgba(59, 130, 246, 0.1) 0%,
       transparent 50%
     );
-  background-attachment: local; /* Critical for smooth mobile scrolling */
+  background-attachment: local;
   background-repeat: no-repeat;
   background-size: cover;
-}
-
-/* Optional: improve text rendering */
-body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
