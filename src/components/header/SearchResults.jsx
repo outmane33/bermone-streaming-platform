@@ -1,9 +1,25 @@
 // components/header/SearchResults.jsx
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import Card from "../shared/card/Card";
-import { SkeletonCard } from "../shared/skeletons/Skeletons";
 
-// ... (LoadingState & EmptyState same as before)
+const LoadingState = () => (
+  <div className="px-4 py-12 text-center">
+    <ICON_MAP.Loader2
+      className="animate-spin text-cyan-400 mx-auto mb-3"
+      size={32}
+    />
+    <div className="text-gray-200 text-base">جاري البحث...</div>
+  </div>
+);
+
+const EmptyState = () => (
+  <div className="px-4 py-12 text-center">
+    <div className="text-gray-200 text-base mb-2 font-semibold">
+      لا توجد نتائج
+    </div>
+    <div className="text-gray-300 text-sm">جرب البحث بكلمات مختلفة</div>
+  </div>
+);
 
 export const SearchResults = ({
   searchResults,
