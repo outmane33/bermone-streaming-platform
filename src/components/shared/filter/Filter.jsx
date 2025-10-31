@@ -27,8 +27,8 @@ export default function Filter({
   isEpisode,
   currentFilters,
   isAnimeEpisode = false,
-  isCategoryPage = false, // ADD THIS PROP
-  contentType = "films", // ADD THIS PROP ('films' or 'series')
+  isCategoryPage = false,
+  contentType = "films",
 }) {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -72,17 +72,7 @@ export default function Filter({
     currentFilters?.country,
   ]);
 
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileMenuOpen]);
+  // REMOVED: Duplicate scroll lock - now handled in MobileMenu component
 
   useEffect(() => {
     if (isFirstRender.current) {
