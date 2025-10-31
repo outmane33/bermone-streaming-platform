@@ -64,12 +64,12 @@ export const SearchResults = ({
         </div>
         <div className="p-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {searchResults.slice(0, 12).map((item) => (
+            {searchResults.slice(0, 40).map((item) => (
               <Card
                 key={item.id}
                 media={item}
                 className="!h-auto"
-                onNavigate={onResultClick} // ✅ closes dropdown
+                onNavigate={onResultClick}
               />
             ))}
           </div>
