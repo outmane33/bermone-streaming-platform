@@ -1,3 +1,4 @@
+// app/layout.js
 import Header from "@/components/header/Header";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -25,9 +26,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        <div className="max-w-[1440px] mx-auto min-h-screen relative">
+        <div className="max-w-[1440px] mx-auto min-h-screen">
           <Header />
           {children}
         </div>
