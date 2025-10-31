@@ -4,7 +4,6 @@ export default function useIsTouchDevice() {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
-    // Run only on client
     const check = () =>
       "ontouchstart" in window ||
       navigator.maxTouchPoints > 0 ||
