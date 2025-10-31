@@ -1,3 +1,4 @@
+// components/header/SearchBar.jsx
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 
 export const SearchBar = ({
@@ -6,12 +7,11 @@ export const SearchBar = ({
   searchFocused,
   setSearchFocused,
   isSearching,
+  isTouchDevice,
 }) => (
   <div
-    className={`relative ${
-      DESIGN_TOKENS.effects.transition
-    } w-full sm:min-w-[260px] sm:w-auto ${
-      searchFocused ? "sm:w-96" : "sm:w-72"
+    className={`relative w-full sm:min-w-[260px] sm:w-auto ${
+      !isTouchDevice && searchFocused ? "sm:w-96" : "sm:w-72"
     }`}
   >
     <div className="relative flex items-center">
@@ -22,11 +22,11 @@ export const SearchBar = ({
         onChange={(e) => setSearchQuery(e.target.value)}
         onFocus={() => setSearchFocused(true)}
         onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-        className={`w-full px-10 sm:px-14 py-2.5 sm:py-3 pr-10 sm:pr-12 text-white placeholder-gray-200 outline-none text-sm sm:text-base font-medium ${DESIGN_TOKENS.effects.transition} rounded-xl ${DESIGN_TOKENS.glass.light} shadow-lg`}
+        className={`w-full px-10 sm:px-14 py-2.5 sm:py-3 pr-10 sm:pr-12 text-white placeholder-gray-200 outline-none text-sm sm:text-base font-medium rounded-xl ${
+          isTouchDevice ? "bg-black/40" : DESIGN_TOKENS.glass.light
+        } shadow-lg`}
         autoComplete="off"
       />
-
-      {/* Loading or Search Icon */}
       <div className="absolute left-3 sm:left-4 text-gray-400">
         {isSearching ? (
           <ICON_MAP.Loader2 className="animate-spin" size={20} />
