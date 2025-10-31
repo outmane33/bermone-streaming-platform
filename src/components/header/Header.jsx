@@ -9,6 +9,7 @@ import { Logo } from "./Logo";
 import { SearchBar } from "./SearchBar";
 import { SearchResults } from "./SearchResults";
 import { CategoryItem } from "./CategoryItem";
+import { MobileSubmenuModal } from "./MobileSubmenuModal";
 
 // Helper function to get active category from pathname
 const getActiveCategoryFromPath = (pathname) => {
@@ -84,6 +85,8 @@ export default function Header() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileSubmenuOpen, setMobileSubmenuOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -140,7 +143,13 @@ export default function Header() {
     const category = CATEGORIES.find((c) => c.id === categoryId);
 
     if (category?.subMenu) {
-      setOpenMenuId(openMenuId === categoryId ? null : categoryId);
+      // On mobile, open modal instead of dropdown
+      if (!isDesktop) {
+        setSelectedCategory(category);
+        setMobileSubmenuOpen(true);
+      } else {
+        setOpenMenuId(openMenuId === categoryId ? null : categoryId);
+      }
     } else {
       setActiveCategory(categoryId);
       setOpenMenuId(null);
@@ -287,6 +296,13 @@ export default function Header() {
           )}
         </div>
       </div>
+      {/* Mobile Submenu Modal */}
+      <MobileSubmenuModal
+        isOpen={mobileSubmenuOpen}
+        onClose={() => setMobileSubmenuOpen(false)}
+        category={selectedCategory}
+        items={selectedCategory?.subMenu || []}
+      />
     </div>
   );
 }

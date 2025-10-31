@@ -27,6 +27,8 @@ export default function FilterSectionClient({
   initialDocuments,
   initialPagination,
   children,
+  contentType = "films",
+  isCategoryPage = false,
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -96,6 +98,8 @@ export default function FilterSectionClient({
           currentFilters={currentFilters}
           isEpisode={isEpisode}
           isAnimeEpisode={isAnimeEpisode}
+          contentType={contentType}
+          isCategoryPage={isCategoryPage}
         />
 
         {initialDocuments?.length > 0 ? (

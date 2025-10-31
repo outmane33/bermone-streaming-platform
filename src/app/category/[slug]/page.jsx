@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
 import { Suspense } from "react";
 import { SkeletonFilterSection } from "@/components/shared/filterSection/SkeletonFilterSection";
+import { SORT_OPTIONS } from "@/lib/data";
 
 const VALID_SORT_IDS = [
   "foreignMovies",
@@ -72,16 +73,19 @@ export default async function CategoryPage({ params, searchParams }) {
   const isEpisode = sortId === "latestAnimeEpisodes";
   const isFilmCollection = sortId === "movieSeries";
 
+  const sortOptions = SORT_OPTIONS[slug];
+
   return (
     <div className="min-h-screen">
       <Suspense fallback={<SkeletonFilterSection />}>
         <FilterSection
           initialData={contentData}
-          contentType={slug}
           isEpisode={isEpisode}
           isFilmCollection={isFilmCollection}
           isAnimeEpisode={isEpisode}
           slug={slug}
+          isCategoryPage={true}
+          sortOptions={sortOptions}
         />
       </Suspense>
     </div>

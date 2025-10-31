@@ -54,13 +54,9 @@ export const SubMenuDropdown = ({
         isDesktop ? "mt-6 right-0 w-56" : "mt-4 right-0 w-44"
       } z-50`}
     >
-      {isDesktop && (
-        <div className="absolute -inset-1 bg-gradient-to-r bg-white/20 shadow-lg backdrop-blur-md rounded-xl blur-md opacity-50" />
-      )}
       <div
         className={`relative ${DESIGN_TOKENS.glass.light} rounded-xl shadow-2xl overflow-hidden`}
       >
-        <div className={`h-1 bg-gradient-to-r ${gradient}`} />
         <div className={`p-2 ${!isDesktop && "max-h-70 overflow-y-auto"}`}>
           {items.map((item, index) => {
             // Handle both object format and string format for backward compatibility
@@ -75,13 +71,13 @@ export const SubMenuDropdown = ({
                   href={path}
                   className={`relative group w-full text-right font-semibold ${
                     isDesktop ? "px-4 py-3" : "px-3 py-2.5"
-                  } rounded-lg ${DESIGN_TOKENS.effects.transition} ${
+                  } rounded-lg transition-all duration-300 ${
                     isDesktop ? "font-medium" : "text-sm font-medium"
                   } block ${
                     isActive
-                      ? "bg-white/30 text-white shadow-lg font-bold cursor-default"
-                      : `text-gray-100 hover:text-white ${DESIGN_TOKENS.glass.hover} cursor-pointer`
-                  } ${isDesktop && !isActive && "hover:shadow-lg"}`}
+                      ? "bg-white/30 text-white shadow-lg scale-[1.02]"
+                      : `text-gray-200 hover:text-white hover:bg-white/15 hover:scale-[1.02]`
+                  }`}
                   onClick={(e) => {
                     if (isActive) {
                       e.preventDefault();
@@ -91,24 +87,20 @@ export const SubMenuDropdown = ({
                     }
                   }}
                 >
-                  {/* Active indicator gradient background */}
+                  {/* Active indicator glow */}
                   {isActive && (
-                    <>
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-20 rounded-lg`}
-                      />
-                      <div
-                        className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} opacity-30 rounded-lg blur-sm`}
-                      />
-                    </>
+                    <div className="absolute inset-0 bg-white/10 rounded-lg blur-sm" />
+                  )}
+
+                  {/* Hover glow effect */}
+                  {!isActive && (
+                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 rounded-lg transition-all duration-300" />
                   )}
 
                   {isDesktop && (
                     <div className="relative flex items-center justify-between">
                       <div
-                        className={`w-2 h-2 rounded-full ${
-                          DESIGN_TOKENS.effects.transition
-                        } ${
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
                           isActive
                             ? "bg-white opacity-100 scale-110"
                             : "bg-white opacity-0 group-hover:opacity-100"

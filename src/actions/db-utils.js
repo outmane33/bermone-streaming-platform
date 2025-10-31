@@ -67,8 +67,7 @@ export const BASE_SORT_CONFIGS = {
 // 🎯 Build Match Query from Filters
 export const buildMatchQuery = (filters = {}, additionalFilters = {}) => {
   const cleanFilters = sanitize(filters);
-  const cleanAdditional = sanitize(additionalFilters);
-  const matchQuery = { ...cleanAdditional };
+  const matchQuery = { ...additionalFilters };
 
   if (cleanFilters.genre?.length > 0) {
     matchQuery.genre = { $in: cleanFilters.genre };
@@ -85,7 +84,6 @@ export const buildMatchQuery = (filters = {}, additionalFilters = {}) => {
       matchQuery.releaseYear = { $in: validYears };
     }
   }
-
   if (cleanFilters.language?.length > 0) {
     matchQuery.language = { $in: cleanFilters.language };
   }

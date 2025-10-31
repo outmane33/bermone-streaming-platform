@@ -27,6 +27,8 @@ export default function Filter({
   isEpisode,
   currentFilters,
   isAnimeEpisode = false,
+  isCategoryPage = false, // ADD THIS PROP
+  contentType = "films", // ADD THIS PROP ('films' or 'series')
 }) {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -128,9 +130,20 @@ export default function Filter({
     });
   }, []);
 
-  const handleSortClick = useCallback((sortId) => {
-    setSelectedSort((prev) => (prev === sortId ? prev : sortId));
-  }, []);
+  const handleSortClick = useCallback(
+    (sortId) => {
+      // If on category page, redirect instead of filtering
+      if (isCategoryPage) {
+        const basePath = contentType === "series" ? "/series" : "/films";
+        window.location.href = `${basePath}?sort=${sortId}`;
+        return;
+      }
+
+      // Normal behavior for non-category pages
+      setSelectedSort((prev) => (prev === sortId ? prev : sortId));
+    },
+    [isCategoryPage, contentType]
+  );
 
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
@@ -284,7 +297,7 @@ export default function Filter({
             />
             <button
               onClick={clearAllFilters}
-              className={`px-2 sm:px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-white rounded-lg text-xs sm:text-sm font-semibold ${DESIGN_TOKENS.effects.transition} duration-200 cursor-pointer`}
+              className={`px-2 sm:px-3 py-1 bg-gradient-to-r ${DESIGN_TOKENS.gradients.rose} hover:bg-gradient-to-r hover:from-rose-700 hover:to-pink-700 text-white rounded-lg text-xs sm:text-sm font-semibold ${DESIGN_TOKENS.effects.transition} cursor-pointer`}
             >
               مسح الكل
             </button>

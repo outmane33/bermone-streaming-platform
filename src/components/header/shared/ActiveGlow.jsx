@@ -1,10 +1,9 @@
 export const ActiveGlow = ({ gradient }) => (
-  <>
-    <div
-      className={`absolute -inset-1 bg-gradient-to-r ${gradient} rounded-lg blur-md opacity-75`}
-    />
-    <div
-      className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-lg opacity-90`}
-    />
-  </>
+  <div
+    className="absolute inset-0 bg-gradient-to-r opacity-20 rounded-lg blur-xl"
+    style={{
+      background:
+        gradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    }}
+  />
 );

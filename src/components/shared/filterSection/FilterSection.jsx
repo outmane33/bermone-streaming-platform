@@ -14,6 +14,7 @@ export default async function FilterSection({
   isAnimeEpisode = false,
   page,
   slug,
+  isCategoryPage = false,
 }) {
   const { documents, pagination } = initialData;
   const carouselData =
@@ -31,6 +32,8 @@ export default async function FilterSection({
         isAnimeEpisode={isAnimeEpisode}
         initialDocuments={documents}
         initialPagination={pagination}
+        contentType={slug}
+        isCategoryPage={isCategoryPage}
       >
         {documents?.length > 0 && (
           <div className={DESIGN_TOKENS.grid.container}>
