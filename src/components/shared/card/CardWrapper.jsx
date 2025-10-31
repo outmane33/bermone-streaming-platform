@@ -1,5 +1,6 @@
-// CardWrapper.jsx
+// src/components/shared/card/CardWrapper.jsx
 "use client";
+
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useTransition, useEffect } from "react";
@@ -24,11 +25,9 @@ export default function CardWrapper({ href, children, onNavigate }) {
       )}; path=/; max-age=600`;
     }
 
-    // Notify parent (e.g., SearchResults) that navigation is starting
-    if (onNavigate) onNavigate();
+    if (onNavigate) onNavigate(); // 👈 Close parent (e.g., SearchResults)
 
     setIsNavigating(true);
-
     startTransition(() => {
       router.push(href);
     });

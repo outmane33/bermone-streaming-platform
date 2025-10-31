@@ -1,6 +1,6 @@
+// src/components/skeletons/Skeletons.jsx
 import { DESIGN_TOKENS } from "@/lib/data";
 
-// Shared skeleton base classes
 const SKELETON = {
   base: "animate-pulse",
   bg: "bg-white/10",
@@ -8,10 +8,17 @@ const SKELETON = {
   border: "border border-white/20",
 };
 
-// Shared Skeleton Card Component
+// Helper: safely apply glass only on md+
+const getGlassClass = (token) => {
+  // Assumes token = "bg-white/10 backdrop-blur-md ..."
+  return `bg-white/5 md:${token.replace("bg-", "bg-")}`;
+};
+
 export const SkeletonCard = () => (
   <div
-    className={`${DESIGN_TOKENS.glass.light} rounded-lg overflow-hidden ${SKELETON.base}`}
+    className={`${getGlassClass(
+      DESIGN_TOKENS.glass.light
+    )} rounded-lg overflow-hidden ${SKELETON.base}`}
   >
     <div className={`aspect-[2/3] ${SKELETON.bgLight}`} />
     <div className="p-3 space-y-2">
@@ -38,7 +45,7 @@ export const SkeletonCarousel = () => (
 
 export const SkeletonFilterBar = () => (
   <div
-    className={`hidden lg:flex gap-2 mb-6 ${SKELETON.bg} rounded-xl backdrop-blur-md ${SKELETON.border} px-4 py-3 ${SKELETON.base}`}
+    className={`hidden lg:flex gap-2 mb-6 ${SKELETON.bg} rounded-xl lg:backdrop-blur-md ${SKELETON.border} px-4 py-3 ${SKELETON.base}`}
   >
     {[...Array(6)].map((_, i) => (
       <div key={i} className={`h-10 ${SKELETON.bgLight} rounded-lg w-24`} />
@@ -57,12 +64,12 @@ export const SkeletonPagination = () => (
 export const SkeletonHero = () => (
   <div className="relative rounded-3xl">
     <div
-      className={`absolute inset-0 ${DESIGN_TOKENS.glass.medium} shadow-lg rounded-3xl`}
+      className={`absolute inset-0 ${getGlassClass(
+        DESIGN_TOKENS.glass.medium
+      )} shadow-lg rounded-3xl`}
     />
-
     <div className="relative p-6 sm:p-10">
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        {/* Poster Skeleton */}
         <div className="flex-shrink-0 mx-auto lg:mx-0">
           <div className={`relative group ${SKELETON.base}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-xl" />
@@ -71,18 +78,13 @@ export const SkeletonHero = () => (
             />
           </div>
         </div>
-
-        {/* Info Section Skeleton */}
         <div
           className={`flex-1 flex flex-col justify-center gap-6 ${SKELETON.base}`}
         >
-          {/* Badges */}
           <div className="flex gap-2 mb-2">
             <div className={`h-7 w-20 ${SKELETON.bg} rounded-lg`} />
             <div className={`h-7 w-16 ${SKELETON.bg} rounded-lg`} />
           </div>
-
-          {/* Title */}
           <div className="space-y-3">
             <div
               className={`h-10 sm:h-12 lg:h-14 ${SKELETON.bg} rounded-lg w-3/4`}
@@ -91,21 +93,15 @@ export const SkeletonHero = () => (
               className={`h-10 sm:h-12 lg:h-14 ${SKELETON.bg} rounded-lg w-2/3`}
             />
           </div>
-
-          {/* Rating & Duration */}
           <div className="flex items-center gap-4">
             <div className={`h-12 w-32 ${SKELETON.bg} rounded-xl`} />
             <div className={`h-12 w-24 ${SKELETON.bg} rounded-xl`} />
           </div>
-
-          {/* Description */}
           <div className="space-y-2">
             <div className={`h-4 ${SKELETON.bg} rounded w-full`} />
             <div className={`h-4 ${SKELETON.bg} rounded w-5/6`} />
             <div className={`h-4 ${SKELETON.bg} rounded w-4/6`} />
           </div>
-
-          {/* Details Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-2">
@@ -114,14 +110,10 @@ export const SkeletonHero = () => (
               </div>
             ))}
           </div>
-
-          {/* Buttons */}
           <div className="flex flex-wrap gap-4">
             <div className={`h-12 w-36 ${SKELETON.bg} rounded-xl`} />
             <div className={`h-12 w-28 ${SKELETON.bg} rounded-xl`} />
           </div>
-
-          {/* Social Share */}
           <div className="flex gap-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className={`h-10 w-10 ${SKELETON.bg} rounded-lg`} />
@@ -133,19 +125,15 @@ export const SkeletonHero = () => (
   </div>
 );
 
-// Related Section Skeleton
 export const SkeletonRelated = () => (
   <div className="relative">
-    {/* Section Header */}
     <div className="mb-8">
       <div
         className={`h-9 w-48 ${SKELETON.bg} rounded-lg ${SKELETON.base} ml-auto`}
       />
       <div className="h-1 bg-gradient-to-l from-cyan-500/30 via-purple-500/30 to-transparent rounded-full mt-3" />
     </div>
-
-    {/* Cards Grid */}
-    <div className={DESIGN_TOKENS.grid.container}>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
       {[...Array(12)].map((_, i) => (
         <SkeletonCard key={i} />
       ))}
