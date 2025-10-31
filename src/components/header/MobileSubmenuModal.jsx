@@ -1,5 +1,5 @@
 // MobileSubmenuModal.jsx
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
@@ -7,6 +7,31 @@ import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 export const MobileSubmenuModal = memo(
   ({ isOpen, onClose, category, items }) => {
     const pathname = usePathname();
+
+    // Lock body scroll when modal is open
+    useEffect(() => {
+      if (isOpen) {
+        // Save current scroll position
+        const scrollY = window.scrollY;
+
+        // Lock body scroll
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = "100%";
+        document.body.style.overflow = "hidden";
+
+        return () => {
+          // Restore body scroll
+          document.body.style.position = "";
+          document.body.style.top = "";
+          document.body.style.width = "";
+          document.body.style.overflow = "";
+
+          // Restore scroll position
+          window.scrollTo(0, scrollY);
+        };
+      }
+    }, [isOpen]);
 
     if (!isOpen || !category) return null;
 
