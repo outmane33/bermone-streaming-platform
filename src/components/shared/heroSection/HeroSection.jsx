@@ -4,8 +4,9 @@ import HeroDetailsGrid from "./HeroDetailsGrid";
 import SocialShare from "./SocialShare";
 import Button from "./Button";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
+import Link from "next/link";
 
-export default function HeroSection({ media, type = "movie" }) {
+export default function HeroSection({ media, type = "movie", seriesSlug }) {
   const category = media?.category?.isForeignmovies
     ? "افلام اجنبي"
     : media?.category?.isAsianmovies
@@ -37,6 +38,25 @@ export default function HeroSection({ media, type = "movie" }) {
 
   return (
     <div className="relative rounded-3xl">
+      {seriesSlug && (
+        <Link
+          href={`/${seriesSlug}`}
+          className={`
+      absolute top-4 right-4 z-30
+      flex items-center gap-2
+      bg-white/15 md:${DESIGN_TOKENS.glass.light.replace("bg-", "bg-")}
+      rounded-lg
+      px-3 py-2
+      text-white font-semibold text-sm
+      ${DESIGN_TOKENS.effects.transition}
+      ${DESIGN_TOKENS.effects.hoverLift}
+    `}
+          aria-label="عودة إلى السلسلة"
+        >
+          <ICON_MAP.ArrowLeft size={16} className="text-white" />
+          <span>العودة إلى السلسلة</span>
+        </Link>
+      )}
       <div
         className={`absolute inset-0 
           bg-white/5 md:bg-white/10 md:backdrop-blur-md

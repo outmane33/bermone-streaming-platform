@@ -44,6 +44,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Home,
+  ArrowLeft,
 } from "lucide-react";
 
 // ============================================
@@ -86,6 +87,7 @@ export const ICON_MAP = {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  ArrowLeft,
 };
 
 // ============================================

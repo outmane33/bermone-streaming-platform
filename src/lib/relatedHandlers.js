@@ -74,7 +74,7 @@ export const relatedHandlers = {
               })
             )
           : [],
-      title: `Season ${data.season.seasonNumber} Episodes`,
+      title: `الموسم ${data.season.seasonNumber} الحلقات`,
       allEpisodes: episodes || [],
     };
   },
