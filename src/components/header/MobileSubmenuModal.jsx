@@ -1,12 +1,13 @@
 // MobileSubmenuModal.jsx
 import { memo, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 
 export const MobileSubmenuModal = memo(
   ({ isOpen, onClose, category, items, isTouchDevice }) => {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
       if (isOpen) {
@@ -33,8 +34,16 @@ export const MobileSubmenuModal = memo(
 
     const isItemActive = (itemPath) => {
       if (!pathname) return false;
-      const [itemBasePath] = itemPath.split("?");
-      return itemBasePath === pathname;
+
+      // Parse the item's path and query
+      const [itemBasePath, itemQuery] = itemPath.split("?");
+      const itemSort = new URLSearchParams(itemQuery).get("sort");
+
+      // Current page must match base path AND sort param
+      if (itemBasePath !== pathname) return false;
+
+      const currentSort = searchParams.get("sort");
+      return itemSort === currentSort;
     };
 
     return (
