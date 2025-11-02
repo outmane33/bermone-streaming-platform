@@ -1,6 +1,7 @@
 import Header from "@/components/header/Header";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,9 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="max-w-[1440px] mx-auto min-h-[100dvh]">
-          <Header />
+          <Suspense fallback={<header className="h-20" />}>
+            <Header />
+          </Suspense>
           {children}
         </div>
       </body>
