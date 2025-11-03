@@ -12,7 +12,6 @@ export const CONTENT_TYPES = {
   EPISODE: "episode",
 };
 
-// Content type detection and fetching strategies
 const CONTENT_STRATEGIES = {
   [CONTENT_TYPES.EPISODE]: {
     detect: (slug) =>
@@ -47,9 +46,7 @@ const CONTENT_STRATEGIES = {
   },
 };
 
-// Resolve media by trying detected type first, then fallback to all types
 export async function resolveMediaBySlug(slug) {
-  // Try detected type first (fast path)
   const detectedType = Object.entries(CONTENT_STRATEGIES).find(
     ([_, strategy]) => strategy.detect(slug)
   )?.[0];
@@ -59,7 +56,6 @@ export async function resolveMediaBySlug(slug) {
     if (result) return result;
   }
 
-  // Fallback: try all types in order
   for (const [type, _] of Object.entries(CONTENT_STRATEGIES)) {
     if (type !== detectedType) {
       const result = await tryFetchType(slug, type);

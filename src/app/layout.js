@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="max-w-[1440px] mx-auto min-h-[100dvh]">
+        <div className="max-w-[1440px] mx-auto min-h-[100dvh] ">
           <Suspense fallback={<header className="h-20" />}>
             <Header />
           </Suspense>

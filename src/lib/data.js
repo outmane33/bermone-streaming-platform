@@ -590,7 +590,7 @@ export const ITEMS_PER_PAGE = 18;
 export const CURRENT_YEAR = new Date().getFullYear();
 export const SEARCH_LIMIT = 20;
 export const MAX_SEASONS = 20;
-export const MAX_EPISODES = 30;
+export const MAX_EPISODES = 60;
 export const MAX_RELATED = 12;
 export const MAX_RESPONSE_SIZE = 1000;
 

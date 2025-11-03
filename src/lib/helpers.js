@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 
-// utils/helpers.js - Shared utilities
 export const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 export const useClickOutside = (isOpen, ref, callback) => {

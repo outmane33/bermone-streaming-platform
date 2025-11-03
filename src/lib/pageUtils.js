@@ -1,5 +1,3 @@
-// lib/pageUtils.js
-
 import { notFound } from "next/navigation";
 import { FILTER_CONFIG } from "@/lib/data";
 import { validatePage } from "./validation";
@@ -36,7 +34,6 @@ export function validateFilterValues(params) {
       const values = params[key].split(",").filter(Boolean);
       const allowedOptions = FILTER_CONFIG[key]?.options || [];
 
-      // Check if all values are in the allowed options
       const hasInvalidValues = values.some(
         (value) => !allowedOptions.includes(value)
       );
@@ -76,17 +73,13 @@ export function buildFilters(params, includeQuality = true) {
  * Parses and validates common page parameters
  */
 export function parsePageParams(params, validSortIds, validQueryParams) {
-  // Validate query parameters
   validateQueryParams(params, validQueryParams);
 
-  // Validate filter values
   validateFilterValues(params);
 
-  // Extract and validate sort
   const sortId = params?.sort || null;
   validateSortId(sortId, validSortIds);
 
-  // Extract page
   const page = validatePage(params?.page || "1");
 
   return { sortId, page };
@@ -100,3 +93,7 @@ export function createCarouselProps(documents) {
     carouselMida: documents,
   };
 }
+
+export const isEpisodeSlug = (slug) =>
+  slug.includes("موسم") && slug.includes("حلقة");
+export const cleanSlug = (slug) => decodeURIComponent(slug).trim();

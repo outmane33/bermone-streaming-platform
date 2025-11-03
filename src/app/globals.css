@@ -21,15 +21,15 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  min-height: 100dvh; /* dynamic viewport height for mobile */
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* prevent horizontal scroll */
+  overflow-x: hidden;
   position: relative;
-  min-height: 100vh; /* fallback */
-  min-height: 100dvh; /* modern browsers */
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* Fixed background using pseudo-element (mobile-safe) */
@@ -58,4 +58,57 @@ body::before {
   background-repeat: no-repeat;
   background-size: cover;
   z-index: -1;
+}
+
+/* =================================================== */
+/* Glass Effect Scrollbar – Desktop Only (Mobile Hidden) */
+
+/* Hide custom scrollbars on mobile to improve performance */
+@media (max-width: 767px) {
+  html {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  html::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
+}
+/* Enable custom scrollbars only on desktop */
+@media (min-width: 768px) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #cccccc transparent; /* fallback color (light gray) */
+  }
+
+  html::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  html::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05); /* very subtle dark gray */
+    border-radius: 10px;
+  }
+
+  html::-webkit-scrollbar-thumb {
+    /* Gray to white gradient */
+    background: linear-gradient(
+      to bottom,
+      #e0e0e0,
+      /* light gray */ #ffffff /* white */
+    );
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s ease;
+  }
+
+  html::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      to bottom,
+      #d0d0d0,
+      /* slightly darker on hover */ #f0f0f0
+    );
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  }
 }

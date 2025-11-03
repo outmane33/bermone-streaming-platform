@@ -2,11 +2,7 @@
 "use client";
 import React, { useState } from "react";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
-import {
-  getServicesForQuality,
-  getDownloadLinks,
-  logDownloadAction,
-} from "@/actions/download";
+import { getServicesForQuality, getDownloadLinks } from "@/actions/download";
 
 const decodeDownloadLink = (encodedLink) => {
   try {
@@ -154,13 +150,6 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
     setDownloadLinks(null);
     setLoadingServices(true);
 
-    await logDownloadAction("QUALITY_SELECTED", {
-      quality,
-      slug,
-      contentType,
-      timestamp: new Date().toISOString(),
-    });
-
     try {
       const result = await getServicesForQuality(slug, quality);
       if (result.success) {
@@ -181,28 +170,12 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
     setSelectedService(index);
     setShowDownloadButton(true);
     setDownloadLinks(null);
-
-    await logDownloadAction("SERVICE_SELECTED", {
-      quality: qualities[selectedQuality],
-      service: service.serviceName,
-      slug,
-      contentType,
-      timestamp: new Date().toISOString(),
-    });
   };
 
   // STEP 3: Handle download button click
   const handleDownloadClick = async () => {
     setLoadingLinks(true);
     setCountdown(3);
-
-    await logDownloadAction("DOWNLOAD_INITIATED", {
-      quality: qualities[selectedQuality],
-      service: availableServices[selectedService].serviceName,
-      slug,
-      contentType,
-      timestamp: new Date().toISOString(),
-    });
 
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
@@ -225,27 +198,9 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
 
       if (result.success) {
         setDownloadLinks(result.links);
-
-        await logDownloadAction("LINKS_RETRIEVED", {
-          quality: qualities[selectedQuality],
-          service: availableServices[selectedService].serviceName,
-          slug,
-          contentType,
-          hasDownload: !!result.links.downloadLink,
-          timestamp: new Date().toISOString(),
-        });
       }
     } catch (error) {
       console.error("Error fetching download links:", error);
-
-      await logDownloadAction("LINKS_FETCH_FAILED", {
-        quality: qualities[selectedQuality],
-        service: availableServices[selectedService].serviceName,
-        slug,
-        contentType,
-        error: error.message,
-        timestamp: new Date().toISOString(),
-      });
     } finally {
       setLoadingLinks(false);
     }
@@ -372,13 +327,6 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
                           "_blank",
                           "noopener,noreferrer"
                         );
-
-                        logDownloadAction("DOWNLOAD_CLICKED", {
-                          quality: downloadLinks.quality,
-                          service: downloadLinks.serviceName,
-                          slug,
-                          timestamp: new Date().toISOString(),
-                        });
                       } else {
                         console.error("❌ Failed to decode download link");
                       }

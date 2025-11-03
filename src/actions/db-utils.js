@@ -1,10 +1,8 @@
-// lib/db-utils.js (NOT a server action file - remove "use server")
 import { ObjectId } from "mongodb";
 import sanitize from "mongo-sanitize";
 import { CURRENT_YEAR, ITEMS_PER_PAGE, MAX_RESPONSE_SIZE } from "@/lib/data";
 import { validatePage } from "@/lib/validation";
 
-// 🔄 Serialization Helpers
 export const serializeObjectId = (id) => {
   if (!id) return null;
   return typeof id === "string" ? id : id.toString();
@@ -15,12 +13,10 @@ export const serializeDocument = (doc) => {
 
   const serialized = { ...doc };
 
-  // Convert _id
   if (serialized._id) {
     serialized._id = serializeObjectId(serialized._id);
   }
 
-  // Convert related IDs
   if (serialized.seriesId)
     serialized.seriesId = serializeObjectId(serialized.seriesId);
   if (serialized.seasonId)
@@ -31,7 +27,6 @@ export const serializeDocument = (doc) => {
 
 export const serializeDocuments = (docs) => docs.map(serializeDocument);
 
-// 🎯 Common Sort Configurations
 export const BASE_SORT_CONFIGS = {
   new: {
     sort: { createdAt: -1, rating: -1 },
@@ -63,8 +58,6 @@ export const BASE_SORT_CONFIGS = {
     filter: {},
   },
 };
-
-// 🎯 Build Match Query from Filters
 export const buildMatchQuery = (filters = {}, additionalFilters = {}) => {
   const cleanFilters = sanitize(filters);
   const matchQuery = { ...additionalFilters };
@@ -94,8 +87,6 @@ export const buildMatchQuery = (filters = {}, additionalFilters = {}) => {
 
   return matchQuery;
 };
-
-// 🎯 Build Standard Content Aggregation Pipeline
 export const buildContentAggregationPipeline = (
   filters,
   sortConfig,
@@ -104,7 +95,6 @@ export const buildContentAggregationPipeline = (
 ) => {
   const skip = (page - 1) * ITEMS_PER_PAGE;
 
-  // Apply sort-specific filters
   const sortFilter =
     typeof sortConfig.filter === "function"
       ? sortConfig.filter(filters.year?.length > 0)
@@ -112,7 +102,6 @@ export const buildContentAggregationPipeline = (
 
   const matchQuery = buildMatchQuery(filters, sortFilter);
 
-  // Default projection for content
   const defaultProjection = {
     _id: { $toString: "$_id" },
     title: 1,
@@ -141,14 +130,11 @@ export const buildContentAggregationPipeline = (
     },
   ];
 };
-
-// 🎯 Build Episode Aggregation Pipeline (with series lookup)
 export const buildEpisodeAggregationPipeline = (
   sortConfig,
   page,
   additionalMatch = {}
 ) => {
-  // Validate page
   const validPage = validatePage(page);
   const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
@@ -209,9 +195,6 @@ export const buildEpisodeAggregationPipeline = (
     },
   ];
 };
-
-// 🎯 Standard Pagination Response
-
 export const buildPaginationResponse = (result, page) => {
   const totalItems = Math.min(
     result.metadata[0]?.total || 0,
@@ -219,7 +202,6 @@ export const buildPaginationResponse = (result, page) => {
   );
   const documents = result.data || [];
 
-  // Limit total pages
   const maxPages = Math.ceil(MAX_RESPONSE_SIZE / ITEMS_PER_PAGE);
 
   return {
@@ -238,10 +220,8 @@ export const buildPaginationResponse = (result, page) => {
 
 // 🎯 Standard Error Response
 export const buildErrorResponse = (contentType, error, page = 1) => {
-  // Log the actual error on the server
   console.error(`Error with ${contentType}:`, error);
 
-  // Return generic message to client
   return {
     success: false,
     error: `An error occurred while fetching ${contentType}`,
@@ -257,12 +237,9 @@ export const buildErrorResponse = (contentType, error, page = 1) => {
     },
   };
 };
-
-// 🎯 Convert string to ObjectId safely
 export const toObjectId = (id) => {
   if (!id) return null;
 
-  // Validate ObjectId format before creating
   if (typeof id === "string") {
     if (!/^[a-f\d]{24}$/i.test(id)) {
       throw new Error("Invalid ObjectId format");
@@ -272,11 +249,8 @@ export const toObjectId = (id) => {
 
   return id;
 };
-
-// 🎯 Build Search Regex
 export const buildSearchRegex = (query, startsWith = false) => {
   const trimmedQuery = query.trim();
-  // Escape regex special characters
   const escapedQuery = trimmedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(startsWith ? `^${escapedQuery}` : escapedQuery, "i");
 };

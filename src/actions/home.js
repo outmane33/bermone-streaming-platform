@@ -1,6 +1,5 @@
-// home.js - REFACTORED
+// home.js
 "use server";
-
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
 import {
@@ -8,48 +7,41 @@ import {
   buildPaginationResponse,
   buildErrorResponse,
   serializeDocument,
+  buildContentAggregationPipeline,
 } from "./db-utils";
 import { validatePage } from "@/lib/validation";
 import { ITEMS_PER_PAGE } from "@/lib/data";
 
-// 🚀 Get latest added (films + series combined)
 export const getLatestAdded = cache(async (filters = {}, page = 1) => {
   try {
     const client = await clientPromise;
     const db = client.db();
-
     const validPage = validatePage(page);
     const skip = (validPage - 1) * ITEMS_PER_PAGE;
     const matchQuery = buildMatchQuery(filters);
 
-    // Get total count with filters
     const totalCount = await Promise.all([
       db.collection("films").countDocuments(matchQuery),
       db.collection("series").countDocuments(matchQuery),
     ]);
-
     const totalItems = totalCount[0] + totalCount[1];
 
-    // Calculate how many items we need to fetch
     const itemsToFetch = skip + ITEMS_PER_PAGE * 2;
-
-    // Fetch from both collections with filters
     const [filmsData, seriesData] = await Promise.all([
       db
         .collection("films")
-        .find(matchQuery)
+        .find(matchQuery, { projection: { services: 0 } })
         .sort({ createdAt: -1 })
         .limit(itemsToFetch)
         .toArray(),
       db
         .collection("series")
-        .find(matchQuery)
+        .find(matchQuery, { projection: { services: 0 } })
         .sort({ createdAt: -1 })
         .limit(itemsToFetch)
         .toArray(),
     ]);
 
-    // Merge and sort by createdAt
     const merged = [
       ...filmsData.map((item) => ({
         ...serializeDocument(item),
@@ -67,154 +59,74 @@ export const getLatestAdded = cache(async (filters = {}, page = 1) => {
       success: true,
       documents: merged,
       pagination: {
-        currentPage: page,
+        currentPage: validPage,
         totalPages: Math.ceil(totalItems / ITEMS_PER_PAGE),
         totalItems,
         itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: page < Math.ceil(totalItems / ITEMS_PER_PAGE),
-        hasPrev: page > 1,
+        hasNext: validPage < Math.ceil(totalItems / ITEMS_PER_PAGE),
+        hasPrev: validPage > 1,
       },
     };
   } catch (error) {
-    console.error("❌ Error fetching latest added:", error);
-    return buildErrorResponse("mixed", error, page);
+    return buildErrorResponse("latestAdded", error, page);
   }
 });
 
-// 🚀 Get new series (by category)
-export const getNewSeries = cache(async (filters = {}, page = 1) => {
-  try {
-    const client = await clientPromise;
-    const collection = client.db().collection("series");
+const buildTypedAggregationPipeline = (filters, page, contentType) => {
+  const type = contentType === "films" ? "film" : "series";
+  return buildContentAggregationPipeline(
+    filters,
+    { sort: { createdAt: -1, rating: -1 }, filter: { "category.isNew": true } },
+    page,
+    { type: { $literal: type } }
+  );
+};
 
-    const validPage = validatePage(page);
-    const skip = (validPage - 1) * ITEMS_PER_PAGE;
-
-    // Combine category filter with user filters
-    const matchQuery = buildMatchQuery(filters, {
-      "category.isNew": true,
-    });
-
-    const pipeline = [
-      { $match: matchQuery },
-      {
-        $facet: {
-          metadata: [{ $count: "total" }],
-          data: [
-            { $sort: { createdAt: -1, rating: -1 } },
-            { $skip: skip },
-            { $limit: ITEMS_PER_PAGE },
-            {
-              $project: {
-                _id: { $toString: "$_id" },
-                title: 1,
-                genre: 1,
-                rating: 1,
-                releaseYear: 1,
-                language: 1,
-                country: 1,
-                image: 1,
-                slug: 1,
-                category: 1,
-                duration: 1,
-                type: { $literal: "series" },
-              },
-            },
-          ],
-        },
-      },
-    ];
-
-    const [result] = await collection.aggregate(pipeline).toArray();
-
-    return {
-      success: true,
-      ...buildPaginationResponse(result, page),
-    };
-  } catch (error) {
-    console.error("❌ Error fetching new series:", error);
-    return buildErrorResponse("series", error, page);
-  }
-});
-
-// 🚀 Get new movies (by category)
 export const getNewMovies = cache(async (filters = {}, page = 1) => {
   try {
     const client = await clientPromise;
-    const collection = client.db().collection("films");
-
-    const validPage = validatePage(page);
-    const skip = (validPage - 1) * ITEMS_PER_PAGE;
-
-    // Combine category filter with user filters
-    const matchQuery = buildMatchQuery(filters, {
-      "category.isNew": true,
-    });
-
-    const pipeline = [
-      { $match: matchQuery },
-      {
-        $facet: {
-          metadata: [{ $count: "total" }],
-          data: [
-            { $sort: { createdAt: -1, rating: -1 } },
-            { $skip: skip },
-            { $limit: ITEMS_PER_PAGE },
-            {
-              $project: {
-                _id: { $toString: "$_id" },
-                title: 1,
-                genre: 1,
-                rating: 1,
-                releaseYear: 1,
-                language: 1,
-                country: 1,
-                image: 1,
-                slug: 1,
-                category: 1,
-                duration: 1,
-                type: { $literal: "film" },
-              },
-            },
-          ],
-        },
-      },
-    ];
-
-    const [result] = await collection.aggregate(pipeline).toArray();
-
-    return {
-      success: true,
-      ...buildPaginationResponse(result, page),
-    };
+    const pipeline = buildTypedAggregationPipeline(filters, page, "films");
+    const [result] = await client
+      .db()
+      .collection("films")
+      .aggregate(pipeline)
+      .toArray();
+    return { success: true, ...buildPaginationResponse(result, page) };
   } catch (error) {
-    console.error("❌ Error fetching new movies:", error);
     return buildErrorResponse("films", error, page);
   }
 });
 
-// 🚀 Get latest episodes
+export const getNewSeries = cache(async (filters = {}, page = 1) => {
+  try {
+    const client = await clientPromise;
+    const pipeline = buildTypedAggregationPipeline(filters, page, "series");
+    const [result] = await client
+      .db()
+      .collection("series")
+      .aggregate(pipeline)
+      .toArray();
+    return { success: true, ...buildPaginationResponse(result, page) };
+  } catch (error) {
+    return buildErrorResponse("series", error, page);
+  }
+});
+
 export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
   try {
     const client = await clientPromise;
     const db = client.db();
-
     const validPage = validatePage(page);
     const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
-    // For episodes, we need to filter by series properties
     let seriesIds = null;
-
     if (Object.keys(filters).length > 0) {
       const seriesMatchQuery = buildMatchQuery(filters);
       const matchingSeries = await db
         .collection("series")
         .find(seriesMatchQuery, { projection: { _id: 1 } })
         .toArray();
-
       seriesIds = matchingSeries.map((s) => s._id);
-
-      // If no matching series found, return empty result
       if (seriesIds.length === 0) {
         return {
           success: true,
@@ -231,14 +143,9 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
       }
     }
 
-    const collection = db.collection("episodes");
-
-    // Build episode match query
     const episodeMatch = seriesIds ? { seriesId: { $in: seriesIds } } : {};
-
     const pipeline = [
       { $match: episodeMatch },
-      // Lookup season data
       {
         $lookup: {
           from: "seasons",
@@ -291,14 +198,12 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
       },
     ];
 
-    const [result] = await collection.aggregate(pipeline).toArray();
-
-    return {
-      success: true,
-      ...buildPaginationResponse(result, page),
-    };
+    const [result] = await db
+      .collection("episodes")
+      .aggregate(pipeline)
+      .toArray();
+    return { success: true, ...buildPaginationResponse(result, page) };
   } catch (error) {
-    console.error("❌ Error fetching latest episodes:", error);
     return buildErrorResponse("episodes", error, page);
   }
 });

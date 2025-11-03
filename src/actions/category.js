@@ -1,12 +1,21 @@
+// category.js
 "use server";
 import { cache } from "react";
 import sanitize from "mongo-sanitize";
-import { ITEMS_PER_PAGE } from "@/lib/data";
 import clientPromise from "@/lib/mongodb";
+import {
+  BASE_SORT_CONFIGS,
+  buildContentAggregationPipeline,
+  buildEpisodeAggregationPipeline,
+  buildPaginationResponse,
+  buildErrorResponse,
+} from "@/actions/db-utils";
 import { validatePage } from "@/lib/validation";
+import { ITEMS_PER_PAGE } from "@/lib/data";
 
-// 🎯 Sort configurations for FILMS
+// Extend base configs with category-specific ones
 const FILMS_SORT_CONFIGS = {
+  ...BASE_SORT_CONFIGS,
   foreignMovies: {
     sort: { createdAt: -1, rating: -1 },
     filter: { "category.isForeignmovies": true },
@@ -26,8 +35,8 @@ const FILMS_SORT_CONFIGS = {
   },
 };
 
-// 🎯 Sort configurations for SERIES
 const SERIES_SORT_CONFIGS = {
+  ...BASE_SORT_CONFIGS,
   foreignSeries: {
     sort: { createdAt: -1, rating: -1 },
     filter: { "category.isForeignseries": true },
@@ -51,140 +60,10 @@ const SERIES_SORT_CONFIGS = {
   },
 };
 
-// 🎯 Build MongoDB aggregation query for EPISODES (anime episodes)
-function buildEpisodesAggregationPipeline(sortConfig, page) {
-  const validPage = validatePage(page);
-  const skip = (validPage - 1) * ITEMS_PER_PAGE;
-
-  return [
-    {
-      $lookup: {
-        from: "series",
-        localField: "seriesId",
-        foreignField: "_id",
-        as: "series",
-      },
-    },
-    { $unwind: { path: "$series", preserveNullAndEmptyArrays: false } },
-    {
-      $lookup: {
-        from: "seasons",
-        localField: "seasonId",
-        foreignField: "_id",
-        as: "season",
-      },
-    },
-    { $unwind: { path: "$season", preserveNullAndEmptyArrays: true } },
-    { $match: sortConfig.filter },
-    {
-      $facet: {
-        metadata: [{ $count: "total" }],
-        data: [
-          { $sort: sortConfig.sort },
-          { $skip: skip },
-          { $limit: ITEMS_PER_PAGE },
-          {
-            $project: {
-              _id: { $toString: "$_id" },
-              seriesId: { $toString: "$seriesId" },
-              seasonId: { $toString: "$seasonId" },
-              episodeNumber: 1,
-              duration: 1,
-              slug: 1,
-              createdAt: 1,
-              updatedAt: 1,
-              series: {
-                _id: { $toString: "$series._id" },
-                title: "$series.title",
-                image: "$series.image",
-                slug: "$series.slug",
-                rating: "$series.rating",
-                genre: "$series.genre",
-              },
-              season: {
-                _id: { $toString: "$season._id" },
-                seasonNumber: "$season.seasonNumber",
-                image: "$season.image",
-              },
-            },
-          },
-        ],
-      },
-    },
-  ];
-}
-
-// 🎯 Build MongoDB aggregation query for FILMS/SERIES
-function buildContentAggregationPipeline(filters, sortConfig, page) {
-  const cleanFilters = sanitize(filters);
-  const validPage = validatePage(page);
-  const skip = (validPage - 1) * ITEMS_PER_PAGE;
-
-  const matchQuery = {};
-
-  const sortFilter =
-    typeof sortConfig.filter === "function"
-      ? sortConfig.filter(filters.year?.length > 0)
-      : sortConfig.filter;
-
-  Object.assign(matchQuery, sortFilter);
-
-  if (cleanFilters.genre?.length > 0) {
-    matchQuery.genre = { $in: cleanFilters.genre };
-  }
-
-  if (cleanFilters.year?.length > 0) {
-    matchQuery.releaseYear = {
-      $in: cleanFilters.year.map((y) => parseInt(y, 10)),
-    };
-  }
-
-  if (cleanFilters.language?.length > 0) {
-    matchQuery.language = { $in: cleanFilters.language };
-  }
-
-  if (cleanFilters.country?.length > 0) {
-    matchQuery.country = { $in: cleanFilters.country };
-  }
-
-  return [
-    { $match: matchQuery },
-    {
-      $facet: {
-        metadata: [{ $count: "total" }],
-        data: [
-          { $sort: sortConfig.sort },
-          { $skip: skip },
-          { $limit: ITEMS_PER_PAGE },
-          {
-            $project: {
-              _id: { $toString: "$_id" },
-              title: 1,
-              genre: 1,
-              rating: 1,
-              releaseYear: 1,
-              language: 1,
-              country: 1,
-              image: 1,
-              slug: 1,
-              category: 1,
-              duration: 1,
-              seasons: 1,
-              totalEpisodes: 1,
-              status: 1,
-            },
-          },
-        ],
-      },
-    },
-  ];
-}
-
-// 🎯 Build MongoDB aggregation query for FILM COLLECTIONS
+// Reuse film collections pipeline logic if it becomes common — for now keep minimal
 function buildFilmCollectionsAggregationPipeline(page) {
   const validPage = validatePage(page);
   const skip = (validPage - 1) * ITEMS_PER_PAGE;
-
   return [
     {
       $lookup: {
@@ -231,7 +110,6 @@ function buildFilmCollectionsAggregationPipeline(page) {
   ];
 }
 
-// 🚀 Main action - works for films and series (including anime content)
 export const getContent = cache(
   async (contentType, filters = {}, sortId = null, page = 1) => {
     try {
@@ -239,12 +117,8 @@ export const getContent = cache(
         throw new Error("Invalid content type. Must be 'films' or 'series'");
       }
 
-      // Validate page
       const validPage = validatePage(page);
-
       const client = await clientPromise;
-
-      // Determine sort configs based on content type
       const sortConfigs =
         contentType === "films" ? FILMS_SORT_CONFIGS : SERIES_SORT_CONFIGS;
 
@@ -255,29 +129,21 @@ export const getContent = cache(
       const sortConfig =
         sortId && sortConfigs[sortId]
           ? sortConfigs[sortId]
-          : {
-              sort: { createdAt: -1 },
-              filter: {},
-            };
+          : { sort: { createdAt: -1 }, filter: {} };
 
       let pipeline;
       let collectionName;
       let resultContentType;
 
-      // 🎬 Special handling for film collections
       if (sortConfig.type === "filmCollections") {
         collectionName = "filmcollections";
         pipeline = buildFilmCollectionsAggregationPipeline(validPage);
         resultContentType = "filmCollections";
-      }
-      // 🎬 Special handling for episodes-based sorts
-      else if (sortConfig.type === "episodes") {
+      } else if (sortConfig.type === "episodes") {
         collectionName = "episodes";
-        pipeline = buildEpisodesAggregationPipeline(sortConfig, validPage);
+        pipeline = buildEpisodeAggregationPipeline(sortConfig, validPage);
         resultContentType = "episodes";
-      }
-      // Regular films/series query
-      else {
+      } else {
         collectionName = contentType;
         pipeline = buildContentAggregationPipeline(
           filters,
@@ -290,39 +156,31 @@ export const getContent = cache(
       const collection = client.db().collection(collectionName);
       const [result] = await collection.aggregate(pipeline).toArray();
 
-      const totalItems = result.metadata[0]?.total || 0;
-      const documents = result.data || [];
+      if (!result) {
+        return buildErrorResponse(
+          resultContentType,
+          new Error("Empty result"),
+          validPage
+        );
+      }
+
+      const { documents, pagination } = buildPaginationResponse(
+        result,
+        validPage
+      );
 
       return {
         success: true,
         documents,
         contentType: resultContentType,
-        pagination: {
-          currentPage: validPage,
-          totalPages: Math.ceil(totalItems / ITEMS_PER_PAGE),
-          totalItems,
-          itemsPerPage: ITEMS_PER_PAGE,
-          hasNext: validPage < Math.ceil(totalItems / ITEMS_PER_PAGE),
-          hasPrev: validPage > 1,
-        },
+        pagination,
       };
     } catch (error) {
-      console.error(`❌ Error fetching ${contentType}:`, error);
-
-      return {
-        success: false,
-        error: "Failed to fetch content",
-        documents: [],
-        contentType,
-        pagination: {
-          currentPage: page,
-          totalPages: 0,
-          totalItems: 0,
-          itemsPerPage: ITEMS_PER_PAGE,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
+      return buildErrorResponse(
+        sortId?.includes("Episode") ? "episodes" : contentType,
+        error,
+        validatePage(page)
+      );
     }
   }
 );

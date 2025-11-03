@@ -1,9 +1,7 @@
-// series.js - REFACTORED
+// series.js
 "use server";
-
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
-import sanitize from "mongo-sanitize";
 import {
   BASE_SORT_CONFIGS,
   buildContentAggregationPipeline,
@@ -14,227 +12,151 @@ import {
 } from "./db-utils";
 import { validatePage } from "@/lib/validation";
 import { MAX_EPISODES, MAX_SEASONS, ITEMS_PER_PAGE } from "@/lib/data";
+import { cleanSlug } from "@/lib/pageUtils";
 
-// 🚀 Get Series with filters and sorting
+// Reusable serializer for seasons/episodes
+const serializeSeason = (season) => ({
+  _id: season._id.toString(),
+  seriesId: season.seriesId.toString(),
+  seasonNumber: season.seasonNumber,
+  releaseYear: season.releaseYear,
+  rating: season.rating,
+  image: season.image,
+  status: season.status,
+  slug: season.slug,
+  createdAt: season.createdAt?.toISOString(),
+  updatedAt: season.updatedAt?.toISOString(),
+});
+
+const serializeEpisode = (episode) => ({
+  _id: episode._id.toString(),
+  seriesId: episode.seriesId.toString(),
+  seasonId: episode.seasonId.toString(),
+  episodeNumber: episode.episodeNumber,
+  duration: episode.duration,
+  slug: episode.slug,
+  createdAt: episode.createdAt?.toISOString(),
+  updatedAt: episode.updatedAt?.toISOString(),
+});
+
 export const getSeries = cache(
   async (filters = {}, sortId = "all", page = 1) => {
     try {
       const client = await clientPromise;
-      const collection = client.db().collection("series");
-
       const sortConfig = BASE_SORT_CONFIGS[sortId] || BASE_SORT_CONFIGS.all;
-
       const pipeline = buildContentAggregationPipeline(
         filters,
         sortConfig,
         page
       );
-      const [result] = await collection.aggregate(pipeline).toArray();
-
-      return {
-        success: true,
-        ...buildPaginationResponse(result, page),
-      };
+      const [result] = await client
+        .db()
+        .collection("series")
+        .aggregate(pipeline)
+        .toArray();
+      return { success: true, ...buildPaginationResponse(result, page) };
     } catch (error) {
-      console.error("❌ Error fetching series:", error);
       return buildErrorResponse("series", error, page);
     }
   }
 );
 
-// 🚀 Get single series by slug
 export const getSerieBySlug = cache(async (slug) => {
   try {
     const client = await clientPromise;
-    const collection = client.db().collection("series");
-
-    const cleanSlug = sanitize(decodeURIComponent(slug));
-    const serie = await collection.findOne({ slug: cleanSlug });
-
-    if (!serie) {
-      return {
-        success: false,
-        error: "Serie not found",
-        serie: null,
-      };
-    }
-
-    return {
-      success: true,
-      serie: serializeDocument(serie),
-    };
+    const doc = await client
+      .db()
+      .collection("series")
+      .findOne({ slug: cleanSlug(slug) });
+    if (!doc) return { success: false, error: "Serie not found", serie: null };
+    return { success: true, serie: serializeDocument(doc) };
   } catch (error) {
-    console.error("❌ Error fetching serie by slug:", error);
-    return {
-      success: false,
-      error: "An error occurred while fetching the series", // ✅ Generic
-      serie: null,
-    };
+    return buildErrorResponse("serie", error);
   }
 });
 
-// 🎯 Get seasons by series ID
 export const getSeasonsBySeries = cache(async (seriesId) => {
   try {
     const client = await clientPromise;
-    const collection = client.db().collection("seasons");
-
-    const seriesObjectId = toObjectId(seriesId);
-
-    const seasons = await collection
-      .find({ seriesId: seriesObjectId })
+    const seasons = await client
+      .db()
+      .collection("seasons")
+      .find({ seriesId: toObjectId(seriesId) })
       .sort({ seasonNumber: 1 })
       .limit(MAX_SEASONS)
       .toArray();
-    if (!seasons || seasons.length === 0) {
-      return {
-        success: false,
-        message: "No seasons found for this series",
-        seasons: [],
-      };
-    }
+
+    if (!seasons.length)
+      return { success: false, message: "No seasons found", seasons: [] };
 
     return {
       success: true,
-      seasons: seasons.map((season) => ({
-        _id: season._id.toString(),
-        seriesId: season.seriesId.toString(),
-        seasonNumber: season.seasonNumber,
-        releaseYear: season.releaseYear,
-        rating: season.rating,
-        image: season.image,
-        status: season.status,
-        slug: season.slug,
-        createdAt: season.createdAt?.toISOString(),
-        updatedAt: season.updatedAt?.toISOString(),
-      })),
+      seasons: seasons.map(serializeSeason),
       count: seasons.length,
     };
   } catch (error) {
-    console.error("❌ Error fetching seasons by series:", error);
-    return {
-      success: false,
-      error: "An error occurred while fetching seasons", // ✅ Generic
-      seasons: [],
-    };
+    return buildErrorResponse("seasons", error);
   }
 });
 
-// 🚀 Get single season by slug
 export const getSeasonBySlug = cache(async (slug) => {
   try {
     const client = await clientPromise;
     const db = client.db();
-
-    const cleanSlug = sanitize(decodeURIComponent(slug));
-
-    const season = await db.collection("seasons").findOne({ slug: cleanSlug });
-
-    if (!season) {
+    const season = await db
+      .collection("seasons")
+      .findOne({ slug: cleanSlug(slug) });
+    if (!season)
       return {
         success: false,
         error: "Season not found",
         season: null,
         series: null,
       };
-    }
 
-    const series = await db.collection("series").findOne({
-      _id: season.seriesId,
-    });
-
+    const series = await db
+      .collection("series")
+      .findOne({ _id: season.seriesId });
     return {
       success: true,
-      season: {
-        _id: season._id.toString(),
-        seriesId: season.seriesId.toString(),
-        seasonNumber: season.seasonNumber,
-        releaseYear: season.releaseYear,
-        rating: season.rating,
-        image: season.image,
-        status: season.status,
-        slug: season.slug,
-        createdAt: season.createdAt?.toISOString(),
-        updatedAt: season.updatedAt?.toISOString(),
-      },
-      series: series
-        ? {
-            _id: series._id.toString(),
-            title: series.title,
-            description: series.description,
-            genre: series.genre,
-            releaseYear: series.releaseYear,
-            slug: series.slug,
-          }
-        : null,
+      season: serializeSeason(season),
+      series: series ? serializeDocument(series) : null,
     };
   } catch (error) {
-    console.error("❌ Error fetching season by slug:", error);
-    return {
-      success: false,
-      error: "An error occurred while fetching the season", // ✅ Generic
-      season: null,
-      series: null,
-    };
+    return buildErrorResponse("season", error);
   }
 });
 
-// 🎯 Get episodes by season ID
 export const getEpisodesBySeason = cache(async (seasonId) => {
   try {
     const client = await clientPromise;
-    const collection = client.db().collection("episodes");
-
-    const seasonObjectId = toObjectId(seasonId);
-
-    const episodes = await collection
-      .find({ seasonId: seasonObjectId })
+    const episodes = await client
+      .db()
+      .collection("episodes")
+      .find({ seasonId: toObjectId(seasonId) })
       .sort({ episodeNumber: 1 })
       .limit(MAX_EPISODES)
       .toArray();
 
-    if (!episodes || episodes.length === 0) {
-      return {
-        success: false,
-        message: "No episodes found for this season",
-        episodes: [],
-      };
-    }
+    if (!episodes.length)
+      return { success: false, message: "No episodes found", episodes: [] };
 
     return {
       success: true,
-      episodes: episodes.map((episode) => ({
-        _id: episode._id.toString(),
-        seriesId: episode.seriesId.toString(),
-        seasonId: episode.seasonId.toString(),
-        episodeNumber: episode.episodeNumber,
-        duration: episode.duration,
-        slug: episode.slug,
-        createdAt: episode.createdAt?.toISOString(),
-        updatedAt: episode.updatedAt?.toISOString(),
-      })),
+      episodes: episodes.map(serializeEpisode),
       count: episodes.length,
     };
   } catch (error) {
-    console.error("❌ Error fetching episodes by season:", error);
-    return {
-      success: false,
-      error: "An error occurred while fetching episodes", // ✅ Generic
-      episodes: [],
-    };
+    return buildErrorResponse("episodes", error);
   }
 });
 
-// 🚀 Get single episode by slug
 export const getEpisodeBySlug = cache(async (slug) => {
   try {
     const client = await clientPromise;
     const db = client.db();
-
-    const cleanSlug = sanitize(decodeURIComponent(slug));
-
     const pipeline = [
-      { $match: { slug: cleanSlug } },
+      { $match: { slug: cleanSlug(slug) } },
       {
         $lookup: {
           from: "seasons",
@@ -254,13 +176,11 @@ export const getEpisodeBySlug = cache(async (slug) => {
       },
       { $unwind: "$series" },
     ];
-
     const result = await db
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
-
-    if (!result || result.length === 0) {
+    if (!result.length)
       return {
         success: false,
         error: "Episode not found",
@@ -268,64 +188,23 @@ export const getEpisodeBySlug = cache(async (slug) => {
         season: null,
         series: null,
       };
-    }
 
     const data = result[0];
-
     return {
       success: true,
-      episode: {
-        _id: data._id.toString(),
-        seriesId: data.seriesId.toString(),
-        seasonId: data.seasonId.toString(),
-        episodeNumber: data.episodeNumber,
-        duration: data.duration,
-        slug: data.slug,
-        createdAt: data.createdAt?.toISOString(),
-        updatedAt: data.updatedAt?.toISOString(),
-      },
-      season: {
-        _id: data.season._id.toString(),
-        seasonNumber: data.season.seasonNumber,
-        releaseYear: data.season.releaseYear,
-        rating: data.season.rating,
-        image: data.season.image,
-        status: data.season.status,
-        slug: data.season.slug,
-      },
-      series: {
-        _id: data.series._id.toString(),
-        title: data.series.title,
-        description: data.series.description,
-        genre: data.series.genre,
-        releaseYear: data.series.releaseYear,
-        slug: data.series.slug,
-        rating: data.series.rating,
-        country: data.series.country,
-        language: data.series.language,
-      },
+      episode: serializeEpisode(data),
+      season: serializeSeason(data.season),
+      series: serializeDocument(data.series),
     };
   } catch (error) {
-    console.error("❌ Error fetching episode by slug:", error);
-    return {
-      success: false,
-      error: "An error occurred while fetching the episode", // ✅ Generic
-      episode: null,
-      season: null,
-      series: null,
-    };
+    return buildErrorResponse("episode", error);
   }
 });
 
-// 🎯 Get All Episodes (with pagination)
 export const getEpisodes = cache(async (page = 1) => {
   try {
     const client = await clientPromise;
-    const collection = client.db().collection("episodes");
-
     const validPage = validatePage(page);
-    const skip = (validPage - 1) * ITEMS_PER_PAGE;
-
     const pipeline = [
       {
         $lookup: {
@@ -350,7 +229,7 @@ export const getEpisodes = cache(async (page = 1) => {
           metadata: [{ $count: "total" }],
           data: [
             { $sort: { createdAt: -1 } },
-            { $skip: skip },
+            { $skip: (validPage - 1) * ITEMS_PER_PAGE },
             { $limit: ITEMS_PER_PAGE },
             {
               $project: {
@@ -378,15 +257,13 @@ export const getEpisodes = cache(async (page = 1) => {
         },
       },
     ];
-
-    const [result] = await collection.aggregate(pipeline).toArray();
-
-    return {
-      success: true,
-      ...buildPaginationResponse(result, page),
-    };
+    const [result] = await client
+      .db()
+      .collection("episodes")
+      .aggregate(pipeline)
+      .toArray();
+    return { success: true, ...buildPaginationResponse(result, validPage) };
   } catch (error) {
-    console.error("❌ Error fetching episodes:", error);
     return buildErrorResponse("episodes", error, page);
   }
 });

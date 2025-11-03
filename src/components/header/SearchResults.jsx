@@ -27,6 +27,7 @@ export const SearchResults = ({
   onClose,
   isLoading,
 }) => {
+  console.log("searchResults: ", searchResults);
   if (isLoading) {
     return (
       <div className="absolute top-full left-4 right-4 z-50 rounded-xl mt-2">
@@ -66,7 +67,7 @@ export const SearchResults = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {searchResults.slice(0, 40).map((item) => (
               <Card
-                key={item.id}
+                key={item.id || item._id}
                 media={item}
                 className="!h-auto"
                 onNavigate={onResultClick}

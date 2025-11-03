@@ -1,7 +1,11 @@
 import Card from "@/components/shared/card/Card";
 import { DESIGN_TOKENS } from "@/lib/data";
+import { EpisodeTag } from "../card/EpisodeTag";
 
 export default function RelatedSection({ relatedMedia, title }) {
+  const type = relatedMedia[0]?.type;
+  console.log("relatedMedia: ", type);
+
   return (
     <div className="relative">
       {/* Section Header */}
@@ -15,12 +19,30 @@ export default function RelatedSection({ relatedMedia, title }) {
         <div className="h-1 bg-gradient-to-l from-cyan-500 via-purple-500 to-transparent rounded-full mt-3"></div>
       </div>
 
-      {/* Media Grid */}
-      <div className={DESIGN_TOKENS.grid.container}>
-        {relatedMedia.map((media, index) => (
-          <Card key={index} media={media} />
-        ))}
-      </div>
+      {/* Media Grid or Episode List */}
+      {type === "episode" ? (
+        <div className="relative">
+          {/* Scrollable Episode Container with Max Height */}
+          <div className="max-h-96 overflow-y-auto pr-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {relatedMedia.map((media, index) => (
+                <EpisodeTag key={index} episode={media} />
+              ))}
+            </div>
+          </div>
+
+          {/* Optional: Bottom Gradient Indicator */}
+          {relatedMedia.length > 12 && (
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+          )}
+        </div>
+      ) : (
+        <div className={DESIGN_TOKENS.grid.container}>
+          {relatedMedia.map((media, index) => (
+            <Card key={index} media={media} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

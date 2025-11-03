@@ -1,25 +1,7 @@
 import { CONTENT_TYPES } from "./mediaResolver";
 
-// Unified serialization utilities
 const serializeId = (id) =>
   id?.toString() || (typeof id === "object" ? JSON.stringify(id) : id);
-
-const serializeQuality = (quality) =>
-  typeof quality === "string"
-    ? quality
-    : {
-        quality: quality.quality,
-        iframe: quality.iframe,
-        downloadLink: quality.downloadLink,
-        _id: serializeId(quality._id),
-      };
-
-const serializeServices = (services) =>
-  services?.map((service) => ({
-    serviceName: service.serviceName,
-    qualities: service.qualities?.map(serializeQuality) || [],
-    _id: serializeId(service._id),
-  })) || [];
 
 const serializeCategory = (category) => ({
   isNew: category?.isNew || false,
@@ -50,14 +32,12 @@ const serializeMediaBase = (media) => ({
   views: media.views,
   trailer: media.trailer,
   status: media.status,
-  services: serializeServices(media.services),
   createdAt: media.createdAt?.toISOString(),
   updatedAt: media.updatedAt?.toISOString(),
   category: serializeCategory(media.category),
   slug: media.slug,
 });
 
-// Type-specific serializers
 export const serializers = {
   [CONTENT_TYPES.FILM]: (data) => ({
     ...serializeMediaBase(data),
@@ -114,7 +94,6 @@ export const serializers = {
         image: data.seasonImage,
         duration: data.episode.duration,
         episodeNumber: data.episode.episodeNumber,
-        services: data.episode.services,
         type: CONTENT_TYPES.EPISODE,
       };
     }
@@ -145,7 +124,6 @@ export const serializers = {
       seriesSlug: series.slug,
       seasonSlug: season.slug,
       seriesTitle: series.title,
-      services: episode.services || [],
       type: CONTENT_TYPES.EPISODE,
       country: series.country,
       language: series.language,
@@ -154,7 +132,6 @@ export const serializers = {
   },
 };
 
-// Metadata generation
 export const metadataGenerators = {
   [CONTENT_TYPES.FILM]: (data) => ({
     title: `${data.title} (${data.releaseYear}) - Watch Online`,
