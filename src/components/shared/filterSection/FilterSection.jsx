@@ -1,4 +1,3 @@
-// FilterSection.jsx
 import { DESIGN_TOKENS } from "@/lib/data";
 import Card from "../card/Card";
 import FilterSectionClient from "./FilterSectionClient";

@@ -1,11 +1,9 @@
-// src/components/shared/card/Card.jsx
 "use client";
 
-import { COMPONENT_STYLES, DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
+import { COMPONENT_STYLES, ICON_MAP } from "@/lib/data";
 import CardWrapper from "./CardWrapper";
 import Image from "next/image";
 
-// Shared components (no useIsTouchDevice — handled via CSS)
 const TopBadges = ({
   isNew,
   rating,

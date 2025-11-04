@@ -1,4 +1,3 @@
-// src/components/header/SearchResults.jsx
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import Card from "../shared/card/Card";
 
@@ -21,13 +20,7 @@ const EmptyState = () => (
   </div>
 );
 
-export const SearchResults = ({
-  searchResults,
-  onResultClick,
-  onClose,
-  isLoading,
-}) => {
-  console.log("searchResults: ", searchResults);
+export const SearchResults = ({ searchResults, onResultClick, isLoading }) => {
   if (isLoading) {
     return (
       <div className="absolute top-full left-4 right-4 z-50 rounded-xl mt-2">

@@ -1,4 +1,3 @@
-// src/components/filters/MobileMenu.jsx
 import { memo, useState, useEffect } from "react";
 import { FilterButton } from "./FilterButton";
 import { DropdownMenu } from "./DropdownMenu";
@@ -21,7 +20,6 @@ export const MobileMenu = memo(
         const originalStyle = window.getComputedStyle(document.body).overflow;
         const scrollY = window.scrollY;
 
-        // Lock scroll without shifting content
         document.body.style.overflow = "hidden";
         document.body.style.position = "fixed";
         document.body.style.top = `-${scrollY}px`;

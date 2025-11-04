@@ -1,4 +1,3 @@
-// SortButton.jsx (simplified)
 import { BaseButton } from "./BaseButton";
 import { getIcon } from "@/lib/data";
 

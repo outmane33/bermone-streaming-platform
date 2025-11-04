@@ -1,24 +1,19 @@
-// components/download/SecureDownloadClient.js (Client Component)
 "use client";
 import React, { useState } from "react";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import { getServicesForQuality, getDownloadLinks } from "@/actions/download";
+import ServerSelector from "./ServerSelector";
+import QualitySelector from "./QualitySelector";
 
 const decodeDownloadLink = (encodedLink) => {
   try {
-    // Check if it's already a plain URL
     if (
       encodedLink.startsWith("http://") ||
       encodedLink.startsWith("https://")
     ) {
-      console.log("⚠️ Link is already decoded");
       return encodedLink;
     }
-
-    // Try to decode Base64
     const decoded = atob(encodedLink);
-
-    // Verify it's a valid URL after decoding
     if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
       return decoded;
     } else {
@@ -27,89 +22,8 @@ const decodeDownloadLink = (encodedLink) => {
     }
   } catch (error) {
     console.error("❌ Failed to decode link:", error);
-    console.error("❌ Raw value:", encodedLink);
     return null;
   }
-};
-
-const ButtonBase = ({ children, className = "", ...props }) => (
-  <button
-    className={`${DESIGN_TOKENS.effects.transition} ${className}`}
-    {...props}
-  >
-    {children}
-  </button>
-);
-
-const QualityButton = ({ quality, isSelected, onClick, disabled }) => {
-  const baseStyles = `p-4 rounded-xl backdrop-blur-md overflow-hidden border`;
-  const states = isSelected
-    ? "bg-white/20 border-white/40 scale-95 shadow-2xl border-2"
-    : disabled
-    ? "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
-    : `${DESIGN_TOKENS.glass.light} ${DESIGN_TOKENS.glass.hover} hover:scale-95 hover:shadow-xl`;
-
-  return (
-    <ButtonBase
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseStyles} ${states}`}
-      aria-label={`Select quality ${quality}`}
-      aria-pressed={isSelected}
-    >
-      <div className="flex items-center justify-between relative">
-        <div className="flex items-center gap-3">
-          <ICON_MAP.Film
-            className={`w-5 h-5 ${
-              isSelected ? "text-cyan-400" : "text-white/80"
-            }`}
-          />
-          <div className="text-right">
-            <p className="text-white font-bold text-lg">{quality}</p>
-          </div>
-        </div>
-        {isSelected && (
-          <ICON_MAP.CheckCircle className="w-6 h-6 text-cyan-400 animate-pulse" />
-        )}
-      </div>
-    </ButtonBase>
-  );
-};
-
-const ServerButton = ({ server, isSelected, onClick, disabled }) => {
-  const baseStyles = `p-4 rounded-xl overflow-hidden border`;
-  const states = isSelected
-    ? "bg-white/20 border-white/40 scale-95 shadow-2xl border-2"
-    : disabled
-    ? "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
-    : `${DESIGN_TOKENS.glass.light} ${DESIGN_TOKENS.glass.hover} hover:scale-95 hover:shadow-xl`;
-
-  return (
-    <ButtonBase
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseStyles} ${states}`}
-      aria-label={`Download from ${server}`}
-      aria-pressed={isSelected}
-    >
-      <div
-        className={`absolute inset-0 bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} opacity-0 hover:opacity-20 transition-opacity`}
-      />
-      <div className="relative flex flex-col items-center gap-2">
-        <div
-          className={`p-2 bg-gradient-to-r ${
-            DESIGN_TOKENS.gradients.cyan
-          } rounded-lg transition-transform ${isSelected ? "scale-110" : ""}`}
-        >
-          <ICON_MAP.Server className="w-5 h-5 text-white" />
-        </div>
-        <p className="text-white font-bold text-sm">{server}</p>
-      </div>
-      {isSelected && (
-        <ICON_MAP.CheckCircle className="absolute top-2 right-2 w-5 h-5 text-cyan-400 animate-pulse" />
-      )}
-    </ButtonBase>
-  );
 };
 
 const Section = ({ title, icon: Icon, children, step }) => (
@@ -127,22 +41,16 @@ const Section = ({ title, icon: Icon, children, step }) => (
   </div>
 );
 
-export default function SecureDownloadClient({ qualities, slug, contentType }) {
-  // Step 1: Quality selection
+export default function SecureDownloadClient({ qualities, slug }) {
   const [selectedQuality, setSelectedQuality] = useState(null);
-
-  // Step 2: Service selection
   const [availableServices, setAvailableServices] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-
-  // Step 3: Download button and links
   const [showDownloadButton, setShowDownloadButton] = useState(false);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [downloadLinks, setDownloadLinks] = useState(null);
   const [countdown, setCountdown] = useState(null);
 
-  // STEP 1: Handle quality selection
   const handleQualitySelect = async (quality, index) => {
     setSelectedQuality(index);
     setSelectedService(null);
@@ -152,11 +60,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
 
     try {
       const result = await getServicesForQuality(slug, quality);
-      if (result.success) {
-        setAvailableServices(result.services);
-      } else {
-        setAvailableServices([]);
-      }
+      setAvailableServices(result.success ? result.services : []);
     } catch (error) {
       console.error("Error fetching services:", error);
       setAvailableServices([]);
@@ -165,27 +69,15 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
     }
   };
 
-  // STEP 2: Handle service selection
-  const handleServiceSelect = async (service, index) => {
+  const handleServiceSelect = (_service, index) => {
     setSelectedService(index);
     setShowDownloadButton(true);
     setDownloadLinks(null);
   };
 
-  // STEP 3: Handle download button click
   const handleDownloadClick = async () => {
     setLoadingLinks(true);
     setCountdown(3);
-
-    const countdownInterval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          return null;
-        }
-        return prev - 1;
-      });
-    }, 1000);
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
@@ -195,10 +87,7 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
         qualities[selectedQuality],
         availableServices[selectedService].serviceName
       );
-
-      if (result.success) {
-        setDownloadLinks(result.links);
-      }
+      if (result.success) setDownloadLinks(result.links);
     } catch (error) {
       console.error("Error fetching download links:", error);
     } finally {
@@ -208,88 +97,61 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
 
   return (
     <div className="relative">
-      {/* STEP 1: Quality Selection */}
       <Section title="Select Quality" icon={ICON_MAP.Film} step={1}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {qualities.map((quality, idx) => (
-            <QualityButton
-              key={idx}
-              quality={quality}
-              isSelected={selectedQuality === idx}
-              onClick={() => handleQualitySelect(quality, idx)}
-              disabled={loadingServices}
-            />
-          ))}
-        </div>
+        <QualitySelector
+          qualities={qualities}
+          selectedQuality={selectedQuality}
+          onSelect={handleQualitySelect}
+          loading={loadingServices}
+        />
       </Section>
 
-      {/* STEP 2: Service Selection */}
       {selectedQuality !== null && (
         <Section title="Select Server" icon={ICON_MAP.Server} step={2}>
-          {loadingServices ? (
-            <div className="flex items-center justify-center py-8">
-              <ICON_MAP.Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-              <span className="ml-3 text-white/80">Loading servers...</span>
-            </div>
-          ) : availableServices.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fadeIn">
-              {availableServices.map((service, idx) => (
-                <ServerButton
-                  key={idx}
-                  server={service.serviceName}
-                  isSelected={selectedService === idx}
-                  onClick={() => handleServiceSelect(service, idx)}
-                  disabled={loadingLinks}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-white/60">
-              No servers available for this quality
-            </div>
-          )}
+          <ServerSelector
+            services={availableServices}
+            selectedService={selectedService}
+            onSelect={handleServiceSelect}
+            loading={loadingLinks}
+          />
         </Section>
       )}
 
-      {/* STEP 3: Download Button */}
       {showDownloadButton && !downloadLinks && (
         <Section title="Get Download Links" icon={ICON_MAP.Shield} step={3}>
-          <div className="animate-fadeIn">
-            <ButtonBase
-              onClick={handleDownloadClick}
-              disabled={loadingLinks}
-              className={`w-full p-6 rounded-xl ${
-                loadingLinks
-                  ? "bg-white/10 cursor-wait"
-                  : `bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700`
-              } text-white font-bold text-lg flex items-center justify-center gap-3 ${
-                DESIGN_TOKENS.effects.hoverScale
-              }`}
-            >
-              {loadingLinks ? (
-                <>
-                  <ICON_MAP.Lock className="w-6 h-6 animate-pulse" />
-                  {countdown !== null ? (
-                    <span>Verifying... {countdown}s</span>
-                  ) : (
-                    <span>Processing...</span>
-                  )}
-                </>
-              ) : (
-                <>
-                  <ICON_MAP.Download className="w-6 h-6" />
-                  <span>Get Download Links</span>
-                </>
-              )}
-            </ButtonBase>
-          </div>
+          <button
+            onClick={handleDownloadClick}
+            disabled={loadingLinks}
+            className={`w-full p-6 rounded-xl cursor-pointer ${
+              loadingLinks
+                ? "bg-white/10 cursor-wait"
+                : `bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700`
+            } text-white font-bold text-lg flex items-center justify-center gap-3 ${
+              DESIGN_TOKENS.effects.hoverScale
+            } ${DESIGN_TOKENS.effects.transition}`}
+          >
+            {loadingLinks ? (
+              <>
+                <ICON_MAP.Lock className="w-6 h-6 animate-pulse" />
+                {countdown !== null ? (
+                  <span>Verifying... {countdown}s</span>
+                ) : (
+                  <span>Processing...</span>
+                )}
+              </>
+            ) : (
+              <>
+                <ICON_MAP.Download className="w-6 h-6" />
+                <span>Get Download Links</span>
+              </>
+            )}
+          </button>
         </Section>
       )}
 
-      {/* STEP 4: Download Links */}
       {downloadLinks && (
         <Section title="Download Links Ready" icon={ICON_MAP.Download} step={4}>
-          <div className="space-y-3 animate-fadeIn">
+          <div className="space-y-3">
             <div
               className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-6 ${DESIGN_TOKENS.glass.hover} ${DESIGN_TOKENS.effects.transition}`}
             >
@@ -304,34 +166,22 @@ export default function SecureDownloadClient({ qualities, slug, contentType }) {
                   </p>
                 </div>
               </div>
-
               <div className="flex flex-col sm:flex-row gap-3">
                 {downloadLinks.encodedDownloadLink ? (
                   <button
                     onClick={() => {
-                      console.log("🎯 Button clicked!");
-                      console.log(
-                        "🎯 Encoded link:",
-                        downloadLinks.encodedDownloadLink
-                      );
-
-                      // Use the helper function with error handling
                       const decodedUrl = decodeDownloadLink(
                         downloadLinks.encodedDownloadLink
                       );
-                      console.log("🎯 Decoded URL:", decodedUrl);
-
                       if (decodedUrl) {
                         window.open(
                           decodedUrl,
                           "_blank",
                           "noopener,noreferrer"
                         );
-                      } else {
-                        console.error("❌ Failed to decode download link");
                       }
                     }}
-                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r ${DESIGN_TOKENS.gradients.purple} hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-medium transition-colors shadow-lg cursor-pointer`}
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r ${DESIGN_TOKENS.gradients.purple} hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-medium transition-colors shadow-lg`}
                   >
                     <ICON_MAP.Download className="w-5 h-5" />
                     Download Now

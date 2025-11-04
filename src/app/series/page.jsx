@@ -1,21 +1,41 @@
+// app/series/page.jsx
 import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getSeries, getEpisodes } from "@/actions/series";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
 import { Suspense } from "react";
-import { SkeletonFilterSection } from "@/components/shared/filterSection/SkeletonFilterSection";
+import { SkeletonFilterSection } from "@/components/shared/skeletons/SkeletonFilterSection";
 
 const VALID_SORT_IDS = ["latest", "new", "best", "popular", "all"];
 
-export const metadata = {
-  title: "Series - Browse Movies",
-  description: "Discover and filter through our collection of series",
-};
+// ✅ Dynamic metadata based on sort
+export async function generateMetadata({ searchParams }) {
+  const { sort } = await searchParams;
+  const titles = {
+    latest: "أحدث الحلقات",
+    new: "أحدث المسلسلات",
+    best: "أفضل المسلسلات",
+    popular: "مسلسلات شائعة",
+    all: "جميع المسلسلات",
+  };
+  const descriptions = {
+    latest: "شاهد أحدث الحلقات المضافة اليوم من مسلسلات أجنبية وعربية وآسيوية",
+    new: "استكشف أحدث المسلسلات المضافة حديثًا بجميع التصنيفات",
+    best: "أفضل المسلسلات حسب تقييمات الجمهور - مشاهدة اون لاين",
+    popular: "المسلسلات الأكثر رواجًا هذا الأسبوع - مترجمة بدقة عالية",
+    all: "تصفح كامل مكتبة المسلسلات: أجنبية، آسيوية، أنمي، عربية",
+  };
+
+  return {
+    title: `${titles[sort] || "جميع المسلسلات"} | موقعك`,
+    description:
+      descriptions[sort] || "شاهد وحمل مسلسلات مترجمة اون لاين بجودة عالية",
+  };
+}
 
 export default async function SeriesPage({ searchParams }) {
   const params = await searchParams;
 
-  // Parse and validate parameters with default sortId
   const { sortId: rawSortId, page } = parsePageParams(
     params,
     VALID_SORT_IDS,
@@ -23,14 +43,8 @@ export default async function SeriesPage({ searchParams }) {
   );
 
   const sortId = rawSortId || "all";
-
-  // Build filters
   const filters = buildFilters(params, true);
-
-  // Determine if showing latest episodes
   const isLatest = sortId === "latest";
-
-  // Fetch data based on sort type
   const data = isLatest
     ? await getEpisodes(page)
     : await getSeries(filters, sortId, page);
@@ -42,9 +56,12 @@ export default async function SeriesPage({ searchParams }) {
           initialData={data}
           sortOptions={SORT_OPTIONS.series}
           isEpisode={isLatest}
-          page={"series"}
+          page="series"
         />
       </Suspense>
     </div>
   );
 }
+
+// ✅ ISR: Revalidate every 15 minutes
+export const revalidate = 900;

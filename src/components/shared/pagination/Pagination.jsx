@@ -1,8 +1,7 @@
-// components/Pagination.jsx
 "use client";
 import { useState, useEffect } from "react";
 import { COMPONENT_STYLES, ICON_MAP } from "@/lib/data";
-import useIsTouchDevice from "@/hooks/useIsTouchDevice"; // 👈
+import useIsTouchDevice from "@/hooks/useIsTouchDevice";
 
 const NavButton = ({ onClick, disabled, icon: Icon, className = "" }) => (
   <button
@@ -21,20 +20,18 @@ const NavButton = ({ onClick, disabled, icon: Icon, className = "" }) => (
 );
 
 const PageButton = ({ pageNum, isActive, onClick, isTouchDevice }) => {
-  // Simplified styles for touch devices
   const baseClasses = "relative transition-all duration-300 cursor-pointer";
 
   const activeClasses = isActive
     ? "scale-110"
     : isTouchDevice
-    ? "opacity-80" // no hover, just slight dim
+    ? "opacity-80"
     : "hover:scale-110 hover:-translate-y-0.5 opacity-70 hover:opacity-100";
 
-  // Background: no blur on mobile
   const bgClasses = isActive
     ? "bg-transparent border-2 border-cyan-300"
     : isTouchDevice
-    ? "bg-white/10 border border-white/20" // no backdrop-blur
+    ? "bg-white/10 border border-white/20"
     : "bg-white/10 backdrop-blur-md border border-white/20";
 
   return (

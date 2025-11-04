@@ -115,7 +115,7 @@ export const DESIGN_TOKENS = {
   },
 
   effects: {
-    hoverScale: "transition-all duration-300 hover:scale-105",
+    hoverScale: "transition-all duration-300 hover:scale-102",
     hoverLift: "hover:scale-110 hover:-translate-y-0.5",
     transition: "transition-all duration-300",
   },
@@ -597,8 +597,7 @@ export const MAX_RESPONSE_SIZE = 1000;
 // ============================================
 // DEPRECATED (For backward compatibility)
 // ============================================
-export const categories = CATEGORIES;
-export const sortOptions = SORT_OPTIONS.films;
+
 export const filterOptions = Object.fromEntries(
   Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.options])
 );
@@ -611,7 +610,5 @@ export const filterIcons = Object.fromEntries(
 export const filterGradients = Object.fromEntries(
   Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.gradient])
 );
-export const socials = SOCIAL_LINKS;
+
 export const GRADIENTS = DESIGN_TOKENS.gradients;
-export const GLASS_STYLES = DESIGN_TOKENS.glass;
-export const STYLES = COMPONENT_STYLES;

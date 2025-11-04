@@ -10,7 +10,7 @@ import {
   toObjectId,
   serializeDocument,
 } from "./db-utils";
-import { MAX_RELATED, ITEMS_PER_PAGE } from "@/lib/data";
+import { MAX_RELATED } from "@/lib/data";
 
 const FILMS_SORT_CONFIGS = {
   ...BASE_SORT_CONFIGS,
@@ -27,7 +27,6 @@ export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
 
     const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
     const [result] = await collection.aggregate(pipeline).toArray();
-
     return {
       success: true,
       ...buildPaginationResponse(result, page),
@@ -42,10 +41,24 @@ export const getFilmBySlug = cache(async (slug) => {
     const client = await clientPromise;
     const collection = client.db().collection("films");
     const cleanSlug = decodeURIComponent(slug).trim();
-    const film = await collection.findOne({ slug: cleanSlug });
+
+    const film = await collection.findOne(
+      { slug: cleanSlug },
+      {
+        projection: {
+          services: 0,
+          dbId: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          originalTitle: 0,
+          views: 0,
+        },
+      }
+    );
     if (!film) {
       return { success: false, error: "Film not found", film: null };
     }
+
     return { success: true, film: serializeDocument(film) };
   } catch (error) {
     return buildErrorResponse("film", error);
@@ -57,9 +70,22 @@ export const getFilmCollection = cache(async (filmId) => {
     const client = await clientPromise;
     const db = client.db();
     const filmObjectId = toObjectId(filmId);
-    const collection = await db.collection("filmcollections").findOne({
-      films: filmObjectId,
-    });
+
+    // Add projection to collection query
+    const collection = await db.collection("filmcollections").findOne(
+      { films: filmObjectId },
+      {
+        projection: {
+          services: 0,
+          dbId: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          originalTitle: 0,
+          views: 0,
+          __v: 0,
+        },
+      }
+    );
 
     if (!collection) {
       return {
@@ -70,13 +96,26 @@ export const getFilmCollection = cache(async (filmId) => {
       };
     }
 
+    // Add projection to films query
     const films = await db
       .collection("films")
-      .find({ _id: { $in: collection.films } })
+      .find(
+        { _id: { $in: collection.films } },
+        {
+          projection: {
+            services: 0,
+            dbId: 0,
+            createdAt: 0,
+            updatedAt: 0,
+            originalTitle: 0,
+            views: 0,
+            __v: 0,
+          },
+        }
+      )
       .sort({ releaseYear: 1 })
       .limit(100)
       .toArray();
-
     return {
       success: true,
       collection: serializeDocument(collection),

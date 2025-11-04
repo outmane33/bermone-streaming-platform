@@ -4,37 +4,30 @@ import { DESIGN_TOKENS } from "@/lib/data";
 
 export const SubMenuDropdown = ({
   items,
-  gradient,
   handleSubMenuClick,
   position = "desktop",
 }) => {
   const pathname = usePathname();
   const isDesktop = position === "desktop";
 
-  // Function to check if submenu item is active
   const isItemActive = (itemPath) => {
     if (!pathname) return false;
 
-    // Get search params from the current URL
     const searchParams =
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search)
         : new URLSearchParams();
 
-    // Parse the item path
     const [itemBasePath, itemQuery] = itemPath.split("?");
     const currentBasePath = pathname;
 
-    // First check: base paths must match
     if (itemBasePath !== currentBasePath) {
       return false;
     }
 
-    // If item has query params, check if they match current URL params
     if (itemQuery) {
       const itemParams = new URLSearchParams(itemQuery);
 
-      // Check if all item params exist and match in current URL
       for (const [key, value] of itemParams) {
         if (searchParams.get(key) !== value) {
           return false;
@@ -42,9 +35,6 @@ export const SubMenuDropdown = ({
       }
       return true;
     }
-
-    // If item has NO query params, it matches the base path regardless of URL params
-    // This allows /films to be active for both /films and /films?genre=action
     return true;
   };
 
@@ -59,7 +49,6 @@ export const SubMenuDropdown = ({
       >
         <div className={`p-2 ${!isDesktop && "max-h-70 overflow-y-auto"}`}>
           {items.map((item, index) => {
-            // Handle both object format and string format for backward compatibility
             const label = typeof item === "string" ? item : item.label;
             const path =
               typeof item === "string" ? `/category/${item}` : item.path;

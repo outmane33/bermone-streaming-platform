@@ -35,8 +35,6 @@ const serializeEpisode = (episode) => ({
   episodeNumber: episode.episodeNumber,
   duration: episode.duration,
   slug: episode.slug,
-  createdAt: episode.createdAt?.toISOString(),
-  updatedAt: episode.updatedAt?.toISOString(),
 });
 
 export const getSeries = cache(
@@ -133,14 +131,20 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
     const episodes = await client
       .db()
       .collection("episodes")
-      .find({ seasonId: toObjectId(seasonId) })
+      .find(
+        { seasonId: toObjectId(seasonId) },
+        {
+          projection: {
+            services: 0,
+          },
+        }
+      )
       .sort({ episodeNumber: 1 })
       .limit(MAX_EPISODES)
       .toArray();
 
     if (!episodes.length)
       return { success: false, message: "No episodes found", episodes: [] };
-
     return {
       success: true,
       episodes: episodes.map(serializeEpisode),
@@ -175,6 +179,11 @@ export const getEpisodeBySlug = cache(async (slug) => {
         },
       },
       { $unwind: "$series" },
+      {
+        $project: {
+          services: 0,
+        },
+      },
     ];
     const result = await db
       .collection("episodes")

@@ -1,4 +1,3 @@
-// src/components/skeletons/Skeletons.jsx
 import { DESIGN_TOKENS } from "@/lib/data";
 
 const SKELETON = {
@@ -8,7 +7,6 @@ const SKELETON = {
   border: "border border-white/20",
 };
 
-// Helper: safely apply glass only on md+
 const getGlassClass = (token) => {
   // Assumes token = "bg-white/10 backdrop-blur-md ..."
   return `bg-white/5 md:${token.replace("bg-", "bg-")}`;

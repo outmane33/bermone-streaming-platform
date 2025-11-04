@@ -1,4 +1,3 @@
-// src/components/shared/card/CardWrapper.jsx
 "use client";
 
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
@@ -16,7 +15,6 @@ export default function CardWrapper({ href, children, onNavigate }) {
   const handleClick = (e) => {
     e.preventDefault();
 
-    // Save return URL
     const params = searchParams.toString();
     if (params) {
       const currentUrl = `${pathname}?${params}`;
@@ -25,7 +23,7 @@ export default function CardWrapper({ href, children, onNavigate }) {
       )}; path=/; max-age=600`;
     }
 
-    if (onNavigate) onNavigate(); // 👈 Close parent (e.g., SearchResults)
+    if (onNavigate) onNavigate();
 
     setIsNavigating(true);
     startTransition(() => {

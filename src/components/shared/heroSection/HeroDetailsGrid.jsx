@@ -1,4 +1,3 @@
-// src/components/shared/heroSection/HeroDetailsGrid.jsx
 import DetailCard from "./DetailCardSmall";
 import { GRADIENTS, ICON_MAP } from "@/lib/data";
 

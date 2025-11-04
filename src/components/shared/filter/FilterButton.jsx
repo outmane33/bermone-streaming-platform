@@ -1,4 +1,3 @@
-// FilterButton.jsx (simplified)
 import { BaseButton } from "./BaseButton";
 import { filterGradients, filterIcons, filterLabels } from "@/lib/data";
 

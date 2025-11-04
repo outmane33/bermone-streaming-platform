@@ -1,4 +1,3 @@
-// BaseButton.jsx - Shared button component
 import { GradientBackground } from "./GradientBackground";
 import { cn } from "@/lib/helpers";
 import { DESIGN_TOKENS, getTextClasses, ICON_MAP } from "@/lib/data";

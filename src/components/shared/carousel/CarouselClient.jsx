@@ -1,4 +1,3 @@
-// app/components/carousel/CarouselClient.jsx
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import Card from "../card/Card";
@@ -50,7 +49,7 @@ export default function CarouselClient({ carouselMida, className = "" }) {
     return () => window.removeEventListener("resize", handleResize);
   }, [carouselMida, checkScrollability]);
 
-  const ScrollButton = ({ direction, isVisible, disabled }) => {
+  const ScrollButton = ({ direction, disabled }) => {
     const isLeft = direction === "left";
     const buttonConfig = isLeft
       ? COMPONENT_STYLES.scrollButton.left

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Search, Film } from "lucide-react";
+import { Home, Film } from "lucide-react";
 
 export default function NotFound() {
   return (

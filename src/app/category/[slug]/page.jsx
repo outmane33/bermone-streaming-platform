@@ -3,7 +3,7 @@ import { getContent } from "@/actions/category";
 import { notFound } from "next/navigation";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
 import { Suspense } from "react";
-import { SkeletonFilterSection } from "@/components/shared/filterSection/SkeletonFilterSection";
+import { SkeletonFilterSection } from "@/components/shared/skeletons/SkeletonFilterSection";
 import { SORT_OPTIONS } from "@/lib/data";
 
 const VALID_SORT_IDS = [
@@ -28,51 +28,50 @@ const VALID_QUERY_PARAMS = [
   "country",
 ];
 
+// ✅ Dynamic metadata based on slug (films vs series)
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
-  const titles = {
-    films: "Films - Browse Movies",
-    series: "Series - Browse TV Shows",
+  const metadata = {
+    films: {
+      title: "الأفلام - تصفح مكتبة الأفلام المترجمة | موقعك",
+      description:
+        "استمتع بمكتبة ضخمة من الأفلام الأجنبية، الآسيوية، والأنمي مترجمة بجودة عالية",
+    },
+    series: {
+      title: "المسلسلات - تصفح مكتبة المسلسلات المترجمة | موقعك",
+      description:
+        "شاهد جميع مواسم المسلسلات الأجنبية، الآسيوية، والأنمي مترجمة اون لاين",
+    },
   };
 
-  const descriptions = {
-    films: "Discover and filter through our collection of movies",
-    series: "Discover and filter through our collection of TV series",
+  const { title, description } = metadata[slug] || {
+    title: "تصفح المحتوى | موقعك",
+    description: "اكتشف أحدث الأفلام والمسلسلات المترجمة بجودة عالية",
   };
 
-  return {
-    title: titles[slug] || "Browse Content",
-    description: descriptions[slug] || "Discover our content collection",
-  };
+  return { title, description };
 }
 
 export default async function CategoryPage({ params, searchParams }) {
   const { slug } = await params;
   const searchParamsResolved = await searchParams;
 
-  // Validate slug
   if (!["films", "series"].includes(slug)) {
     notFound();
   }
 
-  // Parse and validate parameters
   const { sortId, page } = parsePageParams(
     searchParamsResolved,
     VALID_SORT_IDS,
     VALID_QUERY_PARAMS
   );
 
-  // Build filters
   const filters = buildFilters(searchParamsResolved, true);
-
-  // Fetch content
   const contentData = await getContent(slug, filters, sortId, page);
 
-  // Determine content types
   const isEpisode = sortId === "latestAnimeEpisodes";
   const isFilmCollection = sortId === "movieSeries";
-
   const sortOptions = SORT_OPTIONS[slug];
 
   return (
@@ -91,3 +90,6 @@ export default async function CategoryPage({ params, searchParams }) {
     </div>
   );
 }
+
+// ✅ ISR: Revalidate every 30 minutes (categories change slowly)
+export const revalidate = 1800;

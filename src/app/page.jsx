@@ -1,3 +1,4 @@
+// app/page.jsx (Home)
 import {
   getLatestAdded,
   getNewSeries,
@@ -5,12 +6,11 @@ import {
   getLatestEpisodes,
 } from "@/actions/home";
 import { getFilms } from "@/actions/films";
-import { redirect } from "next/navigation";
 import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
 import { Suspense } from "react";
-import { SkeletonFilterSection } from "@/components/shared/filterSection/SkeletonFilterSection";
+import { SkeletonFilterSection } from "@/components/shared/skeletons/SkeletonFilterSection";
 
 const VALID_SORT_IDS = [
   "latest-added",
@@ -20,32 +20,26 @@ const VALID_SORT_IDS = [
 ];
 
 export const metadata = {
-  title: "Home - Stream Movies & Series",
-  description: "Watch latest movies, series and episodes",
+  title: `شاهد أحدث الأفلام والمسلسلات مترجمة | ${process.env.NEXT_PUBLIC_SITE_URL}`,
+  description:
+    "استمتع بمشاهدة وتحميل أحدث الأفلام والمسلسلات والحلقات مترجمة بجودة عالية اون لاين.",
 };
 
 export default async function Home({ searchParams }) {
   const params = await searchParams;
 
-  // Redirect if no sort parameter
-  if (!params?.sort) {
-    redirect("/?sort=latest-added");
-  }
-
-  // Parse and validate parameters
+  // ✅ NO MORE REDIRECT — sort is guaranteed by middleware
   const { sortId, page } = parsePageParams(
     params,
     VALID_SORT_IDS,
     VALID_QUERY_PARAMS
   );
 
-  // Build filters (without quality for home page)
   const filters = buildFilters(params, false);
 
   let initialData;
   let isEpisode = false;
 
-  // Fetch data based on selected sort/section with filters
   switch (sortId) {
     case "new-series":
       initialData = await getNewSeries(filters, page);
@@ -63,11 +57,10 @@ export default async function Home({ searchParams }) {
       break;
   }
 
-  // Fetch carousel data
   const newFilms = await getFilms({}, "new", 1);
 
   return (
-    <div className="relative min-h-screen pb-10 ">
+    <div className="relative min-h-screen pb-10">
       <Suspense fallback={<SkeletonFilterSection />}>
         <FilterSection
           initialData={initialData}
@@ -80,3 +73,5 @@ export default async function Home({ searchParams }) {
     </div>
   );
 }
+
+export const revalidate = 300; // ✅ Now ISR works!

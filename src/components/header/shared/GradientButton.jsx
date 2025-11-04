@@ -12,7 +12,6 @@ export const GradientButton = ({
 }) => {
   const buttonStyles = COMPONENT_STYLES.button;
 
-  // Determine colors based on gradient or variant
   const getGradientClass = () => {
     if (gradient) return gradient;
     const gradientMap = {

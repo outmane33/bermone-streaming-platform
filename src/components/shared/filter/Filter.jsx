@@ -94,7 +94,6 @@ export default function Filter({
     }
   }, [selectedFilters, selectedSort]);
 
-  // Memoized callbacks
   const toggleDropdown = useCallback((category) => {
     setOpenDropdown((prev) => (prev === category ? null : category));
   }, []);
@@ -104,7 +103,6 @@ export default function Filter({
       const categoryValues = prev[category];
       const isSelected = categoryValues.includes(value);
 
-      // If trying to add and already at max limit, don't add
       if (!isSelected && categoryValues.length >= MAX_SELECTIONS_PER_CATEGORY) {
         return prev;
       }
@@ -120,14 +118,12 @@ export default function Filter({
 
   const handleSortClick = useCallback(
     (sortId) => {
-      // If on category page, redirect instead of filtering
       if (isCategoryPage) {
         const basePath = contentType === "series" ? "/series" : "/films";
         window.location.href = `${basePath}?sort=${sortId}`;
         return;
       }
 
-      // Normal behavior for non-category pages
       setSelectedSort((prev) => (prev === sortId ? prev : sortId));
     },
     [isCategoryPage, contentType]
@@ -141,7 +137,6 @@ export default function Filter({
     setMobileMenuOpen(false);
   }, []);
 
-  // Memoized computed values
   const activeFilterCount = useMemo(
     () => Object.values(selectedFilters).flat().length,
     [selectedFilters]

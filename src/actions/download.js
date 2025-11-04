@@ -30,7 +30,7 @@ export const getAvailableQualities = cache(async (slug) => {
       type: isEpisodeSlug(decodedSlug) ? "episode" : "film",
     };
   } catch (error) {
-    console.error("❌ [STEP 1] Error:", error);
+    console.error("❌ Error:", error);
     return { success: false, qualities: [], type: null };
   }
 });
@@ -58,7 +58,7 @@ export const getServicesForQuality = cache(async (slug, selectedQuality) => {
       services: result.map((r) => ({ serviceName: r.serviceName })),
     };
   } catch (error) {
-    console.error("❌ [STEP 2] Error:", error);
+    console.error("❌ Error:", error);
     return { success: false, services: [] };
   }
 });
@@ -100,7 +100,7 @@ export const getDownloadLinks = cache(
         },
       };
     } catch (error) {
-      console.error("❌ [STEP 3] Error:", error);
+      console.error("❌ Error:", error);
       return { success: false, links: null };
     }
   }

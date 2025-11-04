@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Block other low-value paths
+Disallow: /admin
+Disallow: /search
+Disallow: /api
+Disallow: /_next
+Disallow: */watch$
+Disallow: */download$
+
+Sitemap: https://yourdomain.com/sitemap.xml

@@ -1,4 +1,3 @@
-// src/components/header/Header.jsx
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
@@ -8,11 +7,12 @@ import { searchContent } from "@/actions/search";
 import { Logo } from "./Logo";
 import { SearchBar } from "./SearchBar";
 import { SearchResults } from "./SearchResults";
-import { CategoryItem } from "./CategoryItem";
 import { MobileSubmenuModal } from "./MobileSubmenuModal";
 import useIsTouchDevice from "@/hooks/useIsTouchDevice";
+import useDebounce from "@/hooks/useDebounce";
+import throttle from "@/hooks/useThrottle";
+import { CategoryItem } from "./CategoryItem";
 
-// Helper function to get active category from pathname
 const getActiveCategoryFromPath = (pathname) => {
   if (!pathname || pathname === "/") {
     return "home";
@@ -41,35 +41,6 @@ const getActiveCategoryFromPath = (pathname) => {
 
   return "home";
 };
-
-// Debounce hook
-function useDebounce(value, delay) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
-// Simple throttle utility
-function throttle(func, delay) {
-  let timeoutId;
-  return (...args) => {
-    if (timeoutId) return;
-    timeoutId = setTimeout(() => {
-      func(...args);
-      timeoutId = null;
-    }, delay);
-  };
-}
 
 export default function Header() {
   const pathname = usePathname();
@@ -163,15 +134,13 @@ export default function Header() {
     setMobileSearchOpen(false);
   };
 
-  // ✅ FIXED: Now closes mobile search too
   const closeAllOverlays = () => {
     setOpenMenuId(null);
     setSearchFocused(false);
     setMobileMenuOpen(false);
-    setMobileSearchOpen(false); // 👈 critical fix
+    setMobileSearchOpen(false);
   };
 
-  const toggleMobileMenu = () => setMobileMenuOpen((prev) => !prev);
   const toggleMobileSearch = () => {
     const newState = !mobileSearchOpen;
     setMobileSearchOpen(newState);
@@ -181,12 +150,12 @@ export default function Header() {
     }
   };
 
-  // ✅ FIXED: Include mobileSearchOpen in overlay condition
-  const showOverlay =
+  const showOverlay = Boolean(
     openMenuId ||
-    mobileMenuOpen ||
-    mobileSearchOpen ||
-    (searchFocused && searchQuery);
+      mobileMenuOpen ||
+      mobileSearchOpen ||
+      (searchFocused && searchQuery.trim())
+  );
 
   return (
     <div className="relative w-full">

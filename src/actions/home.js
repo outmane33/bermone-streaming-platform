@@ -179,8 +179,6 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
                 seasonId: { $toString: "$seasonId" },
                 episodeNumber: 1,
                 duration: 1,
-                createdAt: 1,
-                updatedAt: 1,
                 season: {
                   _id: { $toString: "$season._id" },
                   seasonNumber: "$season.seasonNumber",
@@ -202,6 +200,7 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
+
     return { success: true, ...buildPaginationResponse(result, page) };
   } catch (error) {
     return buildErrorResponse("episodes", error, page);

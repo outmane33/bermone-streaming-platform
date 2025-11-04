@@ -48,7 +48,7 @@ export function validateFilterValues(params) {
 /**
  * Builds filters object from search params
  */
-export function buildFilters(params, includeQuality = true) {
+export function buildFilters(params) {
   const filters = {
     genre: params?.genre?.split(",").filter(Boolean) || [],
     year: params?.year?.split(",").filter(Boolean) || [],

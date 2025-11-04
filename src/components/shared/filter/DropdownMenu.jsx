@@ -1,4 +1,3 @@
-// DropdownMenu.jsx (optimized)
 import { memo } from "react";
 import { filterGradients, DESIGN_TOKENS } from "@/lib/data";
 import { cn } from "@/lib/helpers";

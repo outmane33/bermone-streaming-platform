@@ -1,8 +1,6 @@
-// components/header/Logo.jsx
 import Link from "next/link";
 import { ICON_MAP } from "@/lib/data";
 
-// Remove framer-motion on mobile for performance
 export const Logo = ({ isTouchDevice }) => (
   <Link href="/?sort=latest-added" className="relative group cursor-pointer">
     {!isTouchDevice && (

@@ -1,30 +1,28 @@
-// MobileSubmenuModal.jsx
 import { memo, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 
 export const MobileSubmenuModal = memo(
-  ({ isOpen, onClose, category, items, isTouchDevice }) => {
+  ({ isOpen, onClose, category, items }) => {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
     useEffect(() => {
       if (isOpen) {
         const scrollY = window.scrollY;
-        // ✅ Lock scroll + prevent iOS rubber-band
         document.body.style.position = "fixed";
         document.body.style.top = `-${scrollY}px`;
         document.body.style.width = "100%";
         document.body.style.overflow = "hidden";
-        document.body.style.touchAction = "none"; // ✅ critical for iOS
+        document.body.style.touchAction = "none";
 
         return () => {
           document.body.style.position = "";
           document.body.style.top = "";
           document.body.style.width = "";
           document.body.style.overflow = "";
-          document.body.style.touchAction = ""; // ✅ restore
+          document.body.style.touchAction = "";
           window.scrollTo(0, scrollY);
         };
       }
@@ -35,11 +33,9 @@ export const MobileSubmenuModal = memo(
     const isItemActive = (itemPath) => {
       if (!pathname) return false;
 
-      // Parse the item's path and query
       const [itemBasePath, itemQuery] = itemPath.split("?");
       const itemSort = new URLSearchParams(itemQuery).get("sort");
 
-      // Current page must match base path AND sort param
       if (itemBasePath !== pathname) return false;
 
       const currentSort = searchParams.get("sort");
@@ -52,7 +48,7 @@ export const MobileSubmenuModal = memo(
 
         <div
           className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md ${DESIGN_TOKENS.glass.medium} rounded-3xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl`}
-          style={{ WebkitOverflowScrolling: "touch" }} // ✅ smoother scroll
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
           <div className="flex items-center justify-between p-4 border-b border-white/20">
             <h3 className="text-white font-bold text-lg">{category.label}</h3>

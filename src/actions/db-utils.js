@@ -11,7 +11,7 @@ export const serializeObjectId = (id) => {
 export const serializeDocument = (doc) => {
   if (!doc) return null;
 
-  const serialized = { ...doc };
+  const { services, dbId, originalTitle, views, ...serialized } = doc;
 
   if (serialized._id) {
     serialized._id = serializeObjectId(serialized._id);
@@ -91,9 +91,9 @@ export const buildContentAggregationPipeline = (
   filters,
   sortConfig,
   page,
-  projection = {}
+  options = {} // ← Accept options object
 ) => {
-  const skip = (page - 1) * ITEMS_PER_PAGE;
+  const { skipPagination = false, projection = {} } = options;
 
   const sortFilter =
     typeof sortConfig.filter === "function"
@@ -112,9 +112,22 @@ export const buildContentAggregationPipeline = (
     slug: 1,
     category: 1,
     duration: 1,
+    updatedAt: 1, // 👈 Ensure this is included
+    createdAt: 1, // 👈 And this
     ...projection,
   };
 
+  if (skipPagination) {
+    // Return simple pipeline (no facet, no pagination)
+    return [
+      { $match: matchQuery },
+      { $sort: sortConfig.sort },
+      { $project: defaultProjection },
+    ];
+  }
+
+  // Original paginated pipeline
+  const skip = (page - 1) * ITEMS_PER_PAGE;
   return [
     { $match: matchQuery },
     {
@@ -218,7 +231,6 @@ export const buildPaginationResponse = (result, page) => {
   };
 };
 
-// 🎯 Standard Error Response
 export const buildErrorResponse = (contentType, error, page = 1) => {
   console.error(`Error with ${contentType}:`, error);
 

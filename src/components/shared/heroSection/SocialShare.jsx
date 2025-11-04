@@ -1,4 +1,3 @@
-// src/components/shared/heroSection/SocialShare.jsx
 "use client";
 
 import { useState, useEffect } from "react";

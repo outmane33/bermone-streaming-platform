@@ -1,4 +1,3 @@
-// src/components/shared/heroSection/DetailCardSmall.jsx
 import GlassCard from "./GlassCard";
 import { DESIGN_TOKENS } from "@/lib/data";
 
@@ -7,7 +6,6 @@ export default function DetailCard({ icon, label, value, gradient }) {
 
   return (
     <GlassCard className="group relative bg-gradient-to-br from-white/10 to-white/5">
-      {/* Hover overlay only on desktop */}
       <div
         className={`
           absolute inset-0 rounded-lg

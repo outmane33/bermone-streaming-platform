@@ -1,7 +1,6 @@
 // category.js
 "use server";
 import { cache } from "react";
-import sanitize from "mongo-sanitize";
 import clientPromise from "@/lib/mongodb";
 import {
   BASE_SORT_CONFIGS,
@@ -168,7 +167,6 @@ export const getContent = cache(
         result,
         validPage
       );
-
       return {
         success: true,
         documents,

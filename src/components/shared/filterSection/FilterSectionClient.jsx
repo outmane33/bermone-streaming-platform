@@ -1,4 +1,3 @@
-// FilterSectionClient.jsx
 "use client";
 import {
   useTransition,
@@ -55,7 +54,6 @@ export default function FilterSectionClient({
       const params = new URLSearchParams();
       const { page, ...filters } = newParams;
 
-      // Use VALID_QUERY_PARAMS for validation
       for (const [key, value] of Object.entries(filters)) {
         if (!VALID_QUERY_PARAMS.includes(key)) continue;
 

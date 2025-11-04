@@ -12,6 +12,19 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals"),
   {
+    files: ["**/*.js", "**/*.jsx"], // Add this line to specify both .js and .jsx
+    rules: {
+      "no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "react/display-name": "off",
+    },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",

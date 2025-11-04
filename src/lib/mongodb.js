@@ -1,4 +1,3 @@
-// lib/mongodb.js
 import { MongoClient } from "mongodb";
 
 if (!process.env.MONGODB_URI) {
@@ -7,17 +6,11 @@ if (!process.env.MONGODB_URI) {
 
 const uri = process.env.MONGODB_URI;
 
-// Optional: validate TLS (for extra safety)
-if (process.env.NODE_ENV === "production" && !uri.includes("tls=true")) {
-  console.warn("⚠️ Production MongoDB URI should include tls=true");
-}
-
 const options = {
   maxPoolSize: 10,
   minPoolSize: 5,
   retryWrites: true,
   w: "majority",
-  // useUnifiedTopology: true, // not needed in driver v4+
 };
 
 let client;
@@ -34,7 +27,6 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect();
 }
 
-// Optional: log connection errors
 clientPromise.catch((err) => {
   console.error("MongoDB connection error:", err);
 });
