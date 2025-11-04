@@ -14,7 +14,6 @@ export async function OPTIONS() {
   });
 }
 
-// Handle image upload
 export async function POST(request) {
   // 1. Verify secret key (security)
   const authHeader = request.headers.get("authorization");
