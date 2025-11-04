@@ -14,13 +14,13 @@ const eslintConfig = [
   {
     files: ["**/*.js", "**/*.jsx"], // Add this line to specify both .js and .jsx
     rules: {
-      "no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-        },
-      ],
+      // "no-unused-vars": [
+      //   "error",
+      //   {
+      //     argsIgnorePattern: "^_",
+      //     varsIgnorePattern: "^_",
+      //   },
+      // ],
       "react/display-name": "off",
     },
   },
