@@ -18,7 +18,7 @@ export async function OPTIONS() {
 export async function POST(request) {
   // 1. Verify secret key (security)
   const authHeader = request.headers.get("authorization");
-  const expectedSecret = process.env.UPLOAD_SECRET;
+  const expectedSecret = "your_strong_secret_here";
 
   if (!expectedSecret) {
     console.error("❌ UPLOAD_SECRET is not set in environment variables");
