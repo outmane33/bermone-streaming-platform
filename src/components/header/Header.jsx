@@ -165,7 +165,7 @@ export default function Header() {
       {showOverlay && (
         <div
           className={`fixed inset-0 z-30 transition-opacity duration-300 ${
-            isTouchDevice ? "bg-black/60" : "bg-black/70 backdrop-blur-sm"
+            isTouchDevice ? "bg-black/90" : "bg-black/70 backdrop-blur-sm"
           }`}
           onClick={closeAllOverlays}
           aria-hidden="true"
