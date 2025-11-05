@@ -26,10 +26,6 @@ export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
 
     const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
     const [result] = await collection.aggregate(pipeline).toArray();
-    // Close client in production (optional but safe)
-    if (process.env.NODE_ENV !== "development") {
-      await client.close();
-    }
     return {
       success: true,
       ...buildPaginationResponse(result, page),
@@ -60,10 +56,6 @@ export const getFilmBySlug = cache(async (slug) => {
     );
     if (!film) {
       return { success: false, error: "Film not found", film: null };
-    }
-    // Close client in production (optional but safe)
-    if (process.env.NODE_ENV !== "development") {
-      await client.close();
     }
     return { success: true, film: serializeDocument(film) };
   } catch (error) {
@@ -121,10 +113,6 @@ export const getFilmCollection = cache(async (filmId) => {
       .limit(100)
       .toArray();
 
-    // Close client in production (optional but safe)
-    if (process.env.NODE_ENV !== "development") {
-      await client.close();
-    }
     return {
       success: true,
       collection: serializeDocument(collection),
@@ -212,11 +200,6 @@ export const getRelatedFilms = cache(
       ];
 
       const films = await collection.aggregate(pipeline).toArray();
-
-      // Close client in production (optional but safe)
-      if (process.env.NODE_ENV !== "development") {
-        await client.close();
-      }
       return { success: true, films, count: films.length };
     } catch (error) {
       return buildErrorResponse("relatedFilms", error);

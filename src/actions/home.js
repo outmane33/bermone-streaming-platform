@@ -53,11 +53,6 @@ export const getLatestAdded = cache(async (filters = {}, page = 1) => {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(skip, skip + ITEMS_PER_PAGE);
 
-    // Close client in production (optional but safe)
-    if (process.env.NODE_ENV !== "development") {
-      await client.close();
-    }
-
     return {
       success: true,
       documents: merged,
@@ -87,13 +82,10 @@ const buildTypedAggregationPipeline = (filters, page, contentType) => {
 
 export const getNewMovies = cache(async (filters = {}, page = 1) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { client, db } = await connectToDatabase();
     const pipeline = buildTypedAggregationPipeline(filters, page, "films");
     const [result] = await db.collection("films").aggregate(pipeline).toArray();
-    // Close client in production (optional but safe)
-    if (process.env.NODE_ENV !== "development") {
-      await client.close();
-    }
+
     return { success: true, ...buildPaginationResponse(result, page) };
   } catch (error) {
     return buildErrorResponse("films", error, page);
@@ -102,16 +94,13 @@ export const getNewMovies = cache(async (filters = {}, page = 1) => {
 
 export const getNewSeries = cache(async (filters = {}, page = 1) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { client, db } = await connectToDatabase();
     const pipeline = buildTypedAggregationPipeline(filters, page, "series");
     const [result] = await db
       .collection("series")
       .aggregate(pipeline)
       .toArray();
-    // Close client in production (optional but safe)
-    if (process.env.NODE_ENV !== "development") {
-      await client.close();
-    }
+
     return { success: true, ...buildPaginationResponse(result, page) };
   } catch (error) {
     return buildErrorResponse("series", error, page);
@@ -120,7 +109,7 @@ export const getNewSeries = cache(async (filters = {}, page = 1) => {
 
 export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { client, db } = await connectToDatabase();
     const validPage = validatePage(page);
     const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
@@ -205,10 +194,7 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
-    // Close client in production (optional but safe)
-    if (process.env.NODE_ENV !== "development") {
-      await client.close();
-    }
+
     return { success: true, ...buildPaginationResponse(result, page) };
   } catch (error) {
     return buildErrorResponse("episodes", error, page);

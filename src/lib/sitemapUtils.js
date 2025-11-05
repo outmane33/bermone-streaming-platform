@@ -1,9 +1,8 @@
-import clientPromise from "@/lib/mongodb";
+import connectToDatabase from "@/lib/mongodb"; // ← updated import
 
 export async function getAllMediaSlugsForSitemap() {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    const { client, db } = await connectToDatabase();
 
     const [films, seriesList, seasons] = await Promise.all([
       db

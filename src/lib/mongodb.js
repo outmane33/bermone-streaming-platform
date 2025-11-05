@@ -8,33 +8,31 @@ if (!process.env.MONGODB_URI) {
 const uri = process.env.MONGODB_URI;
 const options = {
   maxPoolSize: 10,
-  minPoolSize: 0, // critical for serverless
-  serverSelectionTimeoutMS: 5000, // fail faster
+  serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
   retryWrites: true,
-  w: "majority",
 };
 
-let cachedClient = null;
-let cachedDb = null;
+let client;
+let clientPromise;
 
-async function connectToDatabase() {
+if (process.env.NODE_ENV === "development") {
   // Reuse in development
-  if (process.env.NODE_ENV === "development") {
-    if (!cachedClient) {
-      const client = new MongoClient(uri, options);
-      await client.connect();
-      cachedClient = client;
-      cachedDb = client.db();
-    }
-    return { client: cachedClient, db: cachedDb };
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    global._mongoClientPromise = client.connect();
   }
-
-  // In production: always create new client per cold start
-  // (don't rely on global cache across invocations)
-  const client = new MongoClient(uri, options);
-  await client.connect();
-  return { client, db: client.db() };
+  clientPromise = global._mongoClientPromise;
+} else {
+  // 🚀 Reuse in production (even serverless!)
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    global._mongoClientPromise = client.connect();
+  }
+  clientPromise = global._mongoClientPromise;
 }
 
-export default connectToDatabase;
+export default async function connectToDatabase() {
+  const client = await clientPromise;
+  return { client, db: client.db() };
+}
