@@ -1,6 +1,6 @@
 "use server";
 import { cache } from "react";
-const { client, db } = await connectToDatabase(); // ← new
+import connectToDatabase from "@/lib/mongodb"; // ← updated import
 import { isEpisodeSlug, cleanSlug } from "@/lib/pageUtils";
 
 const getCollectionName = (slug) =>
