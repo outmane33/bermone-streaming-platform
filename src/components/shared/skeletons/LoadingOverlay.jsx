@@ -9,7 +9,11 @@ export default function LoadingOverlay({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div
+      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${
+        isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+    >
       <div
         className={`flex flex-col items-center gap-4 ${DESIGN_TOKENS.glass.medium} px-8 py-6 rounded-2xl shadow-2xl border-cyan-500/30`}
       >

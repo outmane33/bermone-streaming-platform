@@ -127,12 +127,14 @@ export default function Header() {
     setMobileMenuOpen(false);
   };
 
-  const handleSearchResultClick = () => {
-    setSearchQuery("");
-    setSearchFocused(false);
-    setSearchResults([]);
-    setMobileSearchOpen(false);
-  };
+  const handleSearchResultClick = useCallback(() => {
+    setTimeout(() => {
+      setSearchQuery("");
+      setSearchFocused(false);
+      setSearchResults([]);
+      setMobileSearchOpen(false);
+    }, 700);
+  }, []);
 
   const closeAllOverlays = () => {
     setOpenMenuId(null);

@@ -89,11 +89,7 @@ export const getNewMovies = cache(async (filters = {}, page = 1) => {
   try {
     const { client, db } = await connectToDatabase(); // ← new
     const pipeline = buildTypedAggregationPipeline(filters, page, "films");
-    const [result] = await client
-      .db()
-      .collection("films")
-      .aggregate(pipeline)
-      .toArray();
+    const [result] = await db.collection("films").aggregate(pipeline).toArray();
     // Close client in production (optional but safe)
     if (process.env.NODE_ENV !== "development") {
       await client.close();
@@ -108,8 +104,7 @@ export const getNewSeries = cache(async (filters = {}, page = 1) => {
   try {
     const { client, db } = await connectToDatabase(); // ← new
     const pipeline = buildTypedAggregationPipeline(filters, page, "series");
-    const [result] = await client
-      .db()
+    const [result] = await db
       .collection("series")
       .aggregate(pipeline)
       .toArray();

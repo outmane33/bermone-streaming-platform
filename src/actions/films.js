@@ -143,7 +143,7 @@ export const getRelatedFilms = cache(
     );
     try {
       const { client, db } = await connectToDatabase(); // ← new
-      const collection = db().collection("films");
+      const collection = db.collection("films");
       const filmObjectId = toObjectId(filmId);
       const { genre = [], releaseYear, language } = filmData;
 

@@ -1,3 +1,4 @@
+// CardWrapper.jsx
 "use client";
 
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
@@ -5,7 +6,9 @@ import Link from "next/link";
 import { useState, useTransition, useEffect } from "react";
 import LoadingOverlay from "../skeletons/LoadingOverlay";
 
-export default function CardWrapper({ href, children, onNavigate }) {
+const MIN_LOADING_TIME = 600;
+
+export default function CardWrapper({ href, children, onNavigateComplete }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -23,24 +26,25 @@ export default function CardWrapper({ href, children, onNavigate }) {
       )}; path=/; max-age=600`;
     }
 
-    if (onNavigate) onNavigate();
-
+    const startTime = Date.now();
     setIsNavigating(true);
+
     startTransition(() => {
       router.push(href);
     });
+
+    const elapsedTime = Date.now() - startTime;
+    const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+
+    setTimeout(() => {
+      setIsNavigating(false);
+      if (onNavigateComplete) onNavigateComplete(); // ✅ Trigger after loader
+    }, remainingTime);
   };
 
   useEffect(() => {
-    let timeoutId;
-    if (isNavigating) {
-      timeoutId = setTimeout(() => setIsNavigating(false), 500);
-    }
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      setIsNavigating(false);
-    };
-  }, [isNavigating]);
+    return () => setIsNavigating(false);
+  }, []);
 
   return (
     <>

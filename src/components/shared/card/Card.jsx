@@ -103,8 +103,13 @@ const PlayButtonOverlay = () => (
   </div>
 );
 
-const CardContainer = ({ children, href, className = "", onNavigate }) => (
-  <CardWrapper href={href} onNavigate={onNavigate}>
+const CardContainer = ({
+  children,
+  href,
+  className = "",
+  onNavigateComplete,
+}) => (
+  <CardWrapper href={href} onNavigateComplete={onNavigateComplete}>
     <div className="block cursor-pointer">
       <article
         className={`group relative rounded-xl transition duration-500 hover:scale-[1.02] ${className}`}
@@ -139,7 +144,7 @@ export default function Card({
   className = "",
   isEpisode = false,
   isFilmCollection = false,
-  onNavigate,
+  onNavigateComplete,
 }) {
   if (!media) return null;
 
@@ -169,7 +174,7 @@ export default function Card({
       <CardContainer
         href={`/${oldestFilm.slug}`}
         className={className}
-        onNavigate={onNavigate}
+        onNavigateComplete={onNavigateComplete}
       >
         <CardContent
           image={media?.image || films[0]?.image}
@@ -195,7 +200,7 @@ export default function Card({
       <CardContainer
         href={`/${media?.slug}`}
         className={className}
-        onNavigate={onNavigate}
+        onNavigateComplete={onNavigateComplete}
       >
         <CardContent
           image={media?.season?.image || media?.image}
@@ -224,7 +229,7 @@ export default function Card({
     <CardContainer
       href={`/${media?.slug}`}
       className={className}
-      onNavigate={onNavigate}
+      onNavigateComplete={onNavigateComplete}
     >
       <CardContent image={media.image} title={media.title}>
         <TopBadges isNew={media?.category?.isNew} rating={media.rating} />

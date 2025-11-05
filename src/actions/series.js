@@ -45,8 +45,7 @@ export const getSeries = cache(
         sortConfig,
         page
       );
-      const [result] = await client
-        .db()
+      const [result] = await db
         .collection("series")
         .aggregate(pipeline)
         .toArray();
@@ -60,8 +59,7 @@ export const getSeries = cache(
 export const getSerieBySlug = cache(async (slug) => {
   try {
     const { client, db } = await connectToDatabase(); // ← new
-    const doc = await client
-      .db()
+    const doc = await db
       .collection("series")
       .findOne({ slug: cleanSlug(slug) });
     if (!doc) return { success: false, error: "Serie not found", serie: null };
@@ -74,8 +72,7 @@ export const getSerieBySlug = cache(async (slug) => {
 export const getSeasonsBySeries = cache(async (seriesId) => {
   try {
     const { client, db } = await connectToDatabase(); // ← new
-    const seasons = await client
-      .db()
+    const seasons = await db
       .collection("seasons")
       .find({ seriesId: toObjectId(seriesId) })
       .sort({ seasonNumber: 1 })
@@ -125,8 +122,7 @@ export const getSeasonBySlug = cache(async (slug) => {
 export const getEpisodesBySeason = cache(async (seasonId) => {
   try {
     const { client, db } = await connectToDatabase(); // ← new
-    const episodes = await client
-      .db()
+    const episodes = await db
       .collection("episodes")
       .find(
         { seasonId: toObjectId(seasonId) },
@@ -262,8 +258,7 @@ export const getEpisodes = cache(async (page = 1) => {
         },
       },
     ];
-    const [result] = await client
-      .db()
+    const [result] = await db
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
