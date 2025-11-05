@@ -1,5 +1,5 @@
 "use server";
-import clientPromise from "@/lib/mongodb";
+import connectToDatabase from "@/lib/mongodb"; // ← updated import
 import { cache } from "react";
 import {
   BASE_SORT_CONFIGS,
@@ -38,7 +38,7 @@ const serializeEpisode = (episode) => ({
 export const getSeries = cache(
   async (filters = {}, sortId = "all", page = 1) => {
     try {
-      const client = await clientPromise;
+      const { client, db } = await connectToDatabase(); // ← new
       const sortConfig = BASE_SORT_CONFIGS[sortId] || BASE_SORT_CONFIGS.all;
       const pipeline = buildContentAggregationPipeline(
         filters,
@@ -59,7 +59,7 @@ export const getSeries = cache(
 
 export const getSerieBySlug = cache(async (slug) => {
   try {
-    const client = await clientPromise;
+    const { client, db } = await connectToDatabase(); // ← new
     const doc = await client
       .db()
       .collection("series")
@@ -73,7 +73,7 @@ export const getSerieBySlug = cache(async (slug) => {
 
 export const getSeasonsBySeries = cache(async (seriesId) => {
   try {
-    const client = await clientPromise;
+    const { client, db } = await connectToDatabase(); // ← new
     const seasons = await client
       .db()
       .collection("seasons")
@@ -97,8 +97,7 @@ export const getSeasonsBySeries = cache(async (seriesId) => {
 
 export const getSeasonBySlug = cache(async (slug) => {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    const { client, db } = await connectToDatabase(); // ← new
     const season = await db
       .collection("seasons")
       .findOne({ slug: cleanSlug(slug) });
@@ -125,7 +124,7 @@ export const getSeasonBySlug = cache(async (slug) => {
 
 export const getEpisodesBySeason = cache(async (seasonId) => {
   try {
-    const client = await clientPromise;
+    const { client, db } = await connectToDatabase(); // ← new
     const episodes = await client
       .db()
       .collection("episodes")
@@ -155,8 +154,7 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
 
 export const getEpisodeBySlug = cache(async (slug) => {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    const { client, db } = await connectToDatabase(); // ← new
     const pipeline = [
       { $match: { slug: cleanSlug(slug) } },
       {
@@ -210,7 +208,7 @@ export const getEpisodeBySlug = cache(async (slug) => {
 
 export const getEpisodes = cache(async (page = 1) => {
   try {
-    const client = await clientPromise;
+    const { client, db } = await connectToDatabase(); // ← new
     const validPage = validatePage(page);
     const pipeline = [
       {

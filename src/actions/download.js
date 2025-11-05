@@ -1,6 +1,6 @@
 "use server";
 import { cache } from "react";
-import clientPromise from "@/lib/mongodb";
+const { client, db } = await connectToDatabase(); // ← new
 import { isEpisodeSlug, cleanSlug } from "@/lib/pageUtils";
 
 const getCollectionName = (slug) =>
@@ -8,8 +8,7 @@ const getCollectionName = (slug) =>
 
 export const getAvailableQualities = cache(async (slug) => {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    const { client, db } = await connectToDatabase(); // ← new
     const decodedSlug = cleanSlug(slug);
     const collectionName = getCollectionName(decodedSlug);
     const result = await db
@@ -36,8 +35,7 @@ export const getAvailableQualities = cache(async (slug) => {
 
 export const getServicesForQuality = cache(async (slug, selectedQuality) => {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    const { client, db } = await connectToDatabase(); // ← new
     const decodedSlug = cleanSlug(slug);
     const collectionName = getCollectionName(decodedSlug);
     const result = await db
@@ -65,8 +63,7 @@ export const getServicesForQuality = cache(async (slug, selectedQuality) => {
 export const getDownloadLinks = cache(
   async (slug, selectedQuality, selectedService) => {
     try {
-      const client = await clientPromise;
-      const db = client.db();
+      const { client, db } = await connectToDatabase(); // ← new
       const decodedSlug = cleanSlug(slug);
       const collectionName = getCollectionName(decodedSlug);
       const result = await db

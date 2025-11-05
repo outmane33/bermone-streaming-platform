@@ -1,5 +1,5 @@
 "use server";
-import clientPromise from "@/lib/mongodb";
+import connectToDatabase from "@/lib/mongodb"; // ← updated import
 import { cache } from "react";
 import {
   BASE_SORT_CONFIGS,
@@ -17,8 +17,8 @@ const FILMS_SORT_CONFIGS = {
 
 export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
   try {
-    const client = await clientPromise;
-    const collection = client.db().collection("films");
+    const { client, db } = await connectToDatabase(); // ← new
+    const collection = db.collection("films");
     const sortConfig =
       sortId && FILMS_SORT_CONFIGS[sortId]
         ? FILMS_SORT_CONFIGS[sortId]
@@ -26,6 +26,10 @@ export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
 
     const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
     const [result] = await collection.aggregate(pipeline).toArray();
+    // Close client in production (optional but safe)
+    if (process.env.NODE_ENV !== "development") {
+      await client.close();
+    }
     return {
       success: true,
       ...buildPaginationResponse(result, page),
@@ -37,8 +41,8 @@ export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
 
 export const getFilmBySlug = cache(async (slug) => {
   try {
-    const client = await clientPromise;
-    const collection = client.db().collection("films");
+    const { client, db } = await connectToDatabase();
+    const collection = db.collection("films");
     const cleanSlug = decodeURIComponent(slug).trim();
 
     const film = await collection.findOne(
@@ -57,7 +61,10 @@ export const getFilmBySlug = cache(async (slug) => {
     if (!film) {
       return { success: false, error: "Film not found", film: null };
     }
-
+    // Close client in production (optional but safe)
+    if (process.env.NODE_ENV !== "development") {
+      await client.close();
+    }
     return { success: true, film: serializeDocument(film) };
   } catch (error) {
     return buildErrorResponse("film", error);
@@ -66,8 +73,7 @@ export const getFilmBySlug = cache(async (slug) => {
 
 export const getFilmCollection = cache(async (filmId) => {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    const { client, db } = await connectToDatabase(); // ← new
     const filmObjectId = toObjectId(filmId);
 
     const collection = await db.collection("filmcollections").findOne(
@@ -114,6 +120,11 @@ export const getFilmCollection = cache(async (filmId) => {
       .sort({ releaseYear: 1 })
       .limit(100)
       .toArray();
+
+    // Close client in production (optional but safe)
+    if (process.env.NODE_ENV !== "development") {
+      await client.close();
+    }
     return {
       success: true,
       collection: serializeDocument(collection),
@@ -131,8 +142,8 @@ export const getRelatedFilms = cache(
       MAX_RELATED
     );
     try {
-      const client = await clientPromise;
-      const collection = client.db().collection("films");
+      const { client, db } = await connectToDatabase(); // ← new
+      const collection = db().collection("films");
       const filmObjectId = toObjectId(filmId);
       const { genre = [], releaseYear, language } = filmData;
 
@@ -201,6 +212,11 @@ export const getRelatedFilms = cache(
       ];
 
       const films = await collection.aggregate(pipeline).toArray();
+
+      // Close client in production (optional but safe)
+      if (process.env.NODE_ENV !== "development") {
+        await client.close();
+      }
       return { success: true, films, count: films.length };
     } catch (error) {
       return buildErrorResponse("relatedFilms", error);
