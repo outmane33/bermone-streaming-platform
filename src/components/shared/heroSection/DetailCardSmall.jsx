@@ -30,7 +30,7 @@ export default function DetailCard({ icon, label, value, gradient }) {
           <p className="text-xs text-gray-100 font-semibold leading-tight">
             {label}
           </p>
-          <p className="text-sm font-bold text-white truncate">{value}</p>
+          <p className="text-sm font-bold text-white">{value}</p>
         </div>
       </div>
     </GlassCard>

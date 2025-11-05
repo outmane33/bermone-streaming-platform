@@ -10,7 +10,7 @@ export default function RelatedSection({ relatedMedia, title }) {
       {/* Section Header */}
       <div className="mb-8">
         <h2
-          className="text-3xl sm:text-4xl font-black text-white bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-right"
+          className="text-3xl sm:text-4xl font-black text-white bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-right px-2"
           dir="rtl"
         >
           {title}
@@ -21,8 +21,8 @@ export default function RelatedSection({ relatedMedia, title }) {
       {/* Media Grid or Episode List */}
       {type === "episode" ? (
         <div className="relative">
-          <div className="max-h-96 overflow-y-auto pr-2">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="max-h-96 overflow-y-auto pr-2 pb-2">
+            <div className={DESIGN_TOKENS.grid.container}>
               {relatedMedia.map((media, index) => (
                 <EpisodeTag key={index} episode={media} />
               ))}

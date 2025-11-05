@@ -122,7 +122,7 @@ export default function HeroSection({ media, type, seriesSlug }) {
           <Link
             href={`/${seriesSlug}`}
             className={`
-      absolute top-4 right-4 z-30
+      absolute top-4 right-4 z-20
       flex items-center gap-2
       bg-white/15 md:${DESIGN_TOKENS.glass.light.replace("bg-", "bg-")}
       rounded-lg

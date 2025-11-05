@@ -63,7 +63,7 @@ export const SearchResults = ({ searchResults, onResultClick, isLoading }) => {
                 key={item.id || item._id}
                 media={item}
                 className="!h-auto"
-                onNavigateComplete={onResultClick} // ✅ NEW
+                onNavigateComplete={onResultClick}
               />
             ))}
           </div>

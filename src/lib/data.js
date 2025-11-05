@@ -143,6 +143,7 @@ export const COMPONENT_STYLES = {
       new: "bg-red-600 text-white",
       year: "bg-yellow-600/20 text-yellow-400 border border-yellow-500/30",
       default: "bg-white/10 text-white border border-white/20",
+      episode: "bg-black/60 border border-cyan-400/40",
     },
   },
 

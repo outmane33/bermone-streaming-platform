@@ -78,7 +78,7 @@ export default function CarouselClient({ carouselMida, className = "" }) {
 
   return (
     <div className={`relative overflow-x-hidden ${className}`}>
-      <div className="relative group px-2">
+      <div className="relative px-2">
         <ScrollButton
           direction="left"
           isVisible={true}
