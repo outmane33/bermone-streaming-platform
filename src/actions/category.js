@@ -1,6 +1,6 @@
 "use server";
 import { cache } from "react";
-import clientPromise from "@/lib/mongodb";
+import connectToDatabase from "@/lib/mongodb"; // ← updated import
 import {
   BASE_SORT_CONFIGS,
   buildContentAggregationPipeline,
@@ -113,7 +113,7 @@ export const getContent = cache(
       }
 
       const validPage = validatePage(page);
-      const client = await clientPromise;
+      const { client, db } = await connectToDatabase(); // ← new
       const sortConfigs =
         contentType === "films" ? FILMS_SORT_CONFIGS : SERIES_SORT_CONFIGS;
 
@@ -148,7 +148,7 @@ export const getContent = cache(
         resultContentType = contentType;
       }
 
-      const collection = client.db().collection(collectionName);
+      const collection = db.collection(collectionName);
       const [result] = await collection.aggregate(pipeline).toArray();
 
       if (!result) {
