@@ -1,4 +1,3 @@
-// home.js
 "use server";
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";

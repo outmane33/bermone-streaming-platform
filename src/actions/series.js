@@ -1,4 +1,3 @@
-// series.js
 "use server";
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
@@ -14,7 +13,6 @@ import { validatePage } from "@/lib/validation";
 import { MAX_EPISODES, MAX_SEASONS, ITEMS_PER_PAGE } from "@/lib/data";
 import { cleanSlug } from "@/lib/pageUtils";
 
-// Reusable serializer for seasons/episodes
 const serializeSeason = (season) => ({
   _id: season._id.toString(),
   seriesId: season.seriesId.toString(),

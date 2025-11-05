@@ -1,9 +1,7 @@
-// lib/mediaSerializers.js
 import { CONTENT_TYPES } from "./mediaResolver";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000/";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 
-// Helper: truncate without cutting words
 function truncateDescription(str, max = 155) {
   if (!str) return "";
   if (str.length <= max) return str;

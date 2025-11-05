@@ -13,7 +13,7 @@ export const Logo = ({ isTouchDevice }) => (
           <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-pink-500 rounded-br-xl opacity-60 group-hover:opacity-100 transition-opacity" />
         </>
       )}
-      <ICON_MAP.MonitorPause className="w-5 h-5 text-white" />
+      <ICON_MAP.Film className="w-5 h-5 text-white" />
       <span className="text-xl font-bold text-white">Bermone</span>
     </div>
   </Link>

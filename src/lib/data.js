@@ -294,7 +294,7 @@ export const SORT_OPTIONS = {
     {
       id: "latest",
       label: "آخر الحلقات",
-      icon: "FolderDown",
+      icon: "CalendarSync",
       gradient: "from-amber-500 via-orange-500 to-yellow-500",
     },
   ],
@@ -321,7 +321,7 @@ export const SORT_OPTIONS = {
     {
       id: "latest-added",
       label: "الجديد المضاف",
-      icon: "CalendarSync",
+      icon: "Clock",
       gradient: "from-purple-500 via-violet-500 to-indigo-500",
     },
   ],

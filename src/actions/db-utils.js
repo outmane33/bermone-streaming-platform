@@ -91,7 +91,7 @@ export const buildContentAggregationPipeline = (
   filters,
   sortConfig,
   page,
-  options = {} // ← Accept options object
+  options = {}
 ) => {
   const { skipPagination = false, projection = {} } = options;
 
@@ -112,13 +112,12 @@ export const buildContentAggregationPipeline = (
     slug: 1,
     category: 1,
     duration: 1,
-    updatedAt: 1, // 👈 Ensure this is included
-    createdAt: 1, // 👈 And this
+    updatedAt: 1,
+    createdAt: 1,
     ...projection,
   };
 
   if (skipPagination) {
-    // Return simple pipeline (no facet, no pagination)
     return [
       { $match: matchQuery },
       { $sort: sortConfig.sort },
@@ -126,7 +125,6 @@ export const buildContentAggregationPipeline = (
     ];
   }
 
-  // Original paginated pipeline
   const skip = (page - 1) * ITEMS_PER_PAGE;
   return [
     { $match: matchQuery },

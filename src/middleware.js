@@ -1,4 +1,3 @@
-// middleware.js
 import { NextResponse } from "next/server";
 
 function addSecurityHeaders(response) {
@@ -16,22 +15,18 @@ function addSecurityHeaders(response) {
 export function middleware(request) {
   const { pathname, search } = request.nextUrl;
 
-  // ✅ 1. Handle Home redirect: / → /?sort=latest-added
   if (pathname === "/") {
     const url = request.nextUrl.clone();
     const searchParams = new URLSearchParams(url.search);
 
-    // Only redirect if NO "sort" param exists
     if (!searchParams.has("sort")) {
       searchParams.set("sort", "latest-added");
       url.search = searchParams.toString();
       const response = NextResponse.redirect(url);
       return addSecurityHeaders(response);
     }
-    // If "sort" exists, continue normally
   }
 
-  // ✅ 2. Your existing category/returnUrl logic
   if (
     pathname.startsWith("/category/") ||
     pathname === "/films" ||

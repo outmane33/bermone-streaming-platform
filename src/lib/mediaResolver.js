@@ -74,15 +74,11 @@ async function tryFetchType(slug, type) {
     : null;
 }
 
-// ✅ NEW: Fetch all media slugs for sitemap
-// lib/mediaResolver.js
-
 export async function getAllMediaSlugs() {
   try {
     const { getFilms } = require("@/actions/films");
     const { getSeries } = require("@/actions/series");
 
-    // Fetch ALL with minimal projection
     const films = await getFilms({}, "all", 1, {
       skipPagination: true,
       projection: { slug: 1, updatedAt: 1, createdAt: 1 },

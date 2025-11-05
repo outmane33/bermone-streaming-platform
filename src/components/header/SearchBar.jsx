@@ -1,4 +1,3 @@
-// components/header/SearchBar.jsx
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 
 export const SearchBar = ({

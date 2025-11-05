@@ -8,7 +8,6 @@ const SKELETON = {
 };
 
 const getGlassClass = (token) => {
-  // Assumes token = "bg-white/10 backdrop-blur-md ..."
   return `bg-white/5 md:${token.replace("bg-", "bg-")}`;
 };
 

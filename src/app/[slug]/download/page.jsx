@@ -1,4 +1,3 @@
-// app/[slug]/download/page.jsx
 import { Suspense } from "react";
 import { Download } from "lucide-react";
 import { DESIGN_TOKENS } from "@/lib/data";
@@ -19,14 +18,12 @@ const BlurBg = ({ position = "top", size = "96" }) => {
   );
 };
 
-// ✅ REMOVE generateMetadata entirely — OR return noindex
 export async function generateMetadata() {
   return {
     robots: {
-      index: false, // 🔒 Do NOT index
-      follow: false, // 🔒 Do NOT follow links
+      index: false,
+      follow: false,
     },
-    // Optional: omit title/description to avoid any SEO signal
   };
 }
 

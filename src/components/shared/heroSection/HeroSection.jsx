@@ -17,7 +17,7 @@ const getAltText = (media, type) => {
 };
 
 const generateJsonLd = (media, type) => {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000/";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const fullImageUrl = media.image?.startsWith("http")
     ? media.image
     : `${baseUrl}${media.image}`;
@@ -109,7 +109,6 @@ export default function HeroSection({ media, type, seriesSlug }) {
   };
 
   const jsonLd = generateJsonLd(media, type);
-  console.log(media);
   return (
     <>
       {/* Structured Data */}

@@ -1,4 +1,3 @@
-// app/films/page.jsx
 import { Suspense } from "react";
 import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
@@ -8,7 +7,6 @@ import { SkeletonFilterSection } from "@/components/shared/skeletons/SkeletonFil
 
 const VALID_SORT_IDS = ["new", "old", "best", "popular"];
 
-// ✅ Dynamic metadata based on sort parameter
 export async function generateMetadata({ searchParams }) {
   const { sort } = await searchParams;
   const titles = {
@@ -25,7 +23,9 @@ export async function generateMetadata({ searchParams }) {
   };
 
   return {
-    title: `${titles[sort] || "جميع الأفلام"} | موقعك`,
+    title: `${titles[sort] || "جميع الأفلام"} | ${
+      process.env.NEXT_PUBLIC_SITE_URL
+    }`,
     description:
       descriptions[sort] || "شاهد وحمل أفلام مترجمة بجودة عالية اون لاين",
   };
@@ -56,5 +56,4 @@ export default async function FilmsPage({ searchParams }) {
   );
 }
 
-// ✅ ISR: Revalidate every 15 minutes
 export const revalidate = 900;

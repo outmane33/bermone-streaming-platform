@@ -1,4 +1,3 @@
-// category.js
 "use server";
 import { cache } from "react";
 import clientPromise from "@/lib/mongodb";
@@ -12,7 +11,6 @@ import {
 import { validatePage } from "@/lib/validation";
 import { ITEMS_PER_PAGE } from "@/lib/data";
 
-// Extend base configs with category-specific ones
 const FILMS_SORT_CONFIGS = {
   ...BASE_SORT_CONFIGS,
   foreignMovies: {
@@ -58,8 +56,6 @@ const SERIES_SORT_CONFIGS = {
     filter: { "series.category.isAnimeseries": true },
   },
 };
-
-// Reuse film collections pipeline logic if it becomes common — for now keep minimal
 function buildFilmCollectionsAggregationPipeline(page) {
   const validPage = validatePage(page);
   const skip = (validPage - 1) * ITEMS_PER_PAGE;

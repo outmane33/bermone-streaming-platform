@@ -1,4 +1,3 @@
-// app/page.jsx (Home)
 import {
   getLatestAdded,
   getNewSeries,
@@ -28,7 +27,6 @@ export const metadata = {
 export default async function Home({ searchParams }) {
   const params = await searchParams;
 
-  // ✅ NO MORE REDIRECT — sort is guaranteed by middleware
   const { sortId, page } = parsePageParams(
     params,
     VALID_SORT_IDS,
@@ -74,4 +72,4 @@ export default async function Home({ searchParams }) {
   );
 }
 
-export const revalidate = 300; // ✅ Now ISR works!
+export const revalidate = 300;

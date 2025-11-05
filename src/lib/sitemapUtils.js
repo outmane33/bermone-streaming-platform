@@ -5,7 +5,6 @@ export async function getAllMediaSlugsForSitemap() {
     const client = await clientPromise;
     const db = client.db();
 
-    // Fetch films, series, seasons (NO episodes)
     const [films, seriesList, seasons] = await Promise.all([
       db
         .collection("films")

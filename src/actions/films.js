@@ -1,4 +1,3 @@
-// films.js
 "use server";
 import clientPromise from "@/lib/mongodb";
 import { cache } from "react";
@@ -71,7 +70,6 @@ export const getFilmCollection = cache(async (filmId) => {
     const db = client.db();
     const filmObjectId = toObjectId(filmId);
 
-    // Add projection to collection query
     const collection = await db.collection("filmcollections").findOne(
       { films: filmObjectId },
       {

@@ -1,4 +1,3 @@
-// app/series/page.jsx
 import { SORT_OPTIONS, VALID_QUERY_PARAMS } from "@/lib/data";
 import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { getSeries, getEpisodes } from "@/actions/series";
@@ -8,7 +7,6 @@ import { SkeletonFilterSection } from "@/components/shared/skeletons/SkeletonFil
 
 const VALID_SORT_IDS = ["latest", "new", "best", "popular", "all"];
 
-// ✅ Dynamic metadata based on sort
 export async function generateMetadata({ searchParams }) {
   const { sort } = await searchParams;
   const titles = {
@@ -27,7 +25,9 @@ export async function generateMetadata({ searchParams }) {
   };
 
   return {
-    title: `${titles[sort] || "جميع المسلسلات"} | موقعك`,
+    title: `${titles[sort] || "جميع المسلسلات"} | ${
+      process.env.NEXT_PUBLIC_SITE_URL
+    }`,
     description:
       descriptions[sort] || "شاهد وحمل مسلسلات مترجمة اون لاين بجودة عالية",
   };
@@ -63,5 +63,4 @@ export default async function SeriesPage({ searchParams }) {
   );
 }
 
-// ✅ ISR: Revalidate every 15 minutes
 export const revalidate = 900;
