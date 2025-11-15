@@ -14,12 +14,8 @@ const EXCLUDED_SERVERS = ["Telegram"];
  */
 export const getAvailableQualities = cache(async (slug) => {
   try {
-    const reqHeaders = await headers();
-    const origin = reqHeaders.get("origin");
-    const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL];
-    if (origin && !allowedOrigins.includes(origin)) {
-      return { success: false, error: "Invalid origin", qualities: [] };
-    }
+    // Server actions have built-in CSRF protection, origin check not needed
+    await headers(); // Still await to comply with Next.js 15
 
     const { db } = await connectToDatabase();
     const cleanedSlug = cleanSlug(slug);
@@ -131,12 +127,8 @@ export const getAvailableQualities = cache(async (slug) => {
  */
 export const getServicesForQuality = cache(async (slug, quality) => {
   try {
-    const reqHeaders = await headers();
-    const origin = reqHeaders.get("origin");
-    const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL];
-    if (origin && !allowedOrigins.includes(origin)) {
-      return { success: false, error: "Invalid origin", services: [] };
-    }
+    // Server actions have built-in CSRF protection
+    await headers();
 
     const { db } = await connectToDatabase();
     const cleanedSlug = cleanSlug(slug);
@@ -203,12 +195,8 @@ export const getServicesForQuality = cache(async (slug, quality) => {
  */
 export const getDownloadLinks = cache(async (slug, quality, serverName) => {
   try {
+    // Get user's real IP from headers
     const reqHeaders = await headers();
-    const origin = reqHeaders.get("origin");
-    const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL];
-    if (origin && !allowedOrigins.includes(origin)) {
-      return { success: false, error: "Invalid origin" };
-    }
 
     // ✅ Get REAL user IP (works locally + Vercel)
     const ip =
