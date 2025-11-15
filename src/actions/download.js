@@ -1,7 +1,6 @@
 // actions/download.js
 "use server";
 import { headers } from "next/headers";
-import { cache } from "react";
 import connectToDatabase from "@/lib/mongodb";
 import { cleanSlug } from "@/lib/pageUtils";
 import { buildErrorResponse } from "./db-utils";
@@ -11,8 +10,9 @@ const EXCLUDED_SERVERS = ["Telegram"];
 
 /**
  * Get available qualities for content by slug
+ * Note: Removed cache() to prevent conflicts with watch page
  */
-export const getAvailableQualities = cache(async (slug) => {
+export const getAvailableQualities = async (slug) => {
   try {
     // Server actions have built-in CSRF protection, origin check not needed
     await headers(); // Still await to comply with Next.js 15
@@ -120,12 +120,13 @@ export const getAvailableQualities = cache(async (slug) => {
     console.error("💥 getAvailableQualities error:", error);
     return buildErrorResponse("qualities", error);
   }
-});
+};
 
 /**
  * Get available services for a given quality
+ * Note: Removed cache() to prevent conflicts
  */
-export const getServicesForQuality = cache(async (slug, quality) => {
+export const getServicesForQuality = async (slug, quality) => {
   try {
     // Server actions have built-in CSRF protection
     await headers();
@@ -188,12 +189,13 @@ export const getServicesForQuality = cache(async (slug, quality) => {
     console.error("💥 getServicesForQuality error:", error);
     return buildErrorResponse("services", error);
   }
-});
+};
 
 /**
  * Get download link - STREAMHG IP BINDING ENABLED
+ * Note: Removed cache() to prevent conflicts
  */
-export const getDownloadLinks = cache(async (slug, quality, serverName) => {
+export const getDownloadLinks = async (slug, quality, serverName) => {
   try {
     // Get user's real IP from headers
     const reqHeaders = await headers();
@@ -206,7 +208,6 @@ export const getDownloadLinks = cache(async (slug, quality, serverName) => {
 
     let safeIp = ip;
     if (ip === "127.0.0.1" || ip === "::1") {
-      // Use STREAMHG_DEV_IP from .env.local, or fallback to your IP
       safeIp = process.env.STREAMHG_DEV_IP || "160.179.156.215";
       console.log("🏠 Development mode: Using IP from env or default:", safeIp);
     }
@@ -332,7 +333,7 @@ export const getDownloadLinks = cache(async (slug, quality, serverName) => {
     console.error("💥 getDownloadLinks error:", error);
     return { success: false, error: "Failed to generate download link" };
   }
-});
+};
 
 // Helper: Map your quality to StreamHG's format
 function getStreamHgQuality(quality) {
