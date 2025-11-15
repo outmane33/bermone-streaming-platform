@@ -1,6 +1,7 @@
 // actions/download.js
 "use server";
 import { headers } from "next/headers";
+import { cache } from "react";
 import connectToDatabase from "@/lib/mongodb";
 import { cleanSlug } from "@/lib/pageUtils";
 import { buildErrorResponse } from "./db-utils";
@@ -10,9 +11,8 @@ const EXCLUDED_SERVERS = ["Telegram"];
 
 /**
  * Get available qualities for content by slug
- * Note: Removed cache() to prevent conflicts with watch page
  */
-export const getAvailableQualities = async (slug) => {
+export const getAvailableQualities = cache(async (slug) => {
   try {
     // Server actions have built-in CSRF protection, origin check not needed
     await headers(); // Still await to comply with Next.js 15
@@ -120,52 +120,67 @@ export const getAvailableQualities = async (slug) => {
     console.error("💥 getAvailableQualities error:", error);
     return buildErrorResponse("qualities", error);
   }
-};
+});
 
 /**
  * Get available services for a given quality
- * Note: Removed cache() to prevent conflicts
  */
-export const getServicesForQuality = async (slug, quality) => {
+// Replace the aggregation logic with safer JS filtering
+export const getServicesForQuality = cache(async (slug, quality) => {
   try {
-    // Server actions have built-in CSRF protection
     await headers();
-
     const { db } = await connectToDatabase();
     const cleanedSlug = cleanSlug(slug);
 
     let content = null;
-
-    // Try films/episodes (same logic as above)
-    const collections = ["films", "episodes"];
-    for (const coll of collections) {
-      const result = await db.collection(coll).findOne(
-        { slug: cleanedSlug },
-        {
-          projection: {
-            services: {
-              $filter: {
-                input: "$services",
-                as: "s",
-                cond: {
-                  $and: [
-                    { $not: { $in: ["$$s.serviceName", EXCLUDED_SERVERS] } },
-                    { $in: [quality, "$$s.qualities.quality"] },
-                  ],
-                },
-              },
-            },
-          },
-        }
-      );
-      if (result?.services?.length > 0) {
-        content = result;
+    for (const coll of ["films", "episodes"]) {
+      const doc = await db
+        .collection(coll)
+        .findOne({ slug: cleanedSlug }, { projection: { services: 1 } });
+      if (doc?.services?.length) {
+        content = doc;
         break;
       }
     }
 
-    if (!content || !content.services || content.services.length === 0) {
-      console.warn(`⚠️ No services found for quality: ${quality}`);
+    if (!content?.services?.length) {
+      return {
+        success: false,
+        error: "Content or services not found",
+        services: [],
+      };
+    }
+
+    // Normalize input quality
+    const normalizedQuality = quality.trim().toLowerCase();
+
+    // Filter services: exclude blacklisted + match quality robustly
+    const services = content.services
+      .filter((s) => s && typeof s === "object")
+      .filter((s) => !EXCLUDED_SERVERS.includes(s.serviceName))
+      .filter((s) => {
+        if (!Array.isArray(s.qualities)) return false;
+        return s.qualities.some((q) => {
+          // Handle both string and object quality
+          const qVal = typeof q === "string" ? q : q?.quality || q?.name || "";
+          return qVal.trim().toLowerCase() === normalizedQuality;
+        });
+      })
+      .map((s) => ({
+        serviceName: s.serviceName,
+        qualityCount: s.qualities?.length || 0,
+      }));
+
+    if (services.length === 0) {
+      console.warn(
+        `⚠️ No services matched quality "${quality}" (normalized: "${normalizedQuality}")`,
+        "Available qualities in services:",
+        content.services.flatMap(
+          (s) =>
+            s.qualities?.map((q) => (typeof q === "string" ? q : q.quality)) ||
+            []
+        )
+      );
       return {
         success: false,
         error: "No services for this quality",
@@ -173,29 +188,16 @@ export const getServicesForQuality = async (slug, quality) => {
       };
     }
 
-    // Return services that support this quality
-    const services = content.services.map((s) => ({
-      serviceName: s.serviceName,
-      qualityCount: s.qualities?.length || 0,
-    }));
-
-    console.log(
-      `✅ Found ${services.length} services for ${quality}:`,
-      services.map((s) => s.serviceName)
-    );
-
     return { success: true, services };
   } catch (error) {
     console.error("💥 getServicesForQuality error:", error);
     return buildErrorResponse("services", error);
   }
-};
-
+});
 /**
  * Get download link - STREAMHG IP BINDING ENABLED
- * Note: Removed cache() to prevent conflicts
  */
-export const getDownloadLinks = async (slug, quality, serverName) => {
+export const getDownloadLinks = cache(async (slug, quality, serverName) => {
   try {
     // Get user's real IP from headers
     const reqHeaders = await headers();
@@ -208,6 +210,7 @@ export const getDownloadLinks = async (slug, quality, serverName) => {
 
     let safeIp = ip;
     if (ip === "127.0.0.1" || ip === "::1") {
+      // Use STREAMHG_DEV_IP from .env.local, or fallback to your IP
       safeIp = process.env.STREAMHG_DEV_IP || "160.179.156.215";
       console.log("🏠 Development mode: Using IP from env or default:", safeIp);
     }
@@ -333,7 +336,7 @@ export const getDownloadLinks = async (slug, quality, serverName) => {
     console.error("💥 getDownloadLinks error:", error);
     return { success: false, error: "Failed to generate download link" };
   }
-};
+});
 
 // Helper: Map your quality to StreamHG's format
 function getStreamHgQuality(quality) {
