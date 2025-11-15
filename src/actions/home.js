@@ -1,5 +1,5 @@
 "use server";
-import connectToDatabase from "@/lib/mongodb"; // ← updated import
+import connectToDatabase from "@/lib/mongodb";
 import { cache } from "react";
 import {
   buildMatchQuery,
@@ -13,7 +13,7 @@ import { ITEMS_PER_PAGE } from "@/lib/data";
 
 export const getLatestAdded = cache(async (filters = {}, page = 1) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const validPage = validatePage(page);
     const skip = (validPage - 1) * ITEMS_PER_PAGE;
     const matchQuery = buildMatchQuery(filters);
@@ -82,7 +82,7 @@ const buildTypedAggregationPipeline = (filters, page, contentType) => {
 
 export const getNewMovies = cache(async (filters = {}, page = 1) => {
   try {
-    const { client, db } = await connectToDatabase();
+    const { db } = await connectToDatabase();
     const pipeline = buildTypedAggregationPipeline(filters, page, "films");
     const [result] = await db.collection("films").aggregate(pipeline).toArray();
 
@@ -94,7 +94,7 @@ export const getNewMovies = cache(async (filters = {}, page = 1) => {
 
 export const getNewSeries = cache(async (filters = {}, page = 1) => {
   try {
-    const { client, db } = await connectToDatabase();
+    const { db } = await connectToDatabase();
     const pipeline = buildTypedAggregationPipeline(filters, page, "series");
     const [result] = await db
       .collection("series")
@@ -109,7 +109,7 @@ export const getNewSeries = cache(async (filters = {}, page = 1) => {
 
 export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
   try {
-    const { client, db } = await connectToDatabase();
+    const { db } = await connectToDatabase();
     const validPage = validatePage(page);
     const skip = (validPage - 1) * ITEMS_PER_PAGE;
 
@@ -173,6 +173,7 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
                 seasonId: { $toString: "$seasonId" },
                 episodeNumber: 1,
                 duration: 1,
+                mergedEpisodes: 1,
                 season: {
                   _id: { $toString: "$season._id" },
                   seasonNumber: "$season.seasonNumber",
@@ -194,7 +195,6 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
-
     return { success: true, ...buildPaginationResponse(result, page) };
   } catch (error) {
     return buildErrorResponse("episodes", error, page);

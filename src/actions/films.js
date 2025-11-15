@@ -1,5 +1,5 @@
 "use server";
-import connectToDatabase from "@/lib/mongodb"; // ← updated import
+import connectToDatabase from "@/lib/mongodb";
 import { cache } from "react";
 import {
   BASE_SORT_CONFIGS,
@@ -17,7 +17,7 @@ const FILMS_SORT_CONFIGS = {
 
 export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const collection = db.collection("films");
     const sortConfig =
       sortId && FILMS_SORT_CONFIGS[sortId]
@@ -37,7 +37,7 @@ export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
 
 export const getFilmBySlug = cache(async (slug) => {
   try {
-    const { client, db } = await connectToDatabase();
+    const { db } = await connectToDatabase();
     const collection = db.collection("films");
     const cleanSlug = decodeURIComponent(slug).trim();
 
@@ -65,7 +65,7 @@ export const getFilmBySlug = cache(async (slug) => {
 
 export const getFilmCollection = cache(async (filmId) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const filmObjectId = toObjectId(filmId);
 
     const collection = await db.collection("filmcollections").findOne(
@@ -92,7 +92,6 @@ export const getFilmCollection = cache(async (filmId) => {
       };
     }
 
-    // Add projection to films query
     const films = await db
       .collection("films")
       .find(
@@ -130,7 +129,7 @@ export const getRelatedFilms = cache(
       MAX_RELATED
     );
     try {
-      const { client, db } = await connectToDatabase(); // ← new
+      const { db } = await connectToDatabase();
       const collection = db.collection("films");
       const filmObjectId = toObjectId(filmId);
       const { genre = [], releaseYear, language } = filmData;

@@ -109,6 +109,7 @@ export default function HeroSection({ media, type, seriesSlug }) {
   };
 
   const jsonLd = generateJsonLd(media, type);
+
   return (
     <>
       {/* Structured Data */}

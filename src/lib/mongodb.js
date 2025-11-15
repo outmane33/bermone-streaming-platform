@@ -17,14 +17,12 @@ let client;
 let clientPromise;
 
 if (process.env.NODE_ENV === "development") {
-  // Reuse in development
   if (!global._mongoClientPromise) {
     client = new MongoClient(uri, options);
     global._mongoClientPromise = client.connect();
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  // 🚀 Reuse in production (even serverless!)
   if (!global._mongoClientPromise) {
     client = new MongoClient(uri, options);
     global._mongoClientPromise = client.connect();

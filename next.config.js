@@ -3,14 +3,26 @@
 const nextConfig = {
   poweredByHeader: false,
 
-  images: {
-    remotePatterns: [
+  async headers() {
+    return [
       {
-        protocol: "https",
-        hostname: "**.topcinema.cam", // Wildcard for all subdomains
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
       },
-    ],
-    // Disable optimization to bypass 403 errors
+    ];
+  },
+
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "**.topcinema.cam" }],
     unoptimized: true,
   },
 };

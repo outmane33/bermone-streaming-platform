@@ -60,7 +60,7 @@ export const SearchResults = ({ searchResults, onResultClick, isLoading }) => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {searchResults.slice(0, 40).map((item) => (
               <Card
-                key={item.id || item._id}
+                key={item.id || item.slug}
                 media={item}
                 className="!h-auto"
                 onNavigateComplete={onResultClick}

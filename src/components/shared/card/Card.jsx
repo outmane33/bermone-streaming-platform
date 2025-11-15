@@ -10,6 +10,7 @@ const TopBadges = ({
   episodeNumber,
   seasonNumber,
   filmCount,
+  mergedEpisodes,
 }) => {
   const badgeStyles = COMPONENT_STYLES.badge;
 
@@ -28,12 +29,15 @@ const TopBadges = ({
           <span
             className={`${badgeStyles.base} ${badgeStyles.variants.episode}`}
           >
-            {seasonNumber ? `S${seasonNumber}` : ""} E{episodeNumber}
-          </span>
-        )}
-        {isNew && (
-          <span className={`${badgeStyles.base} ${badgeStyles.variants.new}`}>
-            جديد
+            {mergedEpisodes?.length > 0 ? (
+              `${seasonNumber && `S${seasonNumber}`} E${mergedEpisodes.join(
+                "-"
+              )}`
+            ) : (
+              <>
+                {seasonNumber && `S${seasonNumber}`} E{episodeNumber}
+              </>
+            )}
           </span>
         )}
       </div>
@@ -147,7 +151,6 @@ export default function Card({
   onNavigateComplete,
 }) {
   if (!media) return null;
-
   const content = media?.slug?.includes("مسلسل") ? "مسلسل" : "فيلم";
 
   if (isFilmCollection) {
@@ -209,6 +212,7 @@ export default function Card({
           <TopBadges
             episodeNumber={media?.episodeNumber}
             seasonNumber={media?.season?.seasonNumber}
+            mergedEpisodes={media?.mergedEpisodes}
           />
           <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
             <MetaInfo duration={media?.duration} />

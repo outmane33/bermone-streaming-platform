@@ -33,12 +33,13 @@ const serializeEpisode = (episode) => ({
   episodeNumber: episode.episodeNumber,
   duration: episode.duration,
   slug: episode.slug,
+  mergedEpisodes: episode.mergedEpisodes,
 });
 
 export const getSeries = cache(
   async (filters = {}, sortId = "all", page = 1) => {
     try {
-      const { client, db } = await connectToDatabase(); // ← new
+      const { db } = await connectToDatabase();
       const sortConfig = BASE_SORT_CONFIGS[sortId] || BASE_SORT_CONFIGS.all;
       const pipeline = buildContentAggregationPipeline(
         filters,
@@ -58,7 +59,7 @@ export const getSeries = cache(
 
 export const getSerieBySlug = cache(async (slug) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const doc = await db
       .collection("series")
       .findOne({ slug: cleanSlug(slug) });
@@ -71,7 +72,7 @@ export const getSerieBySlug = cache(async (slug) => {
 
 export const getSeasonsBySeries = cache(async (seriesId) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const seasons = await db
       .collection("seasons")
       .find({ seriesId: toObjectId(seriesId) })
@@ -94,7 +95,7 @@ export const getSeasonsBySeries = cache(async (seriesId) => {
 
 export const getSeasonBySlug = cache(async (slug) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const season = await db
       .collection("seasons")
       .findOne({ slug: cleanSlug(slug) });
@@ -121,7 +122,7 @@ export const getSeasonBySlug = cache(async (slug) => {
 
 export const getEpisodesBySeason = cache(async (seasonId) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const episodes = await db
       .collection("episodes")
       .find(
@@ -138,6 +139,7 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
 
     if (!episodes.length)
       return { success: false, message: "No episodes found", episodes: [] };
+
     return {
       success: true,
       episodes: episodes.map(serializeEpisode),
@@ -150,7 +152,7 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
 
 export const getEpisodeBySlug = cache(async (slug) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const pipeline = [
       { $match: { slug: cleanSlug(slug) } },
       {
@@ -204,7 +206,7 @@ export const getEpisodeBySlug = cache(async (slug) => {
 
 export const getEpisodes = cache(async (page = 1) => {
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const validPage = validatePage(page);
     const pipeline = [
       {
@@ -242,6 +244,7 @@ export const getEpisodes = cache(async (page = 1) => {
                 duration: 1,
                 createdAt: 1,
                 updatedAt: 1,
+                mergedEpisodes: 1,
                 season: {
                   _id: { $toString: "$season._id" },
                   seasonNumber: "$season.seasonNumber",

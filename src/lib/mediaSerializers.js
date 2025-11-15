@@ -101,7 +101,11 @@ export const serializers = {
       return {
         _id: data.episode._id,
         slug: data.episode.slug,
-        title: `الحلقة ${data.episode.episodeNumber}`,
+        title: `الحلقة ${
+          data?.episode?.mergedEpisodes?.length > 1
+            ? `${data?.episode?.mergedEpisodes?.join("-")}`
+            : data.episode.episodeNumber
+        }`,
         image: data.seasonImage,
         duration: data.episode.duration,
         episodeNumber: data.episode.episodeNumber,
@@ -115,10 +119,13 @@ export const serializers = {
       allEpisodes.length > 0 &&
       episode.episodeNumber ===
         Math.max(...allEpisodes.map((ep) => ep.episodeNumber));
-
     return {
       _id: episode._id,
-      title: `${series.title} - S${season.seasonNumber}E${episode.episodeNumber}`,
+      title: `${series.title} - S${season.seasonNumber}E${
+        episode?.mergedEpisodes?.length > 1
+          ? `${episode?.mergedEpisodes?.join("-")}`
+          : episode.episodeNumber
+      }`,
       originalTitle: series.originalTitle,
       description: series.description,
       genre: series.genre || [],

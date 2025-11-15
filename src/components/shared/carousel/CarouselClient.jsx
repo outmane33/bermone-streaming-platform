@@ -96,7 +96,7 @@ export default function CarouselClient({ carouselMida, className = "" }) {
           className="flex gap-1 sm:gap-3 md:gap-4 overflow-x-hidden scrollbar-hide scroll-smooth pb-4"
         >
           {carouselMida.map((media) => (
-            <div key={media._id} className={COMPONENT_STYLES.card.width}>
+            <div key={media.slug} className={COMPONENT_STYLES.card.width}>
               <Card media={media} />
             </div>
           ))}

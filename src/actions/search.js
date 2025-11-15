@@ -1,5 +1,5 @@
 "use server";
-import connectToDatabase from "@/lib/mongodb"; // ← updated import
+import connectToDatabase from "@/lib/mongodb";
 import { cache } from "react";
 import { buildSearchRegex, serializeDocument } from "./db-utils";
 import { SEARCH_LIMIT } from "@/lib/data";
@@ -114,7 +114,7 @@ export const searchContent = cache(async (query) => {
 
   const cleanQuery = query.trim();
   try {
-    const { client, db } = await connectToDatabase(); // ← new
+    const { db } = await connectToDatabase();
     const filmPipeline = buildSearchPipeline(cleanQuery, SEARCH_LIMIT);
     const seriesPipeline = buildSearchPipeline(cleanQuery, SEARCH_LIMIT);
     const [films, series] = await Promise.all([

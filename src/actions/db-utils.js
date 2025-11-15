@@ -186,6 +186,7 @@ export const buildEpisodeAggregationPipeline = (
               slug: 1,
               createdAt: 1,
               updatedAt: 1,
+              mergedEpisodes: 1,
               series: {
                 _id: { $toString: "$series._id" },
                 title: "$series.title",

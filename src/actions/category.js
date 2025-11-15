@@ -1,6 +1,6 @@
 "use server";
 import { cache } from "react";
-import connectToDatabase from "@/lib/mongodb"; // ← updated import
+import connectToDatabase from "@/lib/mongodb";
 import {
   BASE_SORT_CONFIGS,
   buildContentAggregationPipeline,
@@ -113,7 +113,7 @@ export const getContent = cache(
       }
 
       const validPage = validatePage(page);
-      const { client, db } = await connectToDatabase(); // ← new
+      const { db } = await connectToDatabase();
       const sortConfigs =
         contentType === "films" ? FILMS_SORT_CONFIGS : SERIES_SORT_CONFIGS;
 
