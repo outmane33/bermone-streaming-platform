@@ -14,8 +14,12 @@ const EXCLUDED_SERVERS = ["Telegram"];
  */
 export const getAvailableQualities = cache(async (slug) => {
   try {
-    // Server actions have built-in CSRF protection, origin check not needed
-    await headers(); // Still await to comply with Next.js 15
+    const reqHeaders = await headers();
+    const origin = reqHeaders.get("origin");
+    const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL];
+    if (origin && !allowedOrigins.includes(origin)) {
+      return { success: false, error: "Invalid origin", qualities: [] };
+    }
 
     const { db } = await connectToDatabase();
     const cleanedSlug = cleanSlug(slug);
@@ -125,62 +129,50 @@ export const getAvailableQualities = cache(async (slug) => {
 /**
  * Get available services for a given quality
  */
-// Replace the aggregation logic with safer JS filtering
 export const getServicesForQuality = cache(async (slug, quality) => {
   try {
-    await headers();
+    const reqHeaders = await headers();
+    const origin = reqHeaders.get("origin");
+    const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL];
+    if (origin && !allowedOrigins.includes(origin)) {
+      return { success: false, error: "Invalid origin", services: [] };
+    }
+
     const { db } = await connectToDatabase();
     const cleanedSlug = cleanSlug(slug);
 
     let content = null;
-    for (const coll of ["films", "episodes"]) {
-      const doc = await db
-        .collection(coll)
-        .findOne({ slug: cleanedSlug }, { projection: { services: 1 } });
-      if (doc?.services?.length) {
-        content = doc;
+
+    // Try films/episodes (same logic as above)
+    const collections = ["films", "episodes"];
+    for (const coll of collections) {
+      const result = await db.collection(coll).findOne(
+        { slug: cleanedSlug },
+        {
+          projection: {
+            services: {
+              $filter: {
+                input: "$services",
+                as: "s",
+                cond: {
+                  $and: [
+                    { $not: { $in: ["$$s.serviceName", EXCLUDED_SERVERS] } },
+                    { $in: [quality, "$$s.qualities.quality"] },
+                  ],
+                },
+              },
+            },
+          },
+        }
+      );
+      if (result?.services?.length > 0) {
+        content = result;
         break;
       }
     }
 
-    if (!content?.services?.length) {
-      return {
-        success: false,
-        error: "Content or services not found",
-        services: [],
-      };
-    }
-
-    // Normalize input quality
-    const normalizedQuality = quality.trim().toLowerCase();
-
-    // Filter services: exclude blacklisted + match quality robustly
-    const services = content.services
-      .filter((s) => s && typeof s === "object")
-      .filter((s) => !EXCLUDED_SERVERS.includes(s.serviceName))
-      .filter((s) => {
-        if (!Array.isArray(s.qualities)) return false;
-        return s.qualities.some((q) => {
-          // Handle both string and object quality
-          const qVal = typeof q === "string" ? q : q?.quality || q?.name || "";
-          return qVal.trim().toLowerCase() === normalizedQuality;
-        });
-      })
-      .map((s) => ({
-        serviceName: s.serviceName,
-        qualityCount: s.qualities?.length || 0,
-      }));
-
-    if (services.length === 0) {
-      console.warn(
-        `⚠️ No services matched quality "${quality}" (normalized: "${normalizedQuality}")`,
-        "Available qualities in services:",
-        content.services.flatMap(
-          (s) =>
-            s.qualities?.map((q) => (typeof q === "string" ? q : q.quality)) ||
-            []
-        )
-      );
+    if (!content || !content.services || content.services.length === 0) {
+      console.warn(`⚠️ No services found for quality: ${quality}`);
       return {
         success: false,
         error: "No services for this quality",
@@ -188,19 +180,35 @@ export const getServicesForQuality = cache(async (slug, quality) => {
       };
     }
 
+    // Return services that support this quality
+    const services = content.services.map((s) => ({
+      serviceName: s.serviceName,
+      qualityCount: s.qualities?.length || 0,
+    }));
+
+    console.log(
+      `✅ Found ${services.length} services for ${quality}:`,
+      services.map((s) => s.serviceName)
+    );
+
     return { success: true, services };
   } catch (error) {
     console.error("💥 getServicesForQuality error:", error);
     return buildErrorResponse("services", error);
   }
 });
+
 /**
  * Get download link - STREAMHG IP BINDING ENABLED
  */
 export const getDownloadLinks = cache(async (slug, quality, serverName) => {
   try {
-    // Get user's real IP from headers
     const reqHeaders = await headers();
+    const origin = reqHeaders.get("origin");
+    const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL];
+    if (origin && !allowedOrigins.includes(origin)) {
+      return { success: false, error: "Invalid origin" };
+    }
 
     // ✅ Get REAL user IP (works locally + Vercel)
     const ip =
