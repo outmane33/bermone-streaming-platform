@@ -1,3 +1,5 @@
+// middleware.js (updated — origin validation + security headers)
+
 import { NextResponse } from "next/server";
 
 function addSecurityHeaders(response) {
@@ -12,10 +14,42 @@ function addSecurityHeaders(response) {
   return response;
 }
 
-export function middleware(request) {
-  const { pathname, search } = request.nextUrl;
+// 🔐 Origin validation helper (sync, for middleware)
+function isValidOrigin(origin) {
+  const allowedOrigins = [process.env.NEXT_PUBLIC_SITE_URL];
+  return origin && allowedOrigins.includes(origin);
+}
 
-  if (pathname === "/") {
+export function middleware(request) {
+  const { pathname } = request.nextUrl;
+
+  // 🔐 Enforce origin check on sensitive API-like routes
+  if (
+    pathname.startsWith("/api/download") ||
+    pathname.startsWith("/api/iframe") ||
+    pathname.startsWith("/api/qualities") ||
+    pathname.startsWith("/api/server") ||
+    pathname.startsWith("/api/services")
+  ) {
+    const origin = request.headers.get("origin");
+    const referer = request.headers.get("referer");
+    // Fallback to referer host if origin is missing (e.g., some POST navigations)
+    const reqOrigin = origin || (referer && new URL(referer).hostname) || null;
+
+    if (!isValidOrigin(reqOrigin)) {
+      return new NextResponse(
+        JSON.stringify({ success: false, error: "Invalid origin" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+  }
+
+  const { pathname: urlPathname, search } = request.nextUrl;
+
+  if (urlPathname === "/") {
     const url = request.nextUrl.clone();
     const searchParams = new URLSearchParams(url.search);
 
@@ -28,9 +62,9 @@ export function middleware(request) {
   }
 
   if (
-    pathname.startsWith("/category/") ||
-    pathname === "/films" ||
-    pathname === "/series"
+    urlPathname.startsWith("/category/") ||
+    urlPathname === "/films" ||
+    urlPathname === "/series"
   ) {
     const returnUrl = request.cookies.get("categoryReturnUrl")?.value;
 
@@ -39,7 +73,7 @@ export function middleware(request) {
         const decodedUrl = decodeURIComponent(returnUrl);
         const returnUrlObj = new URL(decodedUrl, request.url);
 
-        if (returnUrlObj.pathname === pathname) {
+        if (returnUrlObj.pathname === urlPathname) {
           const savedParams = returnUrlObj.searchParams;
           const currentParams = new URLSearchParams(search);
 
@@ -66,7 +100,7 @@ export function middleware(request) {
           }
         }
       } catch (e) {
-        console.error("❌ Middleware error in returnUrl logic:", e);
+        console.error("❌ Middleware error in returnUrl logic");
       }
     }
   }

@@ -14,7 +14,8 @@ const OptionButton = memo(
       disabled={isDisabled && !isSelected}
       aria-pressed={isSelected}
       className={cn(
-        "relative group w-full text-right px-3 py-2.5 rounded-lg font-medium",
+        "relative group w-full text-start px-3 py-2.5 rounded-lg font-medium",
+        "min-w-[90px] min-h-[44px]",
         DESIGN_TOKENS.effects.transition,
         "duration-200",
         isDisabled && !isSelected
@@ -26,9 +27,10 @@ const OptionButton = memo(
       )}
     >
       <div className="relative flex items-center justify-between">
+        <span className="">{option}</span>
         <div
           className={cn(
-            "w-2 h-2 rounded-full",
+            "w-2 h-2 rounded-full ml-2",
             DESIGN_TOKENS.effects.transition,
             "duration-200",
             isSelected
@@ -37,7 +39,6 @@ const OptionButton = memo(
           )}
           aria-hidden="true"
         />
-        <span>{option}</span>
       </div>
     </button>
   )
@@ -57,16 +58,21 @@ const DropdownContent = ({
     <>
       <div
         className={`${
-          isMobile ? "h-0.5 mb-3" : "h-1"
+          isMobile ? "h-0.5 mb-2" : "h-1 mb-2"
         } bg-gradient-to-r ${gradient}`}
       />
       <div
         className={cn(
           "overflow-y-auto",
-          isMobile ? "max-h-80 px-2" : "p-3 max-h-96"
+          isMobile ? "max-h-[60vh] px-2" : "p-3 max-h-96"
         )}
       >
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          className={cn(
+            "grid gap-2",
+            isMobile ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"
+          )}
+        >
           {options.map((option) => (
             <OptionButton
               key={option}
@@ -90,7 +96,7 @@ export const DropdownMenu = memo(
     if (isMobile) {
       return (
         <div
-          className="mt-2 mb-3"
+          className="mt-2 mb-2"
           role="menu"
           onClick={(e) => e.stopPropagation()}
         >

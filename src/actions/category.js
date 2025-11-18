@@ -4,12 +4,12 @@ import connectToDatabase from "@/lib/mongodb";
 import {
   BASE_SORT_CONFIGS,
   buildContentAggregationPipeline,
+  buildFilmCollectionsAggregationPipeline,
   buildEpisodeAggregationPipeline,
   buildPaginationResponse,
-  buildErrorResponse,
+  withErrorHandling,
 } from "@/actions/db-utils";
 import { validatePage } from "@/lib/validation";
-import { ITEMS_PER_PAGE } from "@/lib/data";
 
 const FILMS_SORT_CONFIGS = {
   ...BASE_SORT_CONFIGS,
@@ -25,11 +25,7 @@ const FILMS_SORT_CONFIGS = {
     sort: { createdAt: -1, rating: -1 },
     filter: { "category.isAnimemovies": true },
   },
-  movieSeries: {
-    type: "filmCollections",
-    sort: { createdAt: -1 },
-    filter: {},
-  },
+  movieSeries: { type: "filmCollections", sort: { createdAt: -1 }, filter: {} },
 };
 
 const SERIES_SORT_CONFIGS = {
@@ -56,67 +52,17 @@ const SERIES_SORT_CONFIGS = {
     filter: { "series.category.isAnimeseries": true },
   },
 };
-function buildFilmCollectionsAggregationPipeline(page) {
-  const validPage = validatePage(page);
-  const skip = (validPage - 1) * ITEMS_PER_PAGE;
-  return [
-    {
-      $lookup: {
-        from: "films",
-        localField: "films",
-        foreignField: "_id",
-        as: "filmDetails",
-      },
-    },
-    {
-      $facet: {
-        metadata: [{ $count: "total" }],
-        data: [
-          { $sort: { createdAt: -1 } },
-          { $skip: skip },
-          { $limit: ITEMS_PER_PAGE },
-          {
-            $project: {
-              _id: { $toString: "$_id" },
-              name: 1,
-              createdAt: 1,
-              updatedAt: 1,
-              image: { $arrayElemAt: ["$filmDetails.image", 0] },
-              filmCount: { $size: "$filmDetails" },
-              films: {
-                $map: {
-                  input: "$filmDetails",
-                  as: "film",
-                  in: {
-                    _id: { $toString: "$$film._id" },
-                    title: "$$film.title",
-                    image: "$$film.image",
-                    rating: "$$film.rating",
-                    releaseYear: "$$film.releaseYear",
-                    slug: "$$film.slug",
-                  },
-                },
-              },
-            },
-          },
-        ],
-      },
-    },
-  ];
-}
 
 export const getContent = cache(
-  async (contentType, filters = {}, sortId = null, page = 1) => {
-    try {
+  withErrorHandling(
+    async (contentType, filters = {}, sortId = null, page = 1) => {
+      const validPage = validatePage(page);
       if (!["films", "series"].includes(contentType)) {
         throw new Error("Invalid content type. Must be 'films' or 'series'");
       }
 
-      const validPage = validatePage(page);
-      const { db } = await connectToDatabase();
       const sortConfigs =
         contentType === "films" ? FILMS_SORT_CONFIGS : SERIES_SORT_CONFIGS;
-
       if (sortId && !sortConfigs[sortId]) {
         throw new Error("Invalid sort ID");
       }
@@ -126,6 +72,7 @@ export const getContent = cache(
           ? sortConfigs[sortId]
           : { sort: { createdAt: -1 }, filter: {} };
 
+      const { db } = await connectToDatabase();
       let pipeline;
       let collectionName;
       let resultContentType;
@@ -150,13 +97,8 @@ export const getContent = cache(
 
       const collection = db.collection(collectionName);
       const [result] = await collection.aggregate(pipeline).toArray();
-
-      if (!result) {
-        return buildErrorResponse(
-          resultContentType,
-          new Error("Empty result"),
-          validPage
-        );
+      if (!result?.data) {
+        throw new Error("Empty result");
       }
 
       const { documents, pagination } = buildPaginationResponse(
@@ -169,12 +111,7 @@ export const getContent = cache(
         contentType: resultContentType,
         pagination,
       };
-    } catch (error) {
-      return buildErrorResponse(
-        sortId?.includes("Episode") ? "episodes" : contentType,
-        error,
-        validatePage(page)
-      );
-    }
-  }
+    },
+    "content"
+  )
 );

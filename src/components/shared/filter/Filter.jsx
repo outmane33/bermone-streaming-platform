@@ -52,19 +52,34 @@ export default function Filter({
     useCallback(() => setOpenDropdown(null), [])
   );
 
+  // Sync sort from props
   useEffect(() => {
     if (currentFilters?.sort !== undefined) {
       setSelectedSort(currentFilters.sort);
     }
   }, [currentFilters?.sort]);
 
+  // Sync filters from props (deep sync only if needed)
   useEffect(() => {
-    setSelectedFilters({
-      genre: currentFilters?.genre || [],
-      year: currentFilters?.year || [],
-      language: currentFilters?.language || [],
-      country: currentFilters?.country || [],
-    });
+    const curr = currentFilters || {};
+    const newFilters = {
+      genre: curr.genre || [],
+      year: curr.year || [],
+      language: curr.language || [],
+      country: curr.country || [],
+    };
+
+    const equal = (a, b) =>
+      a.length === b.length && a.every((v, i) => v === b[i]);
+
+    if (
+      !equal(selectedFilters.genre, newFilters.genre) ||
+      !equal(selectedFilters.year, newFilters.year) ||
+      !equal(selectedFilters.language, newFilters.language) ||
+      !equal(selectedFilters.country, newFilters.country)
+    ) {
+      setSelectedFilters(newFilters);
+    }
   }, [
     currentFilters?.genre,
     currentFilters?.year,
@@ -72,27 +87,29 @@ export default function Filter({
     currentFilters?.country,
   ]);
 
+  // Notify parent of changes (debounced by React's batch)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
 
+    const curr = currentFilters || {};
     const filtersChanged =
-      JSON.stringify(selectedFilters) !==
-      JSON.stringify({
-        genre: currentFilters?.genre || [],
-        year: currentFilters?.year || [],
-        language: currentFilters?.language || [],
-        country: currentFilters?.country || [],
-      });
+      !arraysEqual(selectedFilters.genre, curr.genre || []) ||
+      !arraysEqual(selectedFilters.year, curr.year || []) ||
+      !arraysEqual(selectedFilters.language, curr.language || []) ||
+      !arraysEqual(selectedFilters.country, curr.country || []);
 
-    const sortChanged = selectedSort !== currentFilters?.sort;
+    const sortChanged = selectedSort !== curr.sort;
 
     if (filtersChanged || sortChanged) {
       onFilterChange?.({ ...selectedFilters, sort: selectedSort });
     }
-  }, [selectedFilters, selectedSort]);
+  }, [selectedFilters, selectedSort, onFilterChange, currentFilters]);
+
+  const arraysEqual = (a, b) =>
+    a.length === b.length && a.every((v, i) => v === b[i]);
 
   const toggleDropdown = useCallback((category) => {
     setOpenDropdown((prev) => (prev === category ? null : category));
@@ -156,6 +173,7 @@ export default function Filter({
 
   return (
     <div className="mb-4 relative">
+      {/* Backdrop for desktop dropdown */}
       {openDropdown && (
         <div
           className="hidden lg:block fixed inset-0 bg-black/50 backdrop-blur-sm z-[20] transition-opacity duration-300"
@@ -165,15 +183,12 @@ export default function Filter({
 
       {/* Mobile Combined Section */}
       <div
-        className={`lg:hidden ${DESIGN_TOKENS.glass.light} rounded-lg shadow-xl mb-3 p-3 sm:p-6`}
+        className={`lg:hidden ${DESIGN_TOKENS.glass.light} rounded-lg shadow-xl mb-3 p-3 sm:p-6 mx-1`}
       >
         <div className="flex flex-col gap-3">
           {/* Sort Options - Always Visible */}
           {sortOptions?.length > 0 && (
-            <div
-              className="grid grid-cols-2 md:grid-cols-4 items-center gap-2"
-              dir="rtl"
-            >
+            <div className="grid grid-cols-2 md:grid-cols-4 items-center gap-2">
               {sortOptions.map((option) => (
                 <SortButton
                   key={option.id}
@@ -211,6 +226,18 @@ export default function Filter({
         <div
           className={`hidden lg:flex items-center justify-between gap-1 xl:gap-2 flex-wrap ${DESIGN_TOKENS.glass.light} rounded-lg shadow-2xl px-3 sm:px-4 py-2 relative z-[20]`}
         >
+          {sortOptions?.length > 0 && (
+            <div className="flex items-center gap-1 sm:gap-2 pr-2 sm:pr-4 border-r-2 border-white/20">
+              {sortOptions.map((option) => (
+                <SortButton
+                  key={option.id}
+                  option={option}
+                  isSelected={selectedSort === option.id}
+                  onClick={() => handleSortClick(option.id)}
+                />
+              ))}
+            </div>
+          )}
           {!isEpisode ? (
             <div className="flex items-center gap-1 xl:gap-2 flex-wrap">
               {Object.keys(filterOptions).map((category) => (
@@ -240,19 +267,6 @@ export default function Filter({
             </div>
           ) : (
             <div></div>
-          )}
-
-          {sortOptions?.length > 0 && (
-            <div className="flex items-center gap-1 sm:gap-2 pr-2 sm:pr-4 border-r-2 border-white/20">
-              {sortOptions.map((option) => (
-                <SortButton
-                  key={option.id}
-                  option={option}
-                  isSelected={selectedSort === option.id}
-                  onClick={() => handleSortClick(option.id)}
-                />
-              ))}
-            </div>
           )}
         </div>
       )}

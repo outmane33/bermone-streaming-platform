@@ -129,7 +129,6 @@ export const searchContent = cache(async (query) => {
     const allResults = [...serializedFilms, ...serializedSeries]
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, SEARCH_LIMIT);
-
     return {
       success: true,
       films: serializedFilms,

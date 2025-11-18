@@ -118,12 +118,12 @@ export default function HeroSection({ media, type, seriesSlug }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="relative rounded-3xl">
+      <div className="relative rounded-3xl border border-white/30">
         {seriesSlug && (
           <Link
             href={`/${seriesSlug}`}
             className={`
-      absolute top-4 right-4 z-20
+      absolute top-4 right-4 z-20  
       flex items-center gap-2
       bg-white/15 md:${DESIGN_TOKENS.glass.light.replace("bg-", "bg-")}
       rounded-lg

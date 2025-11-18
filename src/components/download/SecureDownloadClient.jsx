@@ -1,22 +1,26 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import { getServicesForQuality, getDownloadLinks } from "@/actions/download";
 import ServerSelector from "./ServerSelector";
 import QualitySelector from "./QualitySelector";
 
 const Section = ({ title, icon: Icon, children, step }) => (
-  <div className="relative mb-8">
-    <div className="flex items-center gap-2 mb-4">
+  <div className="relative mb-6 sm:mb-8">
+    <div className="flex items-center gap-2 mb-3">
       <div
-        className={`flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} text-white font-bold text-sm`}
+        className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full ${DESIGN_TOKENS.gradients.cyan} text-white font-bold text-xs sm:text-sm`}
       >
         {step}
       </div>
-      {Icon && <Icon className="w-5 h-5 text-white/80" />}
-      <p className="text-white/80 text-sm font-semibold">{title}</p>
+      {Icon && (
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white/80 flex-shrink-0" />
+      )}
+      <p className="text-white/80 text-sm sm:text-base font-semibold">
+        {title}
+      </p>
     </div>
-    {children}
+    <div>{children}</div>
   </div>
 );
 
@@ -27,76 +31,68 @@ export default function SecureDownloadClient({ qualities, slug }) {
   const [selectedService, setSelectedService] = useState(null);
   const [showDownloadButton, setShowDownloadButton] = useState(false);
   const [loadingLinks, setLoadingLinks] = useState(false);
-  const [downloadLinks, setDownloadLinks] = useState(null);
+  const [downloadData, setDownloadData] = useState(null);
   const [countdown, setCountdown] = useState(null);
 
-  const handleQualitySelect = async (quality, index) => {
-    setSelectedQuality(index);
+  const handleQualitySelect = async (quality) => {
+    setSelectedQuality(quality);
     setSelectedService(null);
     setShowDownloadButton(false);
-    setDownloadLinks(null);
+    setDownloadData(null);
     setLoadingServices(true);
-
     try {
       const result = await getServicesForQuality(slug, quality);
       setAvailableServices(result.success ? result.services : []);
-    } catch (error) {
-      console.error("Error fetching services:", error);
-      setAvailableServices([]);
     } finally {
       setLoadingServices(false);
     }
   };
 
-  const handleServiceSelect = (_service, index) => {
-    setSelectedService(index);
+  const handleServerSelect = (serviceName) => {
+    setSelectedService(serviceName);
     setShowDownloadButton(true);
-    setDownloadLinks(null);
+    setDownloadData(null);
   };
 
   const handleDownloadClick = async () => {
     setLoadingLinks(true);
     setCountdown(3);
 
-    // Countdown timer
-    const countdownInterval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          return null;
-        }
-        return prev - 1;
-      });
+    const interval = setInterval(() => {
+      setCountdown((c) => (c > 1 ? c - 1 : null));
     }, 1000);
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((r) => setTimeout(r, 3000));
+    clearInterval(interval);
 
     try {
       const result = await getDownloadLinks(
         slug,
-        qualities[selectedQuality],
-        availableServices[selectedService].serviceName
+        selectedQuality,
+        selectedService
       );
-
       if (result.success && result.downloadUrl) {
-        setDownloadLinks(result);
+        setDownloadData({
+          url: result.downloadUrl,
+          quality: selectedQuality,
+          service: selectedService,
+        });
       } else {
-        alert(
-          result.error ||
-            "Failed to get download link. Please try another server."
-        );
+        alert("فشل الحصول على رابط التحميل. يُرجى تجربة سيرفر آخر.");
       }
-    } catch (error) {
-      console.error("Error fetching download links:", error);
-      alert("Network error. Please check your connection and try again.");
+    } catch {
+      alert("خطأ في الشبكة. الرجاء التحقق من الاتصال والمحاولة مجددًا.");
     } finally {
       setLoadingLinks(false);
     }
   };
 
+  const handleDownload = () =>
+    window.open(downloadData.url, "_blank", "noopener,noreferrer");
+
   return (
-    <div className="relative">
-      <Section title="Select Quality" icon={ICON_MAP.Film} step={1}>
+    <div className="relative space-y-6">
+      <Section title="اختر الجودة" icon={ICON_MAP.Film} step={1}>
         <QualitySelector
           qualities={qualities}
           selectedQuality={selectedQuality}
@@ -105,125 +101,87 @@ export default function SecureDownloadClient({ qualities, slug }) {
         />
       </Section>
 
-      {selectedQuality !== null && (
-        <Section title="Select Server" icon={ICON_MAP.Server} step={2}>
+      {selectedQuality && (
+        <Section title="اختر السيرفر" icon={ICON_MAP.Server} step={2}>
           <ServerSelector
             services={availableServices}
             selectedService={selectedService}
-            onSelect={handleServiceSelect}
+            onSelect={handleServerSelect}
             loading={loadingLinks}
           />
         </Section>
       )}
 
-      {showDownloadButton && !downloadLinks && (
-        <Section title="Get Download Links" icon={ICON_MAP.Shield} step={3}>
+      {showDownloadButton && !downloadData && (
+        <Section title="احصل على رابط التحميل" icon={ICON_MAP.Shield} step={3}>
           <button
             onClick={handleDownloadClick}
             disabled={loadingLinks}
-            className={`w-full p-6 rounded-xl cursor-pointer ${
-              loadingLinks
-                ? "bg-white/10 cursor-wait"
-                : `bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700`
-            } text-white font-bold text-lg flex items-center justify-center gap-3 ${
-              DESIGN_TOKENS.effects.hoverScale
-            } ${DESIGN_TOKENS.effects.transition}`}
+            className={`
+              w-full py-3.5 sm:py-4 px-4 rounded-xl font-bold text-base sm:text-lg 
+              flex items-center justify-center gap-2 sm:gap-3 cursor-pointer
+              ${DESIGN_TOKENS.effects.hoverScale} ${
+              DESIGN_TOKENS.effects.transition
+            }
+              ${
+                loadingLinks
+                  ? "bg-white/10 cursor-wait"
+                  : `${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700 text-white`
+              }
+            `}
+            aria-busy={loadingLinks}
           >
             {loadingLinks ? (
               <>
-                <ICON_MAP.Lock className="w-6 h-6 animate-pulse" />
-                {countdown !== null ? (
-                  <span>Securing link... {countdown}s</span>
-                ) : (
-                  <span>Processing...</span>
-                )}
+                <ICON_MAP.Lock className="w-5 h-5 animate-pulse" />
+                <span className="whitespace-nowrap">
+                  {countdown !== null
+                    ? `جارٍ تأمين الرابط... ${countdown}ث`
+                    : "قيد المعالجة..."}
+                </span>
               </>
             ) : (
               <>
-                <ICON_MAP.Download className="w-6 h-6" />
-                <span>Get Secure Link</span>
+                <ICON_MAP.Download className="w-5 h-5" />
+                <span>احصل على رابط آمن</span>
               </>
             )}
           </button>
-
-          {/* Dev mode indicator */}
-          {process.env.NODE_ENV === "development" && (
-            <p className="text-xs text-yellow-400 mt-2 text-center">
-              💡 Development mode: Using safe IP for StreamHG testing
-            </p>
-          )}
         </Section>
       )}
 
-      {downloadLinks && (
-        <Section title="Download Ready" icon={ICON_MAP.Download} step={4}>
-          <div className="space-y-3">
-            <div
-              className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-6 ${DESIGN_TOKENS.glass.hover} ${DESIGN_TOKENS.effects.transition}`}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <ICON_MAP.CheckCircle className="w-6 h-6 text-green-400" />
-                <div>
-                  <p className="font-semibold text-white">
-                    {downloadLinks.serviceName}
-                    {downloadLinks.isStreamHg && (
-                      <span className="ml-2 bg-cyan-500/20 text-cyan-400 text-xs px-2 py-0.5 rounded">
-                        IP-Bound 🔒
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {downloadLinks.quality}
-                    {downloadLinks.isStreamHg && (
-                      <span className="ml-2">(Valid for your IP only)</span>
-                    )}
-                  </p>
-                </div>
+      {downloadData && (
+        <Section title="التحميل جاهز" icon={ICON_MAP.Download} step={4}>
+          <div
+            className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-4 sm:p-5`}
+          >
+            <div className="flex items-center gap-2.5 sm:gap-3 mb-4">
+              <ICON_MAP.CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-white text-sm sm:text-base">
+                  {downloadData.service}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-400">
+                  {downloadData.quality}
+                </p>
               </div>
-
-              {/* Single Download Button */}
-              <button
-                onClick={() => {
-                  window.open(
-                    downloadLinks.downloadUrl,
-                    "_blank",
-                    "noopener,noreferrer"
-                  );
-                }}
-                className={`w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700 rounded-lg text-white font-semibold transition-all shadow-lg hover:shadow-xl ${DESIGN_TOKENS.effects.hoverScale}`}
-              >
-                <ICON_MAP.Download className="w-5 h-5" />
-                Download Now
-              </button>
-
-              {downloadLinks.isStreamHg && (
-                <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-                  <p className="text-cyan-400 text-xs text-center">
-                    🔒 This link is bound to your IP address and expires in
-                    minutes. Click Download Now to access the file.
-                  </p>
-                </div>
-              )}
             </div>
+            <button
+              onClick={handleDownload}
+              className={`
+                w-full flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 
+                rounded-lg font-semibold shadow-md hover:shadow-lg 
+                ${DESIGN_TOKENS.effects.hoverScale} ${DESIGN_TOKENS.glass.medium}
+                bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700 text-white
+                transition-all duration-300
+              `}
+            >
+              <ICON_MAP.Download className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>تنزيل {downloadData.quality}</span>
+            </button>
           </div>
         </Section>
       )}
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

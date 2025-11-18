@@ -110,7 +110,7 @@ export const DESIGN_TOKENS = {
   glass: {
     light:
       "bg-white/15 backdrop-blur-lg backdrop-saturate-150 border border-white/30",
-    medium: "bg-white/10 backdrop-blur-xl border border-white/40",
+    medium: "bg-white/5 backdrop-blur-xl border border-white/40",
     hover: "hover:bg-white/20 hover:border-white/40",
   },
 
@@ -594,6 +594,23 @@ export const MAX_SEASONS = 20;
 export const MAX_EPISODES = 60;
 export const MAX_RELATED = 12;
 export const MAX_RESPONSE_SIZE = 1000;
+export const EXCLUDED_SERVERS = ["Telegram"];
+export const QUALITY_RANK = {
+  "1080p": 5,
+  "720p": 4,
+  "480p": 3,
+  "360p": 2,
+  "240p": 1,
+};
+export const sortQualities = (qualities) =>
+  [...qualities].sort(
+    (a, b) => (QUALITY_RANK[b] || 0) - (QUALITY_RANK[a] || 0)
+  );
+
+export const getPreferredQuality = (qualities) => {
+  const sorted = sortQualities(qualities.map((q) => q.quality || q));
+  return sorted[0];
+};
 
 // ============================================
 // DEPRECATED (For backward compatibility)

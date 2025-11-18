@@ -2,7 +2,11 @@ import Link from "next/link";
 import { ICON_MAP } from "@/lib/data";
 
 export const Logo = ({ isTouchDevice }) => (
-  <Link href="/?sort=latest-added" className="relative group cursor-pointer">
+  <Link
+    href="/?sort=latest-added"
+    className="relative group cursor-pointer"
+    dir="ltr"
+  >
     {!isTouchDevice && (
       <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-xl blur-lg opacity-0 group-hover:opacity-75 transition duration-500" />
     )}

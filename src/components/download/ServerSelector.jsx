@@ -1,42 +1,6 @@
 import React from "react";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 
-const ServerButton = ({ server, isSelected, onClick, disabled }) => {
-  const baseStyles = `p-4 rounded-xl overflow-hidden border cursor-pointer`;
-  const states = isSelected
-    ? "bg-white/20 border-white/40 scale-95 shadow-2xl border-2"
-    : disabled
-    ? "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
-    : `${DESIGN_TOKENS.glass.light} ${DESIGN_TOKENS.glass.hover} hover:scale-95 hover:shadow-xl`;
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`${DESIGN_TOKENS.effects.transition} ${baseStyles} ${states}`}
-      aria-label={`Download from ${server}`}
-      aria-pressed={isSelected}
-    >
-      <div
-        className={`absolute inset-0 bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} opacity-0 hover:opacity-20 transition-opacity`}
-      />
-      <div className="relative flex flex-col items-center gap-2">
-        <div
-          className={`p-2 bg-gradient-to-r ${
-            DESIGN_TOKENS.gradients.cyan
-          } rounded-lg transition-transform ${isSelected ? "scale-110" : ""}`}
-        >
-          <ICON_MAP.Server className="w-5 h-5 text-white" />
-        </div>
-        <p className="text-white font-bold text-sm">{server}</p>
-      </div>
-      {isSelected && (
-        <ICON_MAP.CheckCircle className="absolute top-2 right-2 w-5 h-5 text-cyan-400 animate-pulse" />
-      )}
-    </button>
-  );
-};
-
 export default function ServerSelector({
   services,
   selectedService,
@@ -47,30 +11,70 @@ export default function ServerSelector({
     return (
       <div className="flex items-center justify-center py-8">
         <ICON_MAP.Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-        <span className="ml-3 text-white/80">Loading servers...</span>
+        <span className="mr-3 text-white/80">جارٍ تحميل السيرفرات...</span>
       </div>
     );
   }
 
-  if (services.length === 0) {
+  if (!services?.length) {
     return (
       <div className="text-center py-8 text-white/60">
-        No servers available for this quality
+        لا توجد سيرفرات متاحة لهذه الجودة
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fadeIn">
-      {services.map((service, idx) => (
-        <ServerButton
-          key={idx}
-          server={service.serviceName}
-          isSelected={selectedService === idx}
-          onClick={() => onSelect(service, idx)}
-          disabled={loading}
-        />
-      ))}
+    <div
+      role="radiogroup"
+      aria-label="اختيار السيرفر"
+      className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+    >
+      {services.map((svc) => {
+        const isSelected = selectedService === svc.serviceName;
+        return (
+          <button
+            key={svc.serviceName}
+            onClick={() => onSelect(svc.serviceName)}
+            disabled={loading}
+            className={`
+              p-4 rounded-xl border overflow-hidden cursor-pointer relative
+              ${DESIGN_TOKENS.effects.transition}
+              ${
+                isSelected
+                  ? "bg-white/20 border-white/40 scale-95 shadow-2xl border-2"
+                  : loading
+                  ? "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
+                  : `${DESIGN_TOKENS.glass.medium} ${DESIGN_TOKENS.glass.hover} hover:scale-95 hover:shadow-xl`
+              }
+            `}
+            role="radio"
+            aria-checked={isSelected}
+            aria-label={`تنزيل من ${svc.serviceName}`}
+          >
+            <div
+              className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity"
+              style={{ background: DESIGN_TOKENS.gradients.cyan }}
+            />
+            <div className="relative flex flex-col items-center gap-2">
+              <div
+                className={`p-2 rounded-lg transition-transform ${
+                  isSelected ? "scale-110" : ""
+                }`}
+                style={{ background: DESIGN_TOKENS.gradients.cyan }}
+              >
+                <ICON_MAP.Server className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-white font-bold text-sm">
+                {svc.serviceName}
+              </span>
+            </div>
+            {isSelected && (
+              <ICON_MAP.CheckCircle className="absolute top-2 left-2 w-5 h-5 text-cyan-400 animate-pulse" />
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

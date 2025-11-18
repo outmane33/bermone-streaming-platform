@@ -4,73 +4,14 @@ import { cache } from "react";
 import {
   buildMatchQuery,
   buildPaginationResponse,
-  buildErrorResponse,
   serializeDocument,
   buildContentAggregationPipeline,
+  withErrorHandling,
 } from "./db-utils";
 import { validatePage } from "@/lib/validation";
-import { ITEMS_PER_PAGE } from "@/lib/data";
+import { ITEMS_PER_PAGE, MAX_RESPONSE_SIZE } from "@/lib/data";
 
-export const getLatestAdded = cache(async (filters = {}, page = 1) => {
-  try {
-    const { db } = await connectToDatabase();
-    const validPage = validatePage(page);
-    const skip = (validPage - 1) * ITEMS_PER_PAGE;
-    const matchQuery = buildMatchQuery(filters);
-
-    const totalCount = await Promise.all([
-      db.collection("films").countDocuments(matchQuery),
-      db.collection("series").countDocuments(matchQuery),
-    ]);
-    const totalItems = totalCount[0] + totalCount[1];
-
-    const itemsToFetch = skip + ITEMS_PER_PAGE * 2;
-    const [filmsData, seriesData] = await Promise.all([
-      db
-        .collection("films")
-        .find(matchQuery, { projection: { services: 0 } })
-        .sort({ createdAt: -1 })
-        .limit(itemsToFetch)
-        .toArray(),
-      db
-        .collection("series")
-        .find(matchQuery, { projection: { services: 0 } })
-        .sort({ createdAt: -1 })
-        .limit(itemsToFetch)
-        .toArray(),
-    ]);
-
-    const merged = [
-      ...filmsData.map((item) => ({
-        ...serializeDocument(item),
-        type: "film",
-      })),
-      ...seriesData.map((item) => ({
-        ...serializeDocument(item),
-        type: "series",
-      })),
-    ]
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(skip, skip + ITEMS_PER_PAGE);
-
-    return {
-      success: true,
-      documents: merged,
-      pagination: {
-        currentPage: validPage,
-        totalPages: Math.ceil(totalItems / ITEMS_PER_PAGE),
-        totalItems,
-        itemsPerPage: ITEMS_PER_PAGE,
-        hasNext: validPage < Math.ceil(totalItems / ITEMS_PER_PAGE),
-        hasPrev: validPage > 1,
-      },
-    };
-  } catch (error) {
-    return buildErrorResponse("latestAdded", error, page);
-  }
-});
-
-const buildTypedAggregationPipeline = (filters, page, contentType) => {
+const buildNewContentPipeline = (contentType, filters, page) => {
   const type = contentType === "films" ? "film" : "series";
   return buildContentAggregationPipeline(
     filters,
@@ -80,35 +21,84 @@ const buildTypedAggregationPipeline = (filters, page, contentType) => {
   );
 };
 
-export const getNewMovies = cache(async (filters = {}, page = 1) => {
-  try {
+export const getLatestAdded = cache(
+  withErrorHandling(async (filters = {}, page = 1) => {
     const { db } = await connectToDatabase();
-    const pipeline = buildTypedAggregationPipeline(filters, page, "films");
+    const validPage = validatePage(page);
+    const matchQuery = buildMatchQuery(filters);
+
+    const cappedLimit = Math.min(ITEMS_PER_PAGE * 10, MAX_RESPONSE_SIZE);
+    const [filmsData, seriesData] = await Promise.all([
+      db
+        .collection("films")
+        .find(matchQuery)
+        .project({ services: 0 })
+        .sort({ createdAt: -1 })
+        .limit(cappedLimit)
+        .toArray(),
+      db
+        .collection("series")
+        .find(matchQuery)
+        .project({ services: 0 })
+        .sort({ createdAt: -1 })
+        .limit(cappedLimit)
+        .toArray(),
+    ]);
+
+    const filmsMapped = filmsData.map((item) => ({
+      ...serializeDocument(item),
+      type: "film",
+    }));
+    const seriesMapped = seriesData.map((item) => ({
+      ...serializeDocument(item),
+      type: "series",
+    }));
+
+    const merged = [...filmsMapped, ...seriesMapped].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    const totalItems = Math.min(merged.length, MAX_RESPONSE_SIZE);
+    const documents = merged.slice(
+      (validPage - 1) * ITEMS_PER_PAGE,
+      validPage * ITEMS_PER_PAGE
+    );
+    return {
+      success: true,
+      ...buildPaginationResponse(
+        {
+          data: documents,
+          metadata: [{ total: totalItems }],
+        },
+        validPage
+      ),
+    };
+  }, "latestAdded")
+);
+
+export const getNewMovies = cache(
+  withErrorHandling(async (filters = {}, page = 1) => {
+    const { db } = await connectToDatabase();
+    const pipeline = buildNewContentPipeline("films", filters, page);
     const [result] = await db.collection("films").aggregate(pipeline).toArray();
-
     return { success: true, ...buildPaginationResponse(result, page) };
-  } catch (error) {
-    return buildErrorResponse("films", error, page);
-  }
-});
+  }, "films")
+);
 
-export const getNewSeries = cache(async (filters = {}, page = 1) => {
-  try {
+export const getNewSeries = cache(
+  withErrorHandling(async (filters = {}, page = 1) => {
     const { db } = await connectToDatabase();
-    const pipeline = buildTypedAggregationPipeline(filters, page, "series");
+    const pipeline = buildNewContentPipeline("series", filters, page);
     const [result] = await db
       .collection("series")
       .aggregate(pipeline)
       .toArray();
-
     return { success: true, ...buildPaginationResponse(result, page) };
-  } catch (error) {
-    return buildErrorResponse("series", error, page);
-  }
-});
+  }, "series")
+);
 
-export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
-  try {
+export const getLatestEpisodes = cache(
+  withErrorHandling(async (filters = {}, page = 1) => {
     const { db } = await connectToDatabase();
     const validPage = validatePage(page);
     const skip = (validPage - 1) * ITEMS_PER_PAGE;
@@ -126,7 +116,7 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
           success: true,
           documents: [],
           pagination: {
-            currentPage: page,
+            currentPage: validPage,
             totalPages: 0,
             totalItems: 0,
             itemsPerPage: ITEMS_PER_PAGE,
@@ -159,34 +149,32 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
       },
       { $unwind: { path: "$series", preserveNullAndEmptyArrays: true } },
       {
+        $project: {
+          _id: { $toString: "$_id" },
+          slug: 1,
+          seriesId: { $toString: "$seriesId" },
+          seasonId: { $toString: "$seasonId" },
+          episodeNumber: 1,
+          duration: 1,
+          mergedEpisodes: 1,
+          createdAt: 1,
+          season: {
+            _id: { $toString: "$season._id" },
+            seasonNumber: "$season.seasonNumber",
+            image: "$season.image",
+            title: "$season.title",
+          },
+          series: {
+            _id: { $toString: "$series._id" },
+            title: "$series.title",
+          },
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      {
         $facet: {
           metadata: [{ $count: "total" }],
-          data: [
-            { $sort: { createdAt: -1 } },
-            { $skip: skip },
-            { $limit: ITEMS_PER_PAGE },
-            {
-              $project: {
-                _id: { $toString: "$_id" },
-                slug: 1,
-                seriesId: { $toString: "$seriesId" },
-                seasonId: { $toString: "$seasonId" },
-                episodeNumber: 1,
-                duration: 1,
-                mergedEpisodes: 1,
-                season: {
-                  _id: { $toString: "$season._id" },
-                  seasonNumber: "$season.seasonNumber",
-                  image: "$season.image",
-                  title: "$season.title",
-                },
-                series: {
-                  _id: { $toString: "$series._id" },
-                  title: "$series.title",
-                },
-              },
-            },
-          ],
+          data: [{ $skip: skip }, { $limit: ITEMS_PER_PAGE }],
         },
       },
     ];
@@ -195,8 +183,6 @@ export const getLatestEpisodes = cache(async (filters = {}, page = 1) => {
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
-    return { success: true, ...buildPaginationResponse(result, page) };
-  } catch (error) {
-    return buildErrorResponse("episodes", error, page);
-  }
-});
+    return { success: true, ...buildPaginationResponse(result, validPage) };
+  }, "episodes")
+);

@@ -48,7 +48,7 @@ export default function HeroDetailsGrid({ media }) {
   ].filter((detail) => detail.value);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3" dir="rtl">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {details.map((detail, idx) => (
         <DetailCard key={idx} {...detail} />
       ))}

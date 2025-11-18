@@ -1,5 +1,5 @@
 "use server";
-import connectToDatabase from "@/lib/mongodb"; // ← updated import
+import connectToDatabase from "@/lib/mongodb";
 import { cache } from "react";
 import {
   BASE_SORT_CONFIGS,
@@ -8,33 +8,11 @@ import {
   buildErrorResponse,
   toObjectId,
   serializeDocument,
+  PUBLIC_CONTENT_PROJECTION,
 } from "./db-utils";
 import { validatePage } from "@/lib/validation";
 import { MAX_EPISODES, MAX_SEASONS, ITEMS_PER_PAGE } from "@/lib/data";
 import { cleanSlug } from "@/lib/pageUtils";
-
-const serializeSeason = (season) => ({
-  _id: season._id.toString(),
-  seriesId: season.seriesId.toString(),
-  seasonNumber: season.seasonNumber,
-  releaseYear: season.releaseYear,
-  rating: season.rating,
-  image: season.image,
-  status: season.status,
-  slug: season.slug,
-  createdAt: season.createdAt?.toISOString(),
-  updatedAt: season.updatedAt?.toISOString(),
-});
-
-const serializeEpisode = (episode) => ({
-  _id: episode._id.toString(),
-  seriesId: episode.seriesId.toString(),
-  seasonId: episode.seasonId.toString(),
-  episodeNumber: episode.episodeNumber,
-  duration: episode.duration,
-  slug: episode.slug,
-  mergedEpisodes: episode.mergedEpisodes,
-});
 
 export const getSeries = cache(
   async (filters = {}, sortId = "all", page = 1) => {
@@ -78,16 +56,16 @@ export const getSeasonsBySeries = cache(async (seriesId) => {
       .find({ seriesId: toObjectId(seriesId) })
       .sort({ seasonNumber: 1 })
       .limit(MAX_SEASONS)
+      .project(PUBLIC_CONTENT_PROJECTION)
       .toArray();
 
-    if (!seasons.length)
-      return { success: false, message: "No seasons found", seasons: [] };
-
-    return {
-      success: true,
-      seasons: seasons.map(serializeSeason),
-      count: seasons.length,
-    };
+    return seasons.length
+      ? {
+          success: true,
+          seasons: seasons.map(serializeDocument),
+          count: seasons.length,
+        }
+      : { success: false, message: "No seasons found", seasons: [] };
   } catch (error) {
     return buildErrorResponse("seasons", error);
   }
@@ -106,13 +84,12 @@ export const getSeasonBySlug = cache(async (slug) => {
         season: null,
         series: null,
       };
-
     const series = await db
       .collection("series")
       .findOne({ _id: season.seriesId });
     return {
       success: true,
-      season: serializeSeason(season),
+      season: serializeDocument(season),
       series: series ? serializeDocument(series) : null,
     };
   } catch (error) {
@@ -127,24 +104,18 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
       .collection("episodes")
       .find(
         { seasonId: toObjectId(seasonId) },
-        {
-          projection: {
-            services: 0,
-          },
-        }
+        { projection: PUBLIC_CONTENT_PROJECTION }
       )
       .sort({ episodeNumber: 1 })
       .limit(MAX_EPISODES)
       .toArray();
-
-    if (!episodes.length)
-      return { success: false, message: "No episodes found", episodes: [] };
-
-    return {
-      success: true,
-      episodes: episodes.map(serializeEpisode),
-      count: episodes.length,
-    };
+    return episodes.length
+      ? {
+          success: true,
+          episodes: episodes.map(serializeDocument),
+          count: episodes.length,
+        }
+      : { success: false, message: "No episodes found", episodes: [] };
   } catch (error) {
     return buildErrorResponse("episodes", error);
   }
@@ -173,17 +144,13 @@ export const getEpisodeBySlug = cache(async (slug) => {
         },
       },
       { $unwind: "$series" },
-      {
-        $project: {
-          services: 0,
-        },
-      },
     ];
+
     const result = await db
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
-    if (!result.length)
+    if (!result.length) {
       return {
         success: false,
         error: "Episode not found",
@@ -191,12 +158,13 @@ export const getEpisodeBySlug = cache(async (slug) => {
         season: null,
         series: null,
       };
+    }
 
     const data = result[0];
     return {
       success: true,
-      episode: serializeEpisode(data),
-      season: serializeSeason(data.season),
+      episode: serializeDocument(data),
+      season: serializeDocument(data.season),
       series: serializeDocument(data.series),
     };
   } catch (error) {

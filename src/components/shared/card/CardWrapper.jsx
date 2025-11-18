@@ -1,4 +1,3 @@
-// CardWrapper.jsx
 "use client";
 
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
@@ -38,7 +37,7 @@ export default function CardWrapper({ href, children, onNavigateComplete }) {
 
     setTimeout(() => {
       setIsNavigating(false);
-      if (onNavigateComplete) onNavigateComplete(); // ✅ Trigger after loader
+      if (onNavigateComplete) onNavigateComplete();
     }, remainingTime);
   };
 

@@ -96,7 +96,7 @@ export default function Header() {
         const response = await searchContent(debouncedSearchQuery);
         setSearchResults(response.success ? response.results || [] : []);
       } catch (error) {
-        console.error("Error fetching search results:", error);
+        console.error("Error fetching search results");
         setSearchResults([]);
       } finally {
         setIsSearching(false);
@@ -175,7 +175,7 @@ export default function Header() {
       <div className="relative z-40 w-full py-2 lg:py-4">
         <div
           className={clsx(
-            "flex flex-col md:flex-row items-stretch sm:items-center justify-between",
+            "flex flex-col md:flex-row items-stretch sm:items-center justify-between mx-1",
             "gap-2 sm:gap-4 mb-2 sm:mb-4",
             DESIGN_TOKENS.glass.light,
             "px-4 lg:px-6 py-2 sm:py-2.5",

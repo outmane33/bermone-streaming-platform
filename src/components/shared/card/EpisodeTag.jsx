@@ -3,7 +3,6 @@ import { DESIGN_TOKENS } from "@/lib/data";
 import Link from "next/link";
 
 export const EpisodeTag = ({ episode }) => {
-  // console.log(episode);
   return (
     <Link
       href={`/${episode.slug}`}

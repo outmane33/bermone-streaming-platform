@@ -186,10 +186,7 @@ export default function Card({
           <TopBadges filmCount={films.length} rating={avgRating} />
           <div className="absolute bottom-0 left-0 right-0 z-20 p-2 md:p-4">
             <MetaInfo year={yearRange} />
-            <h3
-              className="text-sm md:text-lg font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 group-hover:bg-clip-text transition text-right"
-              dir="rtl"
-            >
+            <h3 className="text-sm md:text-lg font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 group-hover:bg-clip-text transition text-right">
               {media?.name}
             </h3>
           </div>

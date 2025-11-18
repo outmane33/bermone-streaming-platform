@@ -1,4 +1,4 @@
-import connectToDatabase from "@/lib/mongodb"; // ← updated import
+import connectToDatabase from "@/lib/mongodb";
 
 export async function getAllMediaSlugsForSitemap() {
   try {
@@ -31,7 +31,7 @@ export async function getAllMediaSlugsForSitemap() {
       ...normalize(seasons),
     ];
   } catch (error) {
-    console.error("❌ Sitemap fetch error:", error);
+    console.error("❌ Sitemap fetch error");
     return [];
   }
 }

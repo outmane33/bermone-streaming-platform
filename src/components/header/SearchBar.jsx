@@ -21,7 +21,7 @@ export const SearchBar = ({
         onChange={(e) => setSearchQuery(e.target.value)}
         onFocus={() => setSearchFocused(true)}
         onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-        className={`w-full px-10 sm:px-14 py-2.5 sm:py-3 pr-10 sm:pr-12 text-white placeholder-gray-200 outline-none text-sm sm:text-base font-medium rounded-xl ${
+        className={`w-full px-10 sm:px-14 py-2.5 sm:py-3 pr-10 sm:pr-12 ltr:text-right text-white placeholder-gray-200 outline-none text-sm sm:text-base font-medium rounded-xl ${
           isTouchDevice ? "bg-black/40" : DESIGN_TOKENS.glass.light
         } shadow-lg`}
         autoComplete="off"

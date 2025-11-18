@@ -2,87 +2,57 @@
 import connectToDatabase from "@/lib/mongodb";
 import { cache } from "react";
 import {
-  BASE_SORT_CONFIGS,
   buildContentAggregationPipeline,
   buildPaginationResponse,
-  buildErrorResponse,
-  toObjectId,
   serializeDocument,
+  PUBLIC_CONTENT_PROJECTION,
+  BASE_SORT_CONFIGS,
+  withErrorHandling,
+  toObjectId,
 } from "./db-utils";
 import { MAX_RELATED } from "@/lib/data";
 
-const FILMS_SORT_CONFIGS = {
-  ...BASE_SORT_CONFIGS,
-};
-
-export const getFilms = cache(async (filters = {}, sortId = null, page = 1) => {
-  try {
+export const getFilms = cache(
+  withErrorHandling(async (filters = {}, sortId = null, page = 1) => {
     const { db } = await connectToDatabase();
-    const collection = db.collection("films");
-    const sortConfig =
-      sortId && FILMS_SORT_CONFIGS[sortId]
-        ? FILMS_SORT_CONFIGS[sortId]
-        : { sort: { createdAt: -1 }, filter: {} };
-
-    const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
-    const [result] = await collection.aggregate(pipeline).toArray();
-    return {
-      success: true,
-      ...buildPaginationResponse(result, page),
+    const sortConfig = BASE_SORT_CONFIGS[sortId] || {
+      sort: { createdAt: -1 },
+      filter: {},
     };
-  } catch (error) {
-    return buildErrorResponse("films", error, page);
-  }
-});
+    const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
+    const [result] = await db.collection("films").aggregate(pipeline).toArray();
+    return { success: true, ...buildPaginationResponse(result, page) };
+  }, "films")
+);
 
-export const getFilmBySlug = cache(async (slug) => {
-  try {
+export const getFilmBySlug = cache(
+  withErrorHandling(async (slug) => {
     const { db } = await connectToDatabase();
-    const collection = db.collection("films");
     const cleanSlug = decodeURIComponent(slug).trim();
 
-    const film = await collection.findOne(
+    const film = await db.collection("films").findOne(
       { slug: cleanSlug },
       {
         projection: {
           services: 0,
-          dbId: 0,
-          createdAt: 0,
-          updatedAt: 0,
-          originalTitle: 0,
-          views: 0,
         },
       }
     );
-    if (!film) {
-      return { success: false, error: "Film not found", film: null };
-    }
-    return { success: true, film: serializeDocument(film) };
-  } catch (error) {
-    return buildErrorResponse("film", error);
-  }
-});
 
-export const getFilmCollection = cache(async (filmId) => {
-  try {
+    if (!film) throw new Error("Film not found");
+    return { success: true, film: serializeDocument(film) };
+  }, "film")
+);
+export const getFilmCollection = cache(
+  withErrorHandling(async (filmId) => {
     const { db } = await connectToDatabase();
     const filmObjectId = toObjectId(filmId);
-
-    const collection = await db.collection("filmcollections").findOne(
-      { films: filmObjectId },
-      {
-        projection: {
-          services: 0,
-          dbId: 0,
-          createdAt: 0,
-          updatedAt: 0,
-          originalTitle: 0,
-          views: 0,
-          __v: 0,
-        },
-      }
-    );
-
+    const collection = await db
+      .collection("filmcollections")
+      .findOne(
+        { films: filmObjectId },
+        { projection: PUBLIC_CONTENT_PROJECTION }
+      );
     if (!collection) {
       return {
         success: false,
@@ -91,117 +61,87 @@ export const getFilmCollection = cache(async (filmId) => {
         films: [],
       };
     }
-
     const films = await db
       .collection("films")
       .find(
         { _id: { $in: collection.films } },
-        {
-          projection: {
-            services: 0,
-            dbId: 0,
-            createdAt: 0,
-            updatedAt: 0,
-            originalTitle: 0,
-            views: 0,
-            __v: 0,
-          },
-        }
+        { projection: PUBLIC_CONTENT_PROJECTION }
       )
       .sort({ releaseYear: 1 })
       .limit(100)
       .toArray();
-
     return {
       success: true,
       collection: serializeDocument(collection),
       films: films.map(serializeDocument),
     };
-  } catch (error) {
-    return buildErrorResponse("filmCollection", error);
-  }
-});
+  }, "filmCollection")
+);
 
 export const getRelatedFilms = cache(
-  async (filmId, filmData = {}, limit = 12) => {
+  withErrorHandling(async (filmId, filmData = {}, limit = 12) => {
     const safeLimit = Math.min(
       Math.max(parseInt(limit, 10) || 12, 1),
       MAX_RELATED
     );
-    try {
-      const { db } = await connectToDatabase();
-      const collection = db.collection("films");
-      const filmObjectId = toObjectId(filmId);
-      const { genre = [], releaseYear, language } = filmData;
+    const { db } = await connectToDatabase();
+    const filmObjectId = toObjectId(filmId);
+    const { genre = [], releaseYear, language } = filmData;
 
-      const matchQuery = { _id: { $ne: filmObjectId } };
-      const orConditions = [];
-      if (genre.length > 0) orConditions.push({ genre: { $in: genre } });
-      if (releaseYear) {
-        orConditions.push({
-          releaseYear: { $gte: releaseYear - 3, $lte: releaseYear + 3 },
-        });
-      }
-      if (language) orConditions.push({ language });
+    const matchQuery = { _id: { $ne: filmObjectId } };
+    const orConditions = [];
+    if (genre.length > 0) orConditions.push({ genre: { $in: genre } });
+    if (releaseYear)
+      orConditions.push({
+        releaseYear: { $gte: releaseYear - 3, $lte: releaseYear + 3 },
+      });
+    if (language) orConditions.push({ language });
 
-      if (orConditions.length > 0) matchQuery.$or = orConditions;
+    if (orConditions.length > 0) matchQuery.$or = orConditions;
 
-      const pipeline = [
-        { $match: matchQuery },
-        {
-          $addFields: {
-            genreMatch: {
-              $size: { $ifNull: [{ $setIntersection: ["$genre", genre] }, []] },
-            },
-            yearMatch: {
-              $cond: [
-                {
-                  $and: [
-                    { $gte: ["$releaseYear", releaseYear - 3] },
-                    { $lte: ["$releaseYear", releaseYear + 3] },
-                  ],
-                },
-                1,
-                0,
-              ],
-            },
-            languageMatch: { $cond: [{ $eq: ["$language", language] }, 1, 0] },
+    const pipeline = [
+      { $match: matchQuery },
+      {
+        $addFields: {
+          genreMatch: {
+            $size: { $ifNull: [{ $setIntersection: ["$genre", genre] }, []] },
+          },
+          yearMatch: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$releaseYear", releaseYear - 3] },
+                  { $lte: ["$releaseYear", releaseYear + 3] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+          languageMatch: { $cond: [{ $eq: ["$language", language] }, 1, 0] },
+        },
+      },
+      {
+        $addFields: {
+          similarityScore: {
+            $add: [
+              { $multiply: ["$genreMatch", 3] },
+              "$yearMatch",
+              "$languageMatch",
+            ],
           },
         },
-        {
-          $addFields: {
-            similarityScore: {
-              $add: [
-                { $multiply: ["$genreMatch", 3] },
-                "$yearMatch",
-                "$languageMatch",
-              ],
-            },
-          },
-        },
-        { $sort: { similarityScore: -1, rating: -1, views: -1 } },
-        { $limit: safeLimit },
-        {
-          $project: {
-            _id: { $toString: "$_id" },
-            title: 1,
-            genre: 1,
-            rating: 1,
-            releaseYear: 1,
-            language: 1,
-            country: 1,
-            image: 1,
-            slug: 1,
-            category: 1,
-            duration: 1,
-          },
-        },
-      ];
+      },
+      { $sort: { similarityScore: -1, rating: -1, views: -1 } },
+      { $limit: safeLimit },
+      { $project: PUBLIC_CONTENT_PROJECTION },
+    ];
 
-      const films = await collection.aggregate(pipeline).toArray();
-      return { success: true, films, count: films.length };
-    } catch (error) {
-      return buildErrorResponse("relatedFilms", error);
-    }
-  }
+    const films = await db.collection("films").aggregate(pipeline).toArray();
+    return {
+      success: true,
+      films: films.map(serializeDocument),
+      count: films.length,
+    };
+  }, "relatedFilms")
 );
