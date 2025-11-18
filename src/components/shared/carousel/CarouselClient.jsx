@@ -15,11 +15,19 @@ export default function CarouselClient({ carouselMida, className = "" }) {
     if (!container) return;
 
     const { scrollLeft, scrollWidth, clientWidth } = container;
+    const maxScroll = scrollWidth - clientWidth;
+
+    // Normalize scrollLeft for all RTL behaviors
+    const normalizedScroll =
+      scrollLeft < 0
+        ? Math.abs(scrollLeft) // Chrome (negative)
+        : scrollLeft > maxScroll
+        ? maxScroll - scrollLeft // Firefox (reversed)
+        : scrollLeft; // LTR or Safari
 
     setScrollState({
-      canScrollLeft: scrollLeft > 0,
-      canScrollRight:
-        scrollLeft < scrollWidth - clientWidth - CONFIG.scroll.threshold,
+      canScrollLeft: normalizedScroll < maxScroll - CONFIG.scroll.threshold,
+      canScrollRight: normalizedScroll > CONFIG.scroll.threshold,
     });
   }, []);
 
@@ -28,24 +36,21 @@ export default function CarouselClient({ carouselMida, className = "" }) {
     if (!container) return;
 
     const scrollAmount = container.clientWidth * CONFIG.scroll.percentage;
-    const currentScroll = container.scrollLeft;
-    const newPosition =
-      direction === "left"
-        ? currentScroll - scrollAmount
-        : currentScroll + scrollAmount;
+    const isRTL = document.dir === "rtl";
 
-    container.scrollTo({
-      left: newPosition,
+    // In RTL, invert the direction
+    const multiplier = (direction === "left" ? 1 : -1) * (isRTL ? -1 : 1);
+
+    container.scrollBy({
+      left: scrollAmount * multiplier,
       behavior: "smooth",
     });
   }, []);
 
   useEffect(() => {
     checkScrollability();
-
     const handleResize = () => checkScrollability();
     window.addEventListener("resize", handleResize);
-
     return () => window.removeEventListener("resize", handleResize);
   }, [carouselMida, checkScrollability]);
 
@@ -77,23 +82,18 @@ export default function CarouselClient({ carouselMida, className = "" }) {
   };
 
   return (
-    <div className={`relative overflow-x-hidden ${className}`}>
+    <div className={`relative ${className}`}>
       <div className="relative px-2">
-        <ScrollButton
-          direction="left"
-          isVisible={true}
-          disabled={!scrollState.canScrollLeft}
-        />
+        <ScrollButton direction="left" disabled={!scrollState.canScrollLeft} />
         <ScrollButton
           direction="right"
-          isVisible={true}
           disabled={!scrollState.canScrollRight}
         />
 
         <div
           ref={scrollContainerRef}
           onScroll={checkScrollability}
-          className="flex gap-1 sm:gap-3 md:gap-4 overflow-x-hidden scrollbar-hide scroll-smooth pb-4"
+          className="flex gap-1 sm:gap-3 md:gap-4 overflow-x-hidden scrollbar-hide scroll-smooth pb-4 "
         >
           {carouselMida.map((media) => (
             <div key={media.slug} className={COMPONENT_STYLES.card.width}>
