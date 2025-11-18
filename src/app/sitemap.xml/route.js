@@ -1,4 +1,3 @@
-// app/sitemap.xml/route.js
 import { getAllMediaSlugsForSitemap } from "@/lib/sitemapUtils";
 import { NextResponse } from "next/server";
 

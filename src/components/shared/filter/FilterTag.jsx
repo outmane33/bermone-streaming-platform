@@ -8,14 +8,13 @@ export const FilterTag = ({ icon, label, onRemove }) => {
     <span
       className={`group flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 ${DESIGN_TOKENS.glass.light} rounded-xl text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl ${DESIGN_TOKENS.effects.hoverScale}`}
     >
-      {Icon && <Icon size={14} className="text-current flex-shrink-0" />}
-      <span className="truncate max-w-[120px] sm:max-w-none">{label}</span>
+      {Icon && <Icon size={14} className="text-current sm:w-4 sm:h-4" />}
+      <span className="truncate max-w-[100px] sm:max-w-none">{label}</span>
       <button
         onClick={onRemove}
         className={`ml-1 hover:bg-white/20 rounded-full p-1 ${DESIGN_TOKENS.effects.transition} duration-200 hover:rotate-90 cursor-pointer flex-shrink-0`}
-        aria-label={`إزالة ${label}`}
       >
-        <ICON_MAP.X size={12} />
+        <ICON_MAP.X size={12} className="sm:w-3.5 sm:h-3.5" />
       </button>
     </span>
   );

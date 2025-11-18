@@ -17,13 +17,12 @@ export default function CarouselClient({ carouselMida, className = "" }) {
     const { scrollLeft, scrollWidth, clientWidth } = container;
     const maxScroll = scrollWidth - clientWidth;
 
-    // Normalize scrollLeft for all RTL behaviors
     const normalizedScroll =
       scrollLeft < 0
-        ? Math.abs(scrollLeft) // Chrome (negative)
+        ? Math.abs(scrollLeft)
         : scrollLeft > maxScroll
-        ? maxScroll - scrollLeft // Firefox (reversed)
-        : scrollLeft; // LTR or Safari
+        ? maxScroll - scrollLeft
+        : scrollLeft;
 
     setScrollState({
       canScrollLeft: normalizedScroll < maxScroll - CONFIG.scroll.threshold,
@@ -38,7 +37,6 @@ export default function CarouselClient({ carouselMida, className = "" }) {
     const scrollAmount = container.clientWidth * CONFIG.scroll.percentage;
     const isRTL = document.dir === "rtl";
 
-    // In RTL, invert the direction
     const multiplier = (direction === "left" ? 1 : -1) * (isRTL ? -1 : 1);
 
     container.scrollBy({
