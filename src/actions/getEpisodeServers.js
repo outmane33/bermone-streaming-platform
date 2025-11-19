@@ -45,7 +45,7 @@ export const getServerIframeBySlug = cache(
     try {
       const { content } = await findContentBySlug(slug);
       if (!content) {
-        return { success: false, error: "Content not found", iframeUrl: null };
+        return { success: false, error: "المحتوى غير موجود", iframeUrl: null };
       }
       const service = content.services.find(
         (s) => s.serviceName === serverName
@@ -53,7 +53,7 @@ export const getServerIframeBySlug = cache(
       if (!service?.qualities?.length) {
         return {
           success: false,
-          error: "Server not available",
+          error: "السيرفر غير متاح",
           iframeUrl: null,
         };
       }
@@ -62,25 +62,35 @@ export const getServerIframeBySlug = cache(
         : service.qualities.find((q) => q.quality.includes("1080p")) ||
           service.qualities[0];
       if (!selectedQuality?.iframe) {
-        return { success: false, error: "No iframe found", iframeUrl: null };
-      }
-      const manager = await getServiceManager(serverName);
-      if (!manager?.iframeUrl) {
         return {
           success: false,
-          error: "Service config missing",
+          error: "لا يوجد رابط تشغيل",
           iframeUrl: null,
         };
       }
+
+      // ✅ Generate *embed* URL instead of direct player URL
+      const embedUrl = new URL(
+        `/embed/${slug}`,
+        process.env.NEXT_PUBLIC_SITE_URL || "https://wecima.ac"
+      );
+      embedUrl.searchParams.set("server", serverName);
+      if (quality || selectedQuality.quality) {
+        embedUrl.searchParams.set(
+          "quality",
+          quality || selectedQuality.quality
+        );
+      }
+
       return {
         success: true,
-        iframeUrl: `${manager.iframeUrl}${selectedQuality.iframe}`,
+        iframeUrl: embedUrl.toString(), // 👈 this is now /embed/... not cdn/player
         quality: selectedQuality.quality,
         serverName,
       };
     } catch (error) {
       console.error("💥 getServerIframeBySlug error:", error);
-      return buildErrorResponse("server iframe", error);
+      return buildErrorResponse("رابط المشغل", error);
     }
   }
 );
