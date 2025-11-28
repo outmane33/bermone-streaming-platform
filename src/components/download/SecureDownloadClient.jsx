@@ -1,9 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import { getServicesForQuality, getDownloadLinks } from "@/actions/download";
 import ServerSelector from "./ServerSelector";
 import QualitySelector from "./QualitySelector";
+import {
+  checkDevToolsAndRedirect,
+  setupDevToolsEventListeners,
+} from "@/lib/devtools";
+import {
+  obfuscateUrlAdvanced as obfuscateUrl,
+  deobfuscateUrlAdvanced as deobfuscateUrl,
+} from "@/lib/devtools/urlObfuscator";
 
 const Section = ({ title, icon: Icon, children, step }) => (
   <div className="relative mb-6 sm:mb-8">
@@ -25,16 +34,37 @@ const Section = ({ title, icon: Icon, children, step }) => (
 );
 
 export default function SecureDownloadClient({ qualities, slug }) {
+  const router = useRouter();
   const [selectedQuality, setSelectedQuality] = useState(null);
   const [availableServices, setAvailableServices] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [showDownloadButton, setShowDownloadButton] = useState(false);
   const [loadingLinks, setLoadingLinks] = useState(false);
-  const [downloadData, setDownloadData] = useState(null);
+  const [downloadData, setDownloadData] = useState(null); // 🔒 This will store OBFUSCATED URL
   const [countdown, setCountdown] = useState(null);
+  const [isProtectionActive, setIsProtectionActive] = useState(false);
+
+  // DevTools Protection - activated after user interaction
+  useEffect(() => {
+    if (!isProtectionActive) return;
+
+    const cleanup = setupDevToolsEventListeners(router, () => {
+      console.log("⚠️ DevTools detected");
+    });
+
+    checkDevToolsAndRedirect(router);
+    return cleanup;
+  }, [isProtectionActive, router]);
 
   const handleQualitySelect = async (quality) => {
+    // Activate protection on first user interaction
+    if (!isProtectionActive) {
+      setIsProtectionActive(true);
+    }
+
+    if (checkDevToolsAndRedirect(router)) return;
+
     setSelectedQuality(quality);
     setSelectedService(null);
     setShowDownloadButton(false);
@@ -49,12 +79,16 @@ export default function SecureDownloadClient({ qualities, slug }) {
   };
 
   const handleServerSelect = (serviceName) => {
+    if (checkDevToolsAndRedirect(router)) return;
+
     setSelectedService(serviceName);
     setShowDownloadButton(true);
     setDownloadData(null);
   };
 
   const handleDownloadClick = async () => {
+    if (checkDevToolsAndRedirect(router)) return;
+
     setLoadingLinks(true);
     setCountdown(3);
 
@@ -65,18 +99,32 @@ export default function SecureDownloadClient({ qualities, slug }) {
     await new Promise((r) => setTimeout(r, 3000));
     clearInterval(interval);
 
+    // Check devtools again before generating link
+    if (checkDevToolsAndRedirect(router)) {
+      setLoadingLinks(false);
+      return;
+    }
+
     try {
       const result = await getDownloadLinks(
         slug,
         selectedQuality,
         selectedService
       );
+
       if (result.success && result.downloadUrl) {
-        setDownloadData({
-          url: result.downloadUrl,
-          quality: selectedQuality,
-          service: selectedService,
-        });
+        // 🔒 OBFUSCATE THE DOWNLOAD URL BEFORE STORING
+        const obfuscatedUrl = obfuscateUrl(result.downloadUrl);
+
+        if (obfuscatedUrl) {
+          setDownloadData({
+            url: obfuscatedUrl, // Store obfuscated URL
+            quality: selectedQuality,
+            service: selectedService,
+          });
+        } else {
+          alert("فشل تشفير رابط التحميل. يُرجى المحاولة مرة أخرى.");
+        }
       } else {
         alert("فشل الحصول على رابط التحميل. يُرجى تجربة سيرفر آخر.");
       }
@@ -87,8 +135,18 @@ export default function SecureDownloadClient({ qualities, slug }) {
     }
   };
 
-  const handleDownload = () =>
-    window.open(downloadData.url, "_blank", "noopener,noreferrer");
+  const handleDownload = () => {
+    if (checkDevToolsAndRedirect(router)) return;
+
+    // 🔓 DECODE THE URL BEFORE OPENING
+    const realUrl = deobfuscateUrl(downloadData.url);
+
+    if (realUrl) {
+      window.open(realUrl, "_blank", "noopener,noreferrer");
+    } else {
+      alert("فشل فك تشفير رابط التحميل. يُرجى المحاولة مرة أخرى.");
+    }
+  };
 
   return (
     <div className="relative space-y-6">

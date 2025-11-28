@@ -1,19 +1,19 @@
 import React from "react";
-import { DESIGN_TOKENS } from "@/lib/data";
-import Link from "next/link";
+import { MediaTag } from "@/components/shared/card/MediaTag";
 
-export const EpisodeTag = ({ episode }) => {
+export const EpisodeTag = ({
+  episode,
+  watchPage = false,
+  isCurrent = false,
+  isLastEpisode = false,
+}) => {
   return (
-    <Link
-      href={`/${episode.slug}`}
-      className={`group flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 ${DESIGN_TOKENS.glass.light} rounded-lg text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl ${DESIGN_TOKENS.effects.hoverScale} cursor-pointer`}
-    >
-      <span className="truncate">{episode.title}</span>
-      {episode.duration && (
-        <span className="text-cyan-300 text-xs opacity-80 flex-shrink-0">
-          {episode.duration}
-        </span>
-      )}
-    </Link>
+    <MediaTag
+      title={episode.title}
+      subtitle={episode.duration}
+      isActive={isCurrent}
+      isLastEpisode={isLastEpisode}
+      href={watchPage ? `/${episode.slug}/watch` : `/${episode.slug}`}
+    />
   );
 };

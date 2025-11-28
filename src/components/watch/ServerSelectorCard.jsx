@@ -1,22 +1,33 @@
 import React from "react";
-import { Server, CheckCircle, AlertCircle } from "lucide-react";
-import { DESIGN_TOKENS } from "@/lib/data";
+import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
+import Link from "next/link";
+import Button from "../shared/heroSection/Button";
 
 export default function ServerSelectorCard({
   servers,
   activeServerIdx,
   onServerChange,
   isLoading = false,
-  error,
+  slug,
 }) {
   if (isLoading) return null;
   if (!servers?.length) return null;
 
+  // Ensure slug starts with / for absolute path navigation
+  const cleanSlug = slug?.startsWith("/") ? slug : `/${slug}`;
+
   return (
     <div className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-4 shadow-xl`}>
-      <div className="flex items-center gap-2 mb-3">
-        <Server className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-        <h2 className="text-base font-semibold text-white">اختر السيرفر</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 mb-3">
+          <ICON_MAP.Server className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+          <h2 className="text-base font-semibold text-white">اختر السيرفر</h2>
+        </div>
+        <Link href={cleanSlug}>
+          <Button variant="secondary" size="small" icon={ICON_MAP.ArrowLeft}>
+            عودة للتفاصيل
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -38,9 +49,9 @@ export default function ServerSelectorCard({
           >
             <div className="flex items-center justify-center gap-1.5">
               {server.status === "active" ? (
-                <CheckCircle className="w-3.5 h-3.5 text-white" />
+                <ICON_MAP.CheckCircle className="w-3.5 h-3.5 text-white" />
               ) : (
-                <AlertCircle className="w-3.5 h-3.5 text-yellow-400" />
+                <ICON_MAP.AlertCircle className="w-3.5 h-3.5 text-yellow-400" />
               )}
               <span className="text-white text-xs xs:text-sm truncate">
                 {server.name}

@@ -3,6 +3,7 @@ import { COMPONENT_STYLES, DESIGN_TOKENS } from "@/lib/data";
 export default function Button({
   children,
   variant = "primary",
+  size = "medium",
   icon: Icon,
   onClick,
   className = "",
@@ -12,14 +13,38 @@ export default function Button({
   const variantClass =
     buttonStyles.variants[variant] || buttonStyles.variants.primary;
 
+  // Size variants
+  const sizeClasses = {
+    small: "px-3 py-1.5 text-sm",
+    medium: "px-3 lg:px-6 py-2 lg:py-2.5 text-base",
+    large: "px-6 lg:px-8 py-3 lg:py-3.5 text-lg",
+  };
+
+  const iconSizes = {
+    small: 18,
+    medium: 24,
+    large: 28,
+  };
+
+  const sizeClass = sizeClasses[size] || sizeClasses.medium;
+  const iconSize = iconSizes[size] || iconSizes.medium;
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className={`
         group
-        ${buttonStyles.base}
+        relative
+        font-semibold
+        overflow-hidden
+        rounded-lg
+        transition-all
+        duration-300
+        hover:scale-105
+        cursor-pointer
         ${variantClass}
+        ${sizeClass}
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${className}
       `}
@@ -36,10 +61,10 @@ export default function Button({
         />
       )}
 
-      <div className="relative flex items-center gap-3 justify-center">
+      <div className="relative flex items-center gap-2 lg:gap-3 justify-center">
         {Icon && (
           <Icon
-            size={24}
+            size={iconSize}
             className={variant === "primary" ? "fill-white" : ""}
           />
         )}

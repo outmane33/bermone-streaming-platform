@@ -2,9 +2,12 @@ import Card from "@/components/shared/card/Card";
 import { DESIGN_TOKENS } from "@/lib/data";
 import { EpisodeTag } from "../card/EpisodeTag";
 
-export default function RelatedSection({ relatedMedia, title }) {
+export default function RelatedSection({ relatedMedia, title, seasonStatus }) {
   const type = relatedMedia[0]?.type;
-
+  const maxEpisodeNumber =
+    type === "episode"
+      ? Math.max(...relatedMedia.map((ep) => ep.episodeNumber || 0))
+      : 0;
   return (
     <div className="relative">
       {/* Section Header */}
@@ -20,9 +23,20 @@ export default function RelatedSection({ relatedMedia, title }) {
         <div className="relative">
           <div className="max-h-96 overflow-y-auto pr-2 pb-2">
             <div className={DESIGN_TOKENS.grid.container}>
-              {relatedMedia.map((media, index) => (
-                <EpisodeTag key={index} episode={media} />
-              ))}
+              {relatedMedia.map((media, index) => {
+                // Check logic here
+                const isLastEpisode =
+                  seasonStatus === "مكتمل" &&
+                  media.episodeNumber === maxEpisodeNumber;
+
+                return (
+                  <EpisodeTag
+                    key={index}
+                    episode={media}
+                    isLastEpisode={isLastEpisode}
+                  />
+                );
+              })}
             </div>
           </div>
 

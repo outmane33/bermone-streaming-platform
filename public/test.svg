@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Black rounded square background with orange outline (Instagram style) -->
+  <rect x="10" y="10" width="180" height="180" rx="45" ry="45" fill="#000000"/>
+   
+  <!-- White play triangle -->
+  <polygon points="75,60 75,140 145,100" fill="#FFFFFF"/>
+</svg>

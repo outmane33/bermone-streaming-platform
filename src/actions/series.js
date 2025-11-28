@@ -5,51 +5,41 @@ import {
   BASE_SORT_CONFIGS,
   buildContentAggregationPipeline,
   buildPaginationResponse,
-  buildErrorResponse,
   toObjectId,
   serializeDocument,
   PUBLIC_CONTENT_PROJECTION,
+  withErrorHandling,
 } from "./db-utils";
 import { validatePage } from "@/lib/validation";
 import { MAX_EPISODES, MAX_SEASONS, ITEMS_PER_PAGE } from "@/lib/data";
 import { cleanSlug } from "@/lib/pageUtils";
 
 export const getSeries = cache(
-  async (filters = {}, sortId = "all", page = 1) => {
-    try {
-      const { db } = await connectToDatabase();
-      const sortConfig = BASE_SORT_CONFIGS[sortId] || BASE_SORT_CONFIGS.all;
-      const pipeline = buildContentAggregationPipeline(
-        filters,
-        sortConfig,
-        page
-      );
-      const [result] = await db
-        .collection("series")
-        .aggregate(pipeline)
-        .toArray();
-      return { success: true, ...buildPaginationResponse(result, page) };
-    } catch (error) {
-      return buildErrorResponse("series", error, page);
-    }
-  }
+  withErrorHandling(async (filters = {}, sortId = "all", page = 1) => {
+    const { db } = await connectToDatabase();
+    const sortConfig = BASE_SORT_CONFIGS[sortId] || BASE_SORT_CONFIGS.all;
+    const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
+    const [result] = await db
+      .collection("series")
+      .aggregate(pipeline)
+      .toArray();
+    return { success: true, ...buildPaginationResponse(result, page) };
+  }, "series")
 );
 
-export const getSerieBySlug = cache(async (slug) => {
-  try {
+export const getSerieBySlug = cache(
+  withErrorHandling(async (slug) => {
     const { db } = await connectToDatabase();
     const doc = await db
       .collection("series")
       .findOne({ slug: cleanSlug(slug) });
     if (!doc) return { success: false, error: "Serie not found", serie: null };
     return { success: true, serie: serializeDocument(doc) };
-  } catch (error) {
-    return buildErrorResponse("serie", error);
-  }
-});
+  }, "serie")
+);
 
-export const getSeasonsBySeries = cache(async (seriesId) => {
-  try {
+export const getSeasonsBySeries = cache(
+  withErrorHandling(async (seriesId) => {
     const { db } = await connectToDatabase();
     const seasons = await db
       .collection("seasons")
@@ -59,31 +49,34 @@ export const getSeasonsBySeries = cache(async (seriesId) => {
       .project(PUBLIC_CONTENT_PROJECTION)
       .toArray();
 
-    return seasons.length
-      ? {
-          success: true,
-          seasons: seasons.map(serializeDocument),
-          count: seasons.length,
-        }
-      : { success: false, message: "No seasons found", seasons: [] };
-  } catch (error) {
-    return buildErrorResponse("seasons", error);
-  }
-});
+    if (!seasons.length) {
+      return { success: false, message: "No seasons found", seasons: [] };
+    }
 
-export const getSeasonBySlug = cache(async (slug) => {
-  try {
+    return {
+      success: true,
+      seasons: seasons.map(serializeDocument),
+      count: seasons.length,
+    };
+  }, "seasons")
+);
+
+export const getSeasonBySlug = cache(
+  withErrorHandling(async (slug) => {
     const { db } = await connectToDatabase();
     const season = await db
       .collection("seasons")
       .findOne({ slug: cleanSlug(slug) });
-    if (!season)
+
+    if (!season) {
       return {
         success: false,
         error: "Season not found",
         season: null,
         series: null,
       };
+    }
+
     const series = await db
       .collection("series")
       .findOne({ _id: season.seriesId });
@@ -92,13 +85,11 @@ export const getSeasonBySlug = cache(async (slug) => {
       season: serializeDocument(season),
       series: series ? serializeDocument(series) : null,
     };
-  } catch (error) {
-    return buildErrorResponse("season", error);
-  }
-});
+  }, "season")
+);
 
-export const getEpisodesBySeason = cache(async (seasonId) => {
-  try {
+export const getEpisodesBySeason = cache(
+  withErrorHandling(async (seasonId) => {
     const { db } = await connectToDatabase();
     const episodes = await db
       .collection("episodes")
@@ -109,20 +100,21 @@ export const getEpisodesBySeason = cache(async (seasonId) => {
       .sort({ episodeNumber: 1 })
       .limit(MAX_EPISODES)
       .toArray();
-    return episodes.length
-      ? {
-          success: true,
-          episodes: episodes.map(serializeDocument),
-          count: episodes.length,
-        }
-      : { success: false, message: "No episodes found", episodes: [] };
-  } catch (error) {
-    return buildErrorResponse("episodes", error);
-  }
-});
 
-export const getEpisodeBySlug = cache(async (slug) => {
-  try {
+    if (!episodes.length) {
+      return { success: false, message: "No episodes found", episodes: [] };
+    }
+
+    return {
+      success: true,
+      episodes: episodes.map(serializeDocument),
+      count: episodes.length,
+    };
+  }, "episodes")
+);
+
+export const getEpisodeBySlug = cache(
+  withErrorHandling(async (slug) => {
     const { db } = await connectToDatabase();
     const pipeline = [
       { $match: { slug: cleanSlug(slug) } },
@@ -150,6 +142,7 @@ export const getEpisodeBySlug = cache(async (slug) => {
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
+
     if (!result.length) {
       return {
         success: false,
@@ -167,13 +160,11 @@ export const getEpisodeBySlug = cache(async (slug) => {
       season: serializeDocument(data.season),
       series: serializeDocument(data.series),
     };
-  } catch (error) {
-    return buildErrorResponse("episode", error);
-  }
-});
+  }, "episode")
+);
 
-export const getEpisodes = cache(async (page = 1) => {
-  try {
+export const getEpisodes = cache(
+  withErrorHandling(async (page = 1) => {
     const { db } = await connectToDatabase();
     const validPage = validatePage(page);
     const pipeline = [
@@ -234,7 +225,5 @@ export const getEpisodes = cache(async (page = 1) => {
       .aggregate(pipeline)
       .toArray();
     return { success: true, ...buildPaginationResponse(result, validPage) };
-  } catch (error) {
-    return buildErrorResponse("episodes", error, page);
-  }
-});
+  }, "episodes")
+);

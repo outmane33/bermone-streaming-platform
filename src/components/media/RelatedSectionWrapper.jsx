@@ -16,10 +16,17 @@ export default async function RelatedSectionWrapper({ slug }) {
     return null;
   }
 
+  let seasonStatus = null;
+  if (resolved.type === "episode") {
+    seasonStatus = resolved.data.season?.status;
+  } else if (resolved.type === "season") {
+    seasonStatus = resolved.data.status;
+  }
   return (
     <RelatedSection
       relatedMedia={relatedData.content}
       title={relatedData.title}
+      seasonStatus={seasonStatus}
     />
   );
 }

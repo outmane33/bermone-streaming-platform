@@ -45,6 +45,7 @@ import {
   ChevronsRight,
   Home,
   ArrowLeft,
+  AlertCircle,
 } from "lucide-react";
 
 // ============================================
@@ -88,6 +89,7 @@ export const ICON_MAP = {
   ChevronsLeft,
   ChevronsRight,
   ArrowLeft,
+  AlertCircle,
 };
 
 // ============================================
@@ -132,8 +134,8 @@ export const COMPONENT_STYLES = {
   button: {
     base: "group relative px-3 lg:px-6 py-2 lg:py-2.5 font-semibold overflow-hidden rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer",
     variants: {
-      primary: `bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:shadow-2xl hover:shadow-cyan-500/50`,
-      secondary: `${DESIGN_TOKENS.glass.light} border-2 border-white/20 ${DESIGN_TOKENS.glass.hover}`,
+      primary: `bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan}  hover:shadow-2xl hover:shadow-cyan-500/50`,
+      secondary: `${DESIGN_TOKENS.glass.light}   ${DESIGN_TOKENS.glass.hover}`,
     },
   },
 
@@ -587,7 +589,7 @@ export const VALID_QUERY_PARAMS = [
 // ============================================
 // CONSTANTS
 // ============================================
-export const ITEMS_PER_PAGE = 18;
+export const ITEMS_PER_PAGE = 42;
 export const CURRENT_YEAR = new Date().getFullYear();
 export const SEARCH_LIMIT = 20;
 export const MAX_SEASONS = 20;

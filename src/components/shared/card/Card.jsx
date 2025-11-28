@@ -5,7 +5,6 @@ import CardWrapper from "./CardWrapper";
 import Image from "next/image";
 
 const TopBadges = ({
-  isNew,
   rating,
   episodeNumber,
   seasonNumber,

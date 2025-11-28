@@ -2,12 +2,6 @@ import { CONTENT_TYPES } from "./mediaResolver";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 
-function truncateDescription(str, max = 155) {
-  if (!str) return "";
-  if (str.length <= max) return str;
-  return str.substr(0, str.lastIndexOf(" ", max)) + "...";
-}
-
 const getGenreText = (genres) =>
   Array.isArray(genres) ? genres.join(", ") : "";
 
@@ -48,7 +42,19 @@ const serializeMediaBase = (media) => ({
   category: serializeCategory(media.category),
   slug: media.slug,
 });
+export const checkIsLastEpisode = (season, episode, allEpisodes) => {
+  if (!season || !episode || !allEpisodes || allEpisodes.length === 0)
+    return false;
 
+  // Find the highest episode number in the list
+  const maxEpisodeNumber = Math.max(
+    ...allEpisodes.map((ep) => ep.episodeNumber)
+  );
+
+  return (
+    season.status === "مكتمل" && episode.episodeNumber === maxEpisodeNumber
+  );
+};
 export const serializers = {
   [CONTENT_TYPES.FILM]: (data) => ({
     ...serializeMediaBase(data),
@@ -114,11 +120,7 @@ export const serializers = {
     }
 
     const { episode, season, series, allEpisodes = [] } = data;
-    const isLastEpisode =
-      season.status === "مكتمل" &&
-      allEpisodes.length > 0 &&
-      episode.episodeNumber ===
-        Math.max(...allEpisodes.map((ep) => ep.episodeNumber));
+    const isLastEpisode = checkIsLastEpisode(season, episode, allEpisodes);
     return {
       _id: episode._id,
       title: `${series.title} - S${season.seasonNumber}E${
@@ -158,15 +160,11 @@ export const metadataGenerators = {
 
     return {
       title: `مشاهدة فيلم ${data.title} ${data.releaseYear} مترجم${rating}`,
-      description: truncateDescription(
-        data.metaDescription ||
-          data.description ||
-          `مشاهدة وتحميل فيلم ${data.title} ${
-            data.releaseYear
-          } مترجم اون لاين بجودة عالية${
-            genre ? ` | ${genre}` : ""
-          }${rating} | قصة الفيلم: ${data.description || ""}`
-      ),
+      description: `مشاهدة وتحميل فيلم ${data.title} ${
+        data.releaseYear
+      } مترجم اون لاين بجودة عالية HD. شاهد الآن فيلم ${data.title} كامل مترجم${
+        genre ? ` من نوع ${genre}` : ""
+      }${rating} على موقع Bermone.`,
       keywords: `${data.title}, فيلم ${data.title}, مشاهدة ${
         data.title
       }, تحميل ${data.title}, ${data.title} مترجم, ${data.title} ${
@@ -176,7 +174,9 @@ export const metadataGenerators = {
       robots: { index: true, follow: true },
       openGraph: {
         title: `فيلم ${data.title} ${data.releaseYear} مترجم`,
-        description: truncateDescription(data.description, 160),
+        description: `شاهد فيلم ${data.title} ${
+          data.releaseYear
+        } مترجم بجودة عالية${genre ? ` | ${genre}` : ""}${rating}`,
         type: "video.movie",
         url: `${SITE_URL}/${data.slug}`,
         images: [
@@ -191,7 +191,9 @@ export const metadataGenerators = {
       twitter: {
         card: "summary_large_image",
         title: `فيلم ${data.title} ${data.releaseYear} مترجم`,
-        description: truncateDescription(data.description, 160),
+        description: `شاهد فيلم ${data.title} ${
+          data.releaseYear
+        } مترجم بجودة عالية${genre ? ` | ${genre}` : ""}${rating}`,
         images: [fullImageUrl],
       },
     };
@@ -200,20 +202,18 @@ export const metadataGenerators = {
   [CONTENT_TYPES.SERIES]: (data) => {
     const genre = getGenreText(data.genre);
     const rating = data.rating ? ` - تقييم ${data.rating}` : "";
-    const seasons = data.seasons ? ` ${data.seasons.length} مواسم` : "";
+    const seasons = data.seasons?.length
+      ? ` - ${data.seasons.length} مواسم`
+      : "";
     const fullImageUrl = makeAbsoluteUrl(data.image);
 
     return {
       title: `مشاهدة مسلسل ${data.title} ${data.releaseYear} مترجم${rating}`,
-      description: truncateDescription(
-        data.metaDescription ||
-          data.description ||
-          `مشاهدة وتحميل مسلسل ${data.title} ${
-            data.releaseYear
-          } مترجم جميع المواسم والحلقات اون لاين بجودة عالية${
-            genre ? ` | ${genre}` : ""
-          }${rating}${seasons} | قصة المسلسل: ${data.description || ""}`
-      ),
+      description: `مشاهدة وتحميل مسلسل ${data.title} ${
+        data.releaseYear
+      } مترجم جميع المواسم والحلقات اون لاين بجودة عالية HD${
+        genre ? ` | نوع ${genre}` : ""
+      }${rating}${seasons}. شاهد الآن على Bermone.`,
       keywords: `${data.title}, مسلسل ${data.title}, مشاهدة ${
         data.title
       }, تحميل ${data.title}, ${data.title} مترجم, ${data.title} ${
@@ -223,7 +223,9 @@ export const metadataGenerators = {
       robots: { index: true, follow: true },
       openGraph: {
         title: `مسلسل ${data.title} ${data.releaseYear} مترجم`,
-        description: truncateDescription(data.description, 160),
+        description: `شاهد مسلسل ${data.title} ${
+          data.releaseYear
+        } مترجم - جميع المواسم والحلقات${genre ? ` | ${genre}` : ""}${rating}`,
         type: "video.tv_show",
         url: `${SITE_URL}/${data.slug}`,
         images: [
@@ -238,7 +240,9 @@ export const metadataGenerators = {
       twitter: {
         card: "summary_large_image",
         title: `مسلسل ${data.title} ${data.releaseYear} مترجم`,
-        description: truncateDescription(data.description, 160),
+        description: `شاهد مسلسل ${data.title} ${
+          data.releaseYear
+        } مترجم - جميع المواسم والحلقات${genre ? ` | ${genre}` : ""}${rating}`,
         images: [fullImageUrl],
       },
     };
@@ -248,19 +252,18 @@ export const metadataGenerators = {
     const { series, season } = data;
     const genre = getGenreText(series.genre);
     const rating = season.rating ? ` - تقييم ${season.rating}` : "";
+    const episodeCount = season.episodes?.length
+      ? ` - ${season.episodes.length} حلقات`
+      : "";
     const fullImageUrl = makeAbsoluteUrl(season.image);
 
     return {
       title: `مشاهدة مسلسل ${series.title} الموسم ${season.seasonNumber} مترجم${rating}`,
-      description: truncateDescription(
-        data.metaDescription ||
-          series.description ||
-          `مشاهدة وتحميل الموسم ${season.seasonNumber} من مسلسل ${
-            series.title
-          } ${season.releaseYear} مترجم جميع الحلقات اون لاين بجودة عالية${
-            genre ? ` | ${genre}` : ""
-          }${rating}`
-      ),
+      description: `مشاهدة وتحميل الموسم ${season.seasonNumber} من مسلسل ${
+        series.title
+      } ${season.releaseYear} مترجم جميع الحلقات اون لاين بجودة عالية HD${
+        genre ? ` | نوع ${genre}` : ""
+      }${rating}${episodeCount}.`,
       keywords: `${series.title} الموسم ${season.seasonNumber}, مسلسل ${
         series.title
       } الموسم ${season.seasonNumber}, مشاهدة ${series.title} الموسم ${
@@ -272,7 +275,9 @@ export const metadataGenerators = {
       robots: { index: true, follow: true },
       openGraph: {
         title: `${series.title} - الموسم ${season.seasonNumber} مترجم`,
-        description: truncateDescription(series.description, 160),
+        description: `شاهد الموسم ${season.seasonNumber} من مسلسل ${
+          series.title
+        } مترجم بجودة عالية${genre ? ` | ${genre}` : ""}${rating}`,
         type: "video.tv_show",
         url: `${SITE_URL}/${season.slug}`,
         images: [
@@ -287,7 +292,9 @@ export const metadataGenerators = {
       twitter: {
         card: "summary_large_image",
         title: `${series.title} - الموسم ${season.seasonNumber}`,
-        description: truncateDescription(series.description, 160),
+        description: `شاهد الموسم ${season.seasonNumber} من مسلسل ${
+          series.title
+        } مترجم بجودة عالية${genre ? ` | ${genre}` : ""}${rating}`,
         images: [fullImageUrl],
       },
     };
@@ -301,15 +308,13 @@ export const metadataGenerators = {
 
     return {
       title: `مشاهدة مسلسل ${series.title} الموسم ${season.seasonNumber} الحلقة ${episode.episodeNumber} مترجمة${rating}`,
-      description: truncateDescription(
-        data.metaDescription ||
-          series.description ||
-          `مشاهدة وتحميل الحلقة ${episode.episodeNumber} من الموسم ${
-            season.seasonNumber
-          } من مسلسل ${series.title} ${
-            season.releaseYear
-          } مترجمة اون لاين بجودة عالية${genre ? ` | ${genre}` : ""}${rating}`
-      ),
+      description: `مشاهدة وتحميل الحلقة ${episode.episodeNumber} من الموسم ${
+        season.seasonNumber
+      } من مسلسل ${series.title} ${
+        season.releaseYear
+      } مترجمة اون لاين بجودة عالية HD${
+        genre ? ` | نوع ${genre}` : ""
+      }${rating}. شاهد الآن على Bermone.`,
       keywords: `${series.title} الموسم ${season.seasonNumber} الحلقة ${
         episode.episodeNumber
       }, مسلسل ${series.title} S${season.seasonNumber}E${
@@ -321,7 +326,11 @@ export const metadataGenerators = {
       robots: { index: true, follow: true },
       openGraph: {
         title: `${series.title} - الموسم ${season.seasonNumber} الحلقة ${episode.episodeNumber}`,
-        description: truncateDescription(series.description, 160),
+        description: `شاهد الحلقة ${episode.episodeNumber} من الموسم ${
+          season.seasonNumber
+        } من مسلسل ${series.title} مترجمة${
+          genre ? ` | ${genre}` : ""
+        }${rating}`,
         type: "video.episode",
         url: `${SITE_URL}/${episode.slug}`,
         images: [
@@ -336,7 +345,11 @@ export const metadataGenerators = {
       twitter: {
         card: "summary_large_image",
         title: `${series.title} S${season.seasonNumber}E${episode.episodeNumber}`,
-        description: truncateDescription(series.description, 160),
+        description: `شاهد الحلقة ${episode.episodeNumber} من الموسم ${
+          season.seasonNumber
+        } من مسلسل ${series.title} مترجمة${
+          genre ? ` | ${genre}` : ""
+        }${rating}`,
         images: [fullImageUrl],
       },
     };

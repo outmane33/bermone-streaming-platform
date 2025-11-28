@@ -15,7 +15,13 @@ const buildNewContentPipeline = (contentType, filters, page) => {
   const type = contentType === "films" ? "film" : "series";
   return buildContentAggregationPipeline(
     filters,
-    { sort: { createdAt: -1, rating: -1 }, filter: { "category.isNew": true } },
+    {
+      sort: { createdAt: -1, rating: -1 },
+      filter: {
+        "category.isNew": true,
+        visible: { $ne: false }, // 🔥 ADD THIS
+      },
+    },
     page,
     { type: { $literal: type } }
   );
@@ -25,20 +31,22 @@ export const getLatestAdded = cache(
   withErrorHandling(async (filters = {}, page = 1) => {
     const { db } = await connectToDatabase();
     const validPage = validatePage(page);
-    const matchQuery = buildMatchQuery(filters);
-
+    const matchQuery = {
+      ...buildMatchQuery(filters),
+      visible: { $ne: false }, // 🔥 ADD THIS
+    };
     const cappedLimit = Math.min(ITEMS_PER_PAGE * 10, MAX_RESPONSE_SIZE);
     const [filmsData, seriesData] = await Promise.all([
       db
         .collection("films")
-        .find(matchQuery)
+        .find(matchQuery) // ✅ now only visible films
         .project({ services: 0 })
         .sort({ createdAt: -1 })
         .limit(cappedLimit)
         .toArray(),
       db
         .collection("series")
-        .find(matchQuery)
+        .find(matchQuery) // ✅ now only visible series
         .project({ services: 0 })
         .sort({ createdAt: -1 })
         .limit(cappedLimit)
@@ -102,7 +110,6 @@ export const getLatestEpisodes = cache(
     const { db } = await connectToDatabase();
     const validPage = validatePage(page);
     const skip = (validPage - 1) * ITEMS_PER_PAGE;
-
     let seriesIds = null;
     if (Object.keys(filters).length > 0) {
       const seriesMatchQuery = buildMatchQuery(filters);
@@ -127,7 +134,12 @@ export const getLatestEpisodes = cache(
       }
     }
 
-    const episodeMatch = seriesIds ? { seriesId: { $in: seriesIds } } : {};
+    // Updated episodeMatch to exclude episodes with visible: false
+    const episodeMatch = {
+      ...(seriesIds ? { seriesId: { $in: seriesIds } } : {}),
+      visible: { $ne: false }, // This will match documents where visible is true or doesn't exist
+    };
+
     const pipeline = [
       { $match: episodeMatch },
       {
@@ -178,7 +190,6 @@ export const getLatestEpisodes = cache(
         },
       },
     ];
-
     const [result] = await db
       .collection("episodes")
       .aggregate(pipeline)

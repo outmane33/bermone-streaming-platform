@@ -21,7 +21,7 @@ function Badge({ children, variant = "default", className = "" }) {
 export function HeroBadges({ isNew, className = "" }) {
   return (
     <div className={`flex items-center gap-3 mb-2 ${className}`}>
-      {isNew && <Badge variant="new">NEW</Badge>}
+      {isNew && <Badge variant="new">جديد</Badge>}
     </div>
   );
 }

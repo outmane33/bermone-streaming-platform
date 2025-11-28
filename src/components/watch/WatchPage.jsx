@@ -1,12 +1,24 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useWatchLogic } from "./helpers/useWatchLogic";
 import ServerSelectorCard from "./ServerSelectorCard";
 import VideoPlayerCard from "./VideoPlayerCard";
-import { Loader2 } from "lucide-react";
-import { DESIGN_TOKENS } from "@/lib/data";
+import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
+import EpisodeSwitcher from "./EpisodeSwitcher";
+import SeasonSwitcher from "./SeasonSwitcher";
 
-export default function WatchPage({ slug }) {
+export default function WatchPage({
+  slug,
+  allSeasonEpisodes = {},
+  seasons = null,
+  currentSeasonId: initialSeasonId = null,
+}) {
+  const [currentSeasonId, setCurrentSeasonId] = useState(initialSeasonId);
+  const episodes = allSeasonEpisodes[currentSeasonId] || [];
+
+  const currentSeason = seasons?.find((s) => s._id === currentSeasonId);
+  const seasonStatus = currentSeason?.status;
+
   const {
     servers,
     activeServerIdx,
@@ -19,12 +31,16 @@ export default function WatchPage({ slug }) {
     handleServerChange,
   } = useWatchLogic(slug);
 
+  const handleSeasonChange = (seasonId) => {
+    setCurrentSeasonId(seasonId);
+  };
+
   if (isLoadingServers) {
     return (
       <div
         className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-6 text-center`}
       >
-        <Loader2 className="w-8 h-8 animate-spin text-cyan-400 mx-auto mb-3" />
+        <ICON_MAP.Loader2 className="w-8 h-8 animate-spin text-cyan-400 mx-auto mb-3" />
         <p className="text-white">جاري تحميل السيرفرات...</p>
       </div>
     );
@@ -43,6 +59,7 @@ export default function WatchPage({ slug }) {
         activeServerIdx={activeServerIdx}
         onServerChange={handleServerChange}
         error={error}
+        slug={slug}
       />
 
       <VideoPlayerCard
@@ -54,6 +71,22 @@ export default function WatchPage({ slug }) {
         onPlay={handlePlayVideo}
         error={error}
       />
+
+      {seasons && seasons.length > 1 && (
+        <SeasonSwitcher
+          seasons={seasons}
+          currentSeasonId={currentSeasonId}
+          onSeasonChange={handleSeasonChange}
+        />
+      )}
+
+      {episodes && episodes.length > 0 && (
+        <EpisodeSwitcher
+          episodes={episodes}
+          currentSlug={slug}
+          seasonStatus={seasonStatus}
+        />
+      )}
     </div>
   );
 }

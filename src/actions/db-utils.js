@@ -74,12 +74,17 @@ export const buildPaginationStage = (page, limit = ITEMS_PER_PAGE) => {
 
 export const withPaginationStage = (dataPipeline, page) => {
   const skipStage = (page - 1) * ITEMS_PER_PAGE;
+
   return [
+    // ✅ FIX: Run the filters, sorting, and projection BEFORE the facet
+    ...dataPipeline,
+
     {
       $facet: {
+        // Now 'metadata' counts the filtered results, not the whole collection
         metadata: [{ $count: "total" }],
         data: [
-          ...dataPipeline,
+          // The data is already filtered/sorted, we just need to paginate
           { $skip: skipStage },
           { $limit: ITEMS_PER_PAGE },
         ],
@@ -169,6 +174,8 @@ export const buildEpisodeAggregationPipeline = (
   additionalMatch = {}
 ) => {
   const dataPipeline = [
+    // Add initial match to filter out invisible episodes early
+    { $match: { visible: { $ne: false } } },
     {
       $lookup: {
         from: "series",

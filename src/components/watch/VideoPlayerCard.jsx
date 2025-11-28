@@ -1,7 +1,7 @@
 import React from "react";
-import { Play, Shield, Loader2 } from "lucide-react";
-import { DESIGN_TOKENS } from "@/lib/data";
+import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import { BlurBg } from "@/components/media/BlurBg";
+import { deobfuscateUrlAdvanced as deobfuscateUrl } from "@/lib/devtools/urlObfuscator";
 
 export default function VideoPlayerCard({
   servers,
@@ -14,6 +14,9 @@ export default function VideoPlayerCard({
 }) {
   const activeServer = servers[activeServerIdx];
   const isMaintenance = activeServer?.status === "maintenance";
+
+  // 🔓 DECODE THE URL WHEN RENDERING
+  const decodedUrl = iframeUrl ? deobfuscateUrl(iframeUrl) : null;
 
   return (
     <div className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-4 shadow-xl`}>
@@ -34,20 +37,20 @@ export default function VideoPlayerCard({
                   className={`relative p-4 xs:p-5 rounded-full ${DESIGN_TOKENS.glass.medium} border-2 border-cyan-400/50`}
                 >
                   {isLoadingIframe ? (
-                    <Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
+                    <ICON_MAP.Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
                   ) : (
-                    <Play className="w-10 h-10 text-cyan-400 fill-cyan-400" />
+                    <ICON_MAP.Play className="w-10 h-10 text-cyan-400 fill-cyan-400" />
                   )}
                 </div>
               </button>
             </div>
           ) : isLoadingIframe ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
+              <ICON_MAP.Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
             </div>
-          ) : iframeUrl ? (
+          ) : decodedUrl ? (
             <iframe
-              src={iframeUrl}
+              src={decodedUrl}
               frameBorder="0"
               allowFullScreen
               className="w-full h-full"
@@ -60,7 +63,7 @@ export default function VideoPlayerCard({
         {activeServer && (
           <div className="absolute top-3 right-3 px-2.5 py-1 bg-black/60 rounded-lg">
             <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-cyan-400" />
+              <ICON_MAP.Shield className="w-3.5 h-3.5 text-cyan-400" />
               <span className="text-white text-xs truncate max-w-[100px]">
                 {activeServer.name}
               </span>

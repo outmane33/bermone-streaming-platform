@@ -119,25 +119,6 @@ export default function HeroSection({ media, type, seriesSlug }) {
       />
 
       <div className="relative rounded-3xl border border-white/30">
-        {seriesSlug && (
-          <Link
-            href={`/${seriesSlug}`}
-            className={`
-      absolute top-4 right-4 z-20  
-      flex items-center gap-2
-      bg-white/15 md:${DESIGN_TOKENS.glass.light.replace("bg-", "bg-")}
-      rounded-lg
-      px-3 py-2
-      text-white font-semibold text-sm
-      ${DESIGN_TOKENS.effects.transition}
-      ${DESIGN_TOKENS.effects.hoverLift}
-    `}
-            aria-label="عودة إلى السلسلة"
-          >
-            <ICON_MAP.ArrowLeft size={16} className="text-white" />
-            <span>العودة إلى السلسلة</span>
-          </Link>
-        )}
         <div
           className={`absolute inset-0 
           bg-white/5 md:bg-white/10 md:backdrop-blur-md
@@ -204,21 +185,30 @@ export default function HeroSection({ media, type, seriesSlug }) {
 
               <HeroDetailsGrid media={mappedMedia} />
 
-              {(type === "film" || type === "episode") && (
-                <div className="flex flex-wrap gap-4">
-                  <Link href={`${media.slug}/watch`}>
-                    <Button variant="primary" icon={ICON_MAP.Play}>
-                      مشاهدة الآن
-                    </Button>
-                  </Link>
-                  <Link href={`${media.slug}/download`}>
-                    <Button variant="secondary" icon={ICON_MAP.ArrowDownToLine}>
-                      تحميل
-                    </Button>
-                  </Link>
-                </div>
-              )}
-
+              <div className="flex items-center justify-between">
+                {(type === "film" || type === "episode") && (
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
+                    <Link href={`${media.slug}/watch`}>
+                      <Button variant="primary" icon={ICON_MAP.Play}>
+                        مشاهدة الآن
+                      </Button>
+                    </Link>
+                    <Link href={`${media.slug}/download`}>
+                      <Button
+                        variant="secondary"
+                        icon={ICON_MAP.ArrowDownToLine}
+                      >
+                        تحميل
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+                <Link href={`${seriesSlug}`}>
+                  <Button variant="secondary" icon={ICON_MAP.ArrowLeft}>
+                    عودة إلى السلسلة
+                  </Button>
+                </Link>
+              </div>
               <SocialShare
                 shareTitle={mappedMedia.title}
                 shareDescription={mappedMedia.story}
