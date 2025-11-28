@@ -138,7 +138,6 @@ export const searchContent = cache(async (query) => {
       query: cleanQuery,
     };
   } catch (error) {
-    console.error("❌ Error searching content:", error);
     return {
       success: false,
       error: "An error occurred while searching",
