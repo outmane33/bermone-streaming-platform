@@ -21,11 +21,6 @@ const nextConfig = {
       },
     ];
   },
-
-  images: {
-    remotePatterns: [{ protocol: "https", hostname: "**.topcinema.cam" }],
-    unoptimized: true,
-  },
 };
 
 module.exports = nextConfig;
