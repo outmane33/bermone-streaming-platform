@@ -5,16 +5,18 @@ import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  subsets: ["latin", "arabic"],
   display: "swap",
   preload: true,
+  fallback: ["system-ui", "sans-serif"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  subsets: ["latin", "arabic"],
   display: "swap",
   preload: true,
+  fallback: ["monospace"],
 });
 
 export const metadata = {

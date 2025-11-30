@@ -128,7 +128,7 @@ const CardContent = ({ image, title, children }) => (
     <div className="relative overflow-hidden aspect-[3/4] rounded-xl">
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10 group-hover:from-cyan-500/10 group-hover:via-purple-500/10 transition duration-500" />
       <Image
-        src={image}
+        src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`}
         alt={title}
         fill
         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"

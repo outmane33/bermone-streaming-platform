@@ -4,6 +4,7 @@ import SocialShare from "./SocialShare";
 import Button from "./Button";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import Link from "next/link";
+import Image from "next/image";
 
 const getAltText = (media, type) => {
   const year = media.releaseYear || "";
@@ -129,14 +130,15 @@ export default function HeroSection({ media, type, seriesSlug }) {
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
             {/* Poster */}
             <div className="flex-shrink-0 mx-auto lg:mx-0">
-              <div className="relative group">
+              <div className="relative group w-72 sm:w-80 lg:w-96 h-[400px] sm:h-[444px] lg:h-[533px]">
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${DESIGN_TOKENS.gradients.cyan}/20 to-purple-500/20 rounded-xl`}
                 />
-                <img
-                  src={mappedMedia.poster}
+                <Image
+                  src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${mappedMedia.poster}`}
                   alt={getAltText(media, type)}
-                  className={`relative w-72 sm:w-80 lg:w-96 h-[400px] sm:h-[444px] lg:h-[533px] object-cover rounded-xl shadow-2xl border-4 border-white/10 transition-transform duration-300`}
+                  fill
+                  className={`relative object-cover rounded-xl shadow-2xl border-4 border-white/10 transition-transform duration-300`}
                 />
               </div>
             </div>
