@@ -1,22 +1,23 @@
 import Header from "@/components/header/Header";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cairo } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const cairo = Cairo({
+  variable: "--font-cairo",
   subsets: ["latin", "arabic"],
   display: "swap",
   preload: true,
   fallback: ["system-ui", "sans-serif"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const cairoMono = Cairo({
+  variable: "--font-cairo-mono",
   subsets: ["latin", "arabic"],
   display: "swap",
   preload: true,
   fallback: ["monospace"],
+  weight: ["400", "600", "700"],
 });
 
 export const metadata = {
@@ -90,10 +91,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <div className="max-w-[1440px] mx-auto min-h-[100dvh] ">
+      <body className={`${cairo.variable} ${cairoMono.variable} antialiased`}>
+        <div className="max-w-[1440px] mx-auto min-h-[100dvh]">
           <Suspense fallback={<header className="h-20" />}>
             <Header />
           </Suspense>
