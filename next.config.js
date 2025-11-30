@@ -21,6 +21,15 @@ const nextConfig = {
       },
     ];
   },
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "web.bermone.cam",
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig;
