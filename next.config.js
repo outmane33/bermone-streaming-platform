@@ -26,7 +26,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "web.bermone.cam",
+        hostname: "bermone.click",
       },
     ],
   },

@@ -110,7 +110,7 @@ export default function HeroSection({ media, type, seriesSlug }) {
   };
 
   const jsonLd = generateJsonLd(media, type);
-
+  console.log(type);
   return (
     <>
       {/* Structured Data */}
@@ -205,11 +205,13 @@ export default function HeroSection({ media, type, seriesSlug }) {
                     </Link>
                   </div>
                 )}
-                <Link href={`${seriesSlug}`}>
-                  <Button variant="secondary" icon={ICON_MAP.ArrowLeft}>
-                    عودة إلى السلسلة
-                  </Button>
-                </Link>
+                {(type === "season" || type === "episode") && (
+                  <Link href={`${seriesSlug}`}>
+                    <Button variant="secondary" icon={ICON_MAP.ArrowLeft}>
+                      عودة إلى السلسلة
+                    </Button>
+                  </Link>
+                )}
               </div>
               <SocialShare
                 shareTitle={mappedMedia.title}
