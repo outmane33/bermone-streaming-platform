@@ -5,11 +5,6 @@ import {
   getServersBySlug,
   getServerIframeBySlug,
 } from "@/actions/getEpisodeServers";
-import {
-  checkDevToolsAndRedirect,
-  setupDevToolsEventListeners,
-} from "@/lib/devtools";
-import { obfuscateUrlAdvanced as obfuscateUrl } from "@/lib/devtools/urlObfuscator";
 
 export function useWatchLogic(slug) {
   const router = useRouter();
@@ -20,17 +15,6 @@ export function useWatchLogic(slug) {
   const [isLoadingIframe, setIsLoadingIframe] = useState(false);
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!hasStartedPlaying) return;
-
-    const cleanup = setupDevToolsEventListeners(router, () => {
-      console.log("⚠️ DevTools detected");
-    });
-
-    checkDevToolsAndRedirect(router);
-    return cleanup;
-  }, [hasStartedPlaying, router]);
 
   useEffect(() => {
     if (!slug) {
@@ -61,7 +45,6 @@ export function useWatchLogic(slug) {
   }, [slug]);
 
   const handlePlayVideo = async () => {
-    if (checkDevToolsAndRedirect(router)) return;
     if (hasStartedPlaying && iframeUrl) return;
 
     const server = servers[activeServerIdx];
@@ -74,23 +57,11 @@ export function useWatchLogic(slug) {
       setIsLoadingIframe(true);
       setError(null);
 
-      if (checkDevToolsAndRedirect(router)) {
-        setIsLoadingIframe(false);
-        return;
-      }
-
       const res = await getServerIframeBySlug(slug, server.name);
 
       if (res.success && res.iframeUrl) {
-        // 🔒 OBFUSCATE THE URL BEFORE STORING
-        const obfuscatedUrl = obfuscateUrl(res.iframeUrl);
-
-        if (obfuscatedUrl) {
-          setIframeUrl(obfuscatedUrl);
-          setHasStartedPlaying(true);
-        } else {
-          setError("فشل تحميل الفيديو");
-        }
+        setIframeUrl(res.iframeUrl);
+        setHasStartedPlaying(true);
       } else {
         setError(res.error || "فشل تحميل الفيديو");
       }
@@ -102,8 +73,6 @@ export function useWatchLogic(slug) {
   };
 
   const handleServerChange = async (index) => {
-    if (checkDevToolsAndRedirect(router)) return;
-
     setActiveServerIdx(index);
 
     if (hasStartedPlaying) {
@@ -113,22 +82,10 @@ export function useWatchLogic(slug) {
           setIsLoadingIframe(true);
           setError(null);
 
-          if (checkDevToolsAndRedirect(router)) {
-            setIsLoadingIframe(false);
-            return;
-          }
-
           const res = await getServerIframeBySlug(slug, server.name);
 
           if (res.success && res.iframeUrl) {
-            // 🔒 OBFUSCATE THE URL BEFORE STORING
-            const obfuscatedUrl = obfuscateUrl(res.iframeUrl);
-
-            if (obfuscatedUrl) {
-              setIframeUrl(obfuscatedUrl);
-            } else {
-              setError("فشل التحميل من هذا السيرفر");
-            }
+            setIframeUrl(res.iframeUrl);
           } else {
             setError(res.error || "فشل التحميل من هذا السيرفر");
           }

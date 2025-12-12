@@ -1,7 +1,6 @@
 import React from "react";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import { BlurBg } from "@/components/media/BlurBg";
-import { deobfuscateUrlAdvanced as deobfuscateUrl } from "@/lib/devtools/urlObfuscator";
 
 export default function VideoPlayerCard({
   servers,
@@ -14,9 +13,6 @@ export default function VideoPlayerCard({
 }) {
   const activeServer = servers[activeServerIdx];
   const isMaintenance = activeServer?.status === "maintenance";
-
-  // 🔓 DECODE THE URL WHEN RENDERING
-  const decodedUrl = iframeUrl ? deobfuscateUrl(iframeUrl) : null;
 
   return (
     <div className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-4 shadow-xl`}>
@@ -48,9 +44,9 @@ export default function VideoPlayerCard({
             <div className="absolute inset-0 flex items-center justify-center">
               <ICON_MAP.Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
             </div>
-          ) : decodedUrl ? (
+          ) : iframeUrl ? (
             <iframe
-              src={decodedUrl}
+              src={iframeUrl}
               frameBorder="0"
               allowFullScreen
               className="w-full h-full"
