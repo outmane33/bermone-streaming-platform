@@ -17,12 +17,12 @@ export default function ServerSelectorCard({
 
   useEffect(() => {
     if (servers && servers.length > 0) {
-      console.log("📊 Checking servers for qualities:", servers);
-
       // Check if active server is StreamHG
       const activeServer = servers[activeServerIdx];
-      if (activeServer?.name === "StreamHG") {
-        console.log("⚠️ StreamHG detected, hiding quality selector");
+      if (
+        activeServer?.name === "StreamHG" ||
+        activeServer?.name === "MixDrop"
+      ) {
         setAvailableQualities([]);
         return;
       }
@@ -40,7 +40,6 @@ export default function ServerSelectorCard({
       });
 
       const sortedQualities = Array.from(qualitiesSet).sort((a, b) => b - a);
-      console.log("✅ Available qualities:", sortedQualities);
       setAvailableQualities(sortedQualities);
     }
   }, [servers, activeServerIdx]);
