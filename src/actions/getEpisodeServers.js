@@ -25,12 +25,21 @@ export const getServersBySlug = cache(async (slug) => {
       servers: [],
     };
   }
+
+  // Serialize qualities to remove MongoDB objects
   const servers = content.services.map((s, idx) => ({
     id: idx + 1,
     name: s.serviceName,
     status: s.qualities?.length > 0 ? "active" : "maintenance",
     qualityCount: s.qualities?.length || 0,
+    qualities:
+      s.qualities?.map((q) => ({
+        quality: q.quality,
+        iframe: q.iframe,
+        downloadLink: q.downloadLink || "",
+      })) || [],
   }));
+
   return {
     success: true,
     servers,
@@ -47,9 +56,11 @@ export const getServerIframeBySlug = cache(
       if (!content) {
         return { success: false, error: "Content not found", iframeUrl: null };
       }
+
       const service = content.services.find(
         (s) => s.serviceName === serverName
       );
+
       if (!service?.qualities?.length) {
         return {
           success: false,
@@ -57,13 +68,27 @@ export const getServerIframeBySlug = cache(
           iframeUrl: null,
         };
       }
-      const selectedQuality = quality
-        ? service.qualities.find((q) => q.quality === quality)
-        : service.qualities.find((q) => q.quality.includes("1080p")) ||
+
+      let selectedQuality;
+
+      if (quality) {
+        // Try to find exact match with quality parameter
+        selectedQuality = service.qualities.find((q) =>
+          q.quality.toLowerCase().includes(quality.toLowerCase())
+        );
+      }
+
+      // Fallback: prefer 1080p, then first available
+      if (!selectedQuality) {
+        selectedQuality =
+          service.qualities.find((q) => q.quality.includes("1080p")) ||
           service.qualities[0];
+      }
+
       if (!selectedQuality?.iframe) {
         return { success: false, error: "No iframe found", iframeUrl: null };
       }
+
       const manager = await getServiceManager(serverName);
       if (!manager?.iframeUrl) {
         return {
@@ -72,6 +97,7 @@ export const getServerIframeBySlug = cache(
           iframeUrl: null,
         };
       }
+
       return {
         success: true,
         iframeUrl: `${manager.iframeUrl}${selectedQuality.iframe}`,

@@ -45,6 +45,7 @@ import {
   ChevronsRight,
   Home,
   ArrowLeft,
+  Monitor,
   AlertCircle,
 } from "lucide-react";
 
@@ -90,6 +91,7 @@ export const ICON_MAP = {
   ChevronsRight,
   ArrowLeft,
   AlertCircle,
+  Monitor,
 };
 
 // ============================================

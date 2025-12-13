@@ -22,6 +22,7 @@ export default function WatchPage({
   const {
     servers,
     activeServerIdx,
+    selectedQuality,
     iframeUrl,
     isLoadingServers,
     isLoadingIframe,
@@ -29,6 +30,7 @@ export default function WatchPage({
     error,
     handlePlayVideo,
     handleServerChange,
+    handleQualityChange,
   } = useWatchLogic(slug);
 
   const handleSeasonChange = (seasonId) => {
@@ -57,7 +59,9 @@ export default function WatchPage({
       <ServerSelectorCard
         servers={servers}
         activeServerIdx={activeServerIdx}
+        selectedQuality={selectedQuality}
         onServerChange={handleServerChange}
+        onQualityChange={handleQualityChange}
         error={error}
         slug={slug}
       />
