@@ -52,7 +52,6 @@ export default function Filter({
     useCallback(() => setOpenDropdown(null), [])
   );
 
-  // Sync with URL changes
   useEffect(() => {
     if (currentFilters?.sort !== undefined) {
       setSelectedSort(currentFilters.sort);
@@ -73,37 +72,18 @@ export default function Filter({
     currentFilters?.country,
   ]);
 
-  // Trigger URL update when filters or sort changes
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    const filtersChanged =
-      JSON.stringify(selectedFilters) !==
-      JSON.stringify({
-        genre: currentFilters?.genre || [],
-        year: currentFilters?.year || [],
-        language: currentFilters?.language || [],
-        country: currentFilters?.country || [],
-      });
-
-    const sortChanged = selectedSort !== currentFilters?.sort;
-
-    if (filtersChanged || sortChanged) {
-      console.log("Calling onFilterChange with:", {
-        ...selectedFilters,
-        sort: selectedSort,
-      });
-      onFilterChange?.({ ...selectedFilters, sort: selectedSort });
-    }
-  }, [selectedFilters, selectedSort, currentFilters, onFilterChange]);
-
   const toggleDropdown = useCallback((category) => {
     setOpenDropdown((prev) => (prev === category ? null : category));
   }, []);
-
+  // ✅ Sync filters to URL only after user interaction (safe)
+  useEffect(() => {
+    if (!isFirstRender.current) {
+      // Only sync after mount + user action
+      onFilterChange?.({ ...selectedFilters, sort: selectedSort });
+    } else {
+      isFirstRender.current = false;
+    }
+  }, [selectedFilters, selectedSort, onFilterChange]);
   const toggleFilter = useCallback((category, value) => {
     setSelectedFilters((prev) => {
       const categoryValues = prev[category];
@@ -120,31 +100,30 @@ export default function Filter({
           : [...categoryValues, value],
       };
     });
-  }, []);
+  }, []); // Keep deps minimal
 
   const handleSortClick = useCallback(
     (sortId) => {
-      console.log("Sort clicked:", sortId); // Debug log
-
       if (isCategoryPage) {
         const basePath = contentType === "series" ? "/series" : "/films";
         window.location.href = `${basePath}?sort=${sortId}`;
         return;
       }
 
-      // Update state which will trigger useEffect
-      setSelectedSort((prev) => {
-        // Always allow changing to a different sort
-        return prev === sortId ? sortId : sortId;
-      });
-    },
-    [isCategoryPage, contentType]
-  );
+      const newSort = selectedSort === sortId ? null : sortId;
+      setSelectedSort(newSort);
 
+      // ✅ Call onFilterChange immediately
+      onFilterChange?.({ ...selectedFilters, sort: newSort });
+    },
+    [isCategoryPage, contentType, selectedSort, selectedFilters, onFilterChange]
+  );
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
     setSelectedSort(null);
-  }, []);
+    // ✅ Call onFilterChange
+    onFilterChange?.({ ...INITIAL_FILTERS, sort: null });
+  }, [onFilterChange]);
 
   const closeMobileMenu = useCallback(() => {
     setMobileMenuOpen(false);
@@ -301,7 +280,7 @@ export default function Filter({
               <FilterTag
                 icon={selectedSortOption.icon}
                 label={selectedSortOption.label}
-                onRemove={() => setSelectedSort(null)}
+                onRemove={() => handleSortClick(selectedSort)}
               />
             )}
 
