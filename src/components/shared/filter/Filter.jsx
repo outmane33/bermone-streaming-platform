@@ -52,6 +52,7 @@ export default function Filter({
     useCallback(() => setOpenDropdown(null), [])
   );
 
+  // Sync with URL changes
   useEffect(() => {
     if (currentFilters?.sort !== undefined) {
       setSelectedSort(currentFilters.sort);
@@ -72,6 +73,7 @@ export default function Filter({
     currentFilters?.country,
   ]);
 
+  // Trigger URL update when filters or sort changes
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -90,9 +92,13 @@ export default function Filter({
     const sortChanged = selectedSort !== currentFilters?.sort;
 
     if (filtersChanged || sortChanged) {
+      console.log("Calling onFilterChange with:", {
+        ...selectedFilters,
+        sort: selectedSort,
+      });
       onFilterChange?.({ ...selectedFilters, sort: selectedSort });
     }
-  }, [selectedFilters, selectedSort]);
+  }, [selectedFilters, selectedSort, currentFilters, onFilterChange]);
 
   const toggleDropdown = useCallback((category) => {
     setOpenDropdown((prev) => (prev === category ? null : category));
@@ -118,19 +124,26 @@ export default function Filter({
 
   const handleSortClick = useCallback(
     (sortId) => {
+      console.log("Sort clicked:", sortId); // Debug log
+
       if (isCategoryPage) {
         const basePath = contentType === "series" ? "/series" : "/films";
         window.location.href = `${basePath}?sort=${sortId}`;
         return;
       }
 
-      setSelectedSort((prev) => (prev === sortId ? prev : sortId));
+      // Update state which will trigger useEffect
+      setSelectedSort((prev) => {
+        // Always allow changing to a different sort
+        return prev === sortId ? sortId : sortId;
+      });
     },
     [isCategoryPage, contentType]
   );
 
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
+    setSelectedSort(null);
   }, []);
 
   const closeMobileMenu = useCallback(() => {
@@ -288,7 +301,7 @@ export default function Filter({
               <FilterTag
                 icon={selectedSortOption.icon}
                 label={selectedSortOption.label}
-                onRemove={() => handleSortClick(selectedSort)}
+                onRemove={() => setSelectedSort(null)}
               />
             )}
 

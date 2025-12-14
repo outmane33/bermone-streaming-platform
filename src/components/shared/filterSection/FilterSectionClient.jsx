@@ -5,6 +5,7 @@ import {
   useCallback,
   createContext,
   useContext,
+  useEffect,
 } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Filter from "../filter/Filter";
@@ -68,13 +69,20 @@ export default function FilterSectionClient({
       if (page > 1) params.set("page", page.toString());
 
       const newUrl = params.toString() ? `${pathname}?${params}` : pathname;
-      startTransition(() => router.push(newUrl, { scroll: false }));
+
+      // Force immediate navigation
+      startTransition(() => {
+        router.push(newUrl, { scroll: false });
+      });
     },
     [pathname, router]
   );
 
   const handleFilterChange = useCallback(
-    (newFilters) => updateURL({ ...newFilters, page: 1 }),
+    (newFilters) => {
+      console.log("Filter change triggered:", newFilters); // Debug log
+      updateURL({ ...newFilters, page: 1 });
+    },
     [updateURL]
   );
 
