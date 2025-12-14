@@ -72,18 +72,32 @@ export default function Filter({
     currentFilters?.country,
   ]);
 
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const filtersChanged =
+      JSON.stringify(selectedFilters) !==
+      JSON.stringify({
+        genre: currentFilters?.genre || [],
+        year: currentFilters?.year || [],
+        language: currentFilters?.language || [],
+        country: currentFilters?.country || [],
+      });
+
+    const sortChanged = selectedSort !== currentFilters?.sort;
+
+    if (filtersChanged || sortChanged) {
+      onFilterChange?.({ ...selectedFilters, sort: selectedSort });
+    }
+  }, [selectedFilters, selectedSort]);
+
   const toggleDropdown = useCallback((category) => {
     setOpenDropdown((prev) => (prev === category ? null : category));
   }, []);
-  // ✅ Sync filters to URL only after user interaction (safe)
-  useEffect(() => {
-    if (!isFirstRender.current) {
-      // Only sync after mount + user action
-      onFilterChange?.({ ...selectedFilters, sort: selectedSort });
-    } else {
-      isFirstRender.current = false;
-    }
-  }, [selectedFilters, selectedSort, onFilterChange]);
+
   const toggleFilter = useCallback((category, value) => {
     setSelectedFilters((prev) => {
       const categoryValues = prev[category];
@@ -100,7 +114,7 @@ export default function Filter({
           : [...categoryValues, value],
       };
     });
-  }, []); // Keep deps minimal
+  }, []);
 
   const handleSortClick = useCallback(
     (sortId) => {
@@ -110,20 +124,14 @@ export default function Filter({
         return;
       }
 
-      const newSort = selectedSort === sortId ? null : sortId;
-      setSelectedSort(newSort);
-
-      // ✅ Call onFilterChange immediately
-      onFilterChange?.({ ...selectedFilters, sort: newSort });
+      setSelectedSort((prev) => (prev === sortId ? prev : sortId));
     },
-    [isCategoryPage, contentType, selectedSort, selectedFilters, onFilterChange]
+    [isCategoryPage, contentType]
   );
+
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
-    setSelectedSort(null);
-    // ✅ Call onFilterChange
-    onFilterChange?.({ ...INITIAL_FILTERS, sort: null });
-  }, [onFilterChange]);
+  }, []);
 
   const closeMobileMenu = useCallback(() => {
     setMobileMenuOpen(false);
