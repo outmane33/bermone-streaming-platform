@@ -2,11 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const Logo = ({ isTouchDevice }) => (
-  <Link
-    href="/?sort=latest-added"
-    className="relative group cursor-pointer"
-    dir="ltr"
-  >
+  <Link href="/" className="relative group cursor-pointer" dir="ltr">
     {!isTouchDevice && (
       <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl blur-lg opacity-0 group-hover:opacity-50 transition duration-500" />
     )}

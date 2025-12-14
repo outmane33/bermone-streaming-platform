@@ -19,7 +19,7 @@ const buildNewContentPipeline = (contentType, filters, page) => {
       sort: { createdAt: -1, rating: -1 },
       filter: {
         "category.isNew": true,
-        visible: { $ne: false }, // 🔥 ADD THIS
+        visible: { $ne: false },
       },
     },
     page,

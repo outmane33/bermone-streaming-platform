@@ -28,6 +28,7 @@ export default function FilterSectionClient({
   children,
   contentType = "films",
   isCategoryPage = false,
+  defaultSortId,
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -44,10 +45,10 @@ export default function FilterSectionClient({
       year: parseArray("year"),
       language: parseArray("language"),
       country: parseArray("country"),
-      sort: params.get("sort") || null,
+      sort: params.get("sort") || defaultSortId || null,
       page: parseInt(params.get("page") || "1", 10),
     };
-  }, [searchParams]);
+  }, [searchParams, defaultSortId]);
 
   const updateURL = useCallback(
     (newParams) => {
@@ -98,6 +99,7 @@ export default function FilterSectionClient({
           isAnimeEpisode={isAnimeEpisode}
           contentType={contentType}
           isCategoryPage={isCategoryPage}
+          defaultSortId={defaultSortId}
         />
 
         {initialDocuments?.length > 0 ? (

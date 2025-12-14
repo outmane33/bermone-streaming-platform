@@ -21,7 +21,8 @@ export default function ServerSelectorCard({
       const activeServer = servers[activeServerIdx];
       if (
         activeServer?.name === "StreamHG" ||
-        activeServer?.name === "MixDrop"
+        activeServer?.name === "MixDrop" ||
+        activeServer?.name === "EarnVids"
       ) {
         setAvailableQualities([]);
         return;

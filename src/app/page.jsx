@@ -10,6 +10,7 @@ import FilterSection from "@/components/shared/filterSection/FilterSection";
 import { buildFilters, parsePageParams } from "@/lib/pageUtils";
 import { Suspense } from "react";
 import { SkeletonFilterSection } from "@/components/shared/skeletons/SkeletonFilterSection";
+import { headers } from "next/headers";
 
 const VALID_SORT_IDS = [
   "latest-added",
@@ -27,11 +28,17 @@ export const metadata = {
 export default async function Home({ searchParams }) {
   const params = await searchParams;
 
-  const { sortId, page } = parsePageParams(
+  const reqHeaders = await headers();
+  const pathname = reqHeaders.get("x-current-path") || "/";
+
+  const { sortId: parsedSortId, page } = parsePageParams(
     params,
     VALID_SORT_IDS,
     VALID_QUERY_PARAMS
   );
+
+  const sortId =
+    pathname === "/" && !("sort" in params) ? "latest-episodes" : parsedSortId;
 
   const filters = buildFilters(params, false);
 

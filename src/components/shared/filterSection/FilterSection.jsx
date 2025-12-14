@@ -14,6 +14,7 @@ export default async function FilterSection({
   page,
   slug,
   isCategoryPage = false,
+  sortId,
 }) {
   const { documents, pagination } = initialData;
   const carouselData =
@@ -33,6 +34,7 @@ export default async function FilterSection({
         initialPagination={pagination}
         contentType={slug}
         isCategoryPage={isCategoryPage}
+        defaultSortId={sortId}
       >
         {documents?.length > 0 && (
           <div className={DESIGN_TOKENS.grid.container}>
