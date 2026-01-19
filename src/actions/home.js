@@ -23,7 +23,7 @@ const buildNewContentPipeline = (contentType, filters, page) => {
       },
     },
     page,
-    { type: { $literal: type } }
+    { type: { $literal: type } },
   );
 };
 
@@ -63,13 +63,13 @@ export const getLatestAdded = cache(
     }));
 
     const merged = [...filmsMapped, ...seriesMapped].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     );
 
     const totalItems = Math.min(merged.length, MAX_RESPONSE_SIZE);
     const documents = merged.slice(
       (validPage - 1) * ITEMS_PER_PAGE,
-      validPage * ITEMS_PER_PAGE
+      validPage * ITEMS_PER_PAGE,
     );
     return {
       success: true,
@@ -78,10 +78,10 @@ export const getLatestAdded = cache(
           data: documents,
           metadata: [{ total: totalItems }],
         },
-        validPage
+        validPage,
       ),
     };
-  }, "latestAdded")
+  }, "latestAdded"),
 );
 
 export const getNewMovies = cache(
@@ -90,7 +90,7 @@ export const getNewMovies = cache(
     const pipeline = buildNewContentPipeline("films", filters, page);
     const [result] = await db.collection("films").aggregate(pipeline).toArray();
     return { success: true, ...buildPaginationResponse(result, page) };
-  }, "films")
+  }, "films"),
 );
 
 export const getNewSeries = cache(
@@ -102,7 +102,7 @@ export const getNewSeries = cache(
       .aggregate(pipeline)
       .toArray();
     return { success: true, ...buildPaginationResponse(result, page) };
-  }, "series")
+  }, "series"),
 );
 
 export const getLatestEpisodes = cache(
@@ -111,6 +111,7 @@ export const getLatestEpisodes = cache(
     const validPage = validatePage(page);
     const skip = (validPage - 1) * ITEMS_PER_PAGE;
     let seriesIds = null;
+
     if (Object.keys(filters).length > 0) {
       const seriesMatchQuery = buildMatchQuery(filters);
       const matchingSeries = await db
@@ -118,6 +119,7 @@ export const getLatestEpisodes = cache(
         .find(seriesMatchQuery, { projection: { _id: 1 } })
         .toArray();
       seriesIds = matchingSeries.map((s) => s._id);
+
       if (seriesIds.length === 0) {
         return {
           success: true,
@@ -134,66 +136,72 @@ export const getLatestEpisodes = cache(
       }
     }
 
-    // Updated episodeMatch to exclude episodes with visible: false
     const episodeMatch = {
       ...(seriesIds ? { seriesId: { $in: seriesIds } } : {}),
-      visible: { $ne: false }, // This will match documents where visible is true or doesn't exist
+      visible: { $ne: false }, // Keep this or remove it - doesn't matter!
     };
 
+    // The ONLY thing that matters: pipeline order!
     const pipeline = [
       { $match: episodeMatch },
-      {
-        $lookup: {
-          from: "seasons",
-          localField: "seasonId",
-          foreignField: "_id",
-          as: "season",
-        },
-      },
-      { $unwind: { path: "$season", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "series",
-          localField: "seriesId",
-          foreignField: "_id",
-          as: "series",
-        },
-      },
-      { $unwind: { path: "$series", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: { $toString: "$_id" },
-          slug: 1,
-          seriesId: { $toString: "$seriesId" },
-          seasonId: { $toString: "$seasonId" },
-          episodeNumber: 1,
-          duration: 1,
-          mergedEpisodes: 1,
-          createdAt: 1,
-          season: {
-            _id: { $toString: "$season._id" },
-            seasonNumber: "$season.seasonNumber",
-            image: "$season.image",
-            title: "$season.title",
-          },
-          series: {
-            _id: { $toString: "$series._id" },
-            title: "$series.title",
-          },
-        },
-      },
-      { $sort: { createdAt: -1 } },
+      { $sort: { createdAt: -1 } }, // ← THIS MUST BE HERE!
       {
         $facet: {
           metadata: [{ $count: "total" }],
-          data: [{ $skip: skip }, { $limit: ITEMS_PER_PAGE }],
+          data: [
+            { $skip: skip },
+            { $limit: ITEMS_PER_PAGE },
+            // Lookups AFTER pagination ↓
+            {
+              $lookup: {
+                from: "seasons",
+                localField: "seasonId",
+                foreignField: "_id",
+                as: "season",
+              },
+            },
+            { $unwind: { path: "$season", preserveNullAndEmptyArrays: true } },
+            {
+              $lookup: {
+                from: "series",
+                localField: "seriesId",
+                foreignField: "_id",
+                as: "series",
+              },
+            },
+            { $unwind: { path: "$series", preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                _id: { $toString: "$_id" },
+                slug: 1,
+                seriesId: { $toString: "$seriesId" },
+                seasonId: { $toString: "$seasonId" },
+                episodeNumber: 1,
+                duration: 1,
+                mergedEpisodes: 1,
+                createdAt: 1,
+                season: {
+                  _id: { $toString: "$season._id" },
+                  seasonNumber: "$season.seasonNumber",
+                  image: "$season.image",
+                  title: "$season.title",
+                },
+                series: {
+                  _id: { $toString: "$series._id" },
+                  title: "$series.title",
+                },
+              },
+            },
+          ],
         },
       },
     ];
+
     const [result] = await db
       .collection("episodes")
       .aggregate(pipeline)
       .toArray();
+
     return { success: true, ...buildPaginationResponse(result, validPage) };
-  }, "episodes")
+  }, "episodes"),
 );
