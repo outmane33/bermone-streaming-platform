@@ -90,7 +90,7 @@ export function useWatchLogic(slug) {
           const res = await getServerIframeBySlug(
             slug,
             server.name,
-            qualityParam
+            qualityParam,
           );
 
           if (res.success && res.iframeUrl) {
@@ -123,7 +123,7 @@ export function useWatchLogic(slug) {
             const res = await getServerIframeBySlug(
               slug,
               server.name,
-              qualityParam
+              qualityParam,
             );
 
             if (res.success && res.iframeUrl) {
@@ -139,7 +139,7 @@ export function useWatchLogic(slug) {
         }
       }
     },
-    [slug, servers, activeServerIdx, hasStartedPlaying]
+    [slug, servers, activeServerIdx, hasStartedPlaying],
   );
 
   return {

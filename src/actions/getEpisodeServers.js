@@ -58,7 +58,7 @@ export const getServerIframeBySlug = cache(
       }
 
       const service = content.services.find(
-        (s) => s.serviceName === serverName
+        (s) => s.serviceName === serverName,
       );
 
       if (!service?.qualities?.length) {
@@ -74,7 +74,7 @@ export const getServerIframeBySlug = cache(
       if (quality) {
         // Try to find exact match with quality parameter
         selectedQuality = service.qualities.find((q) =>
-          q.quality.toLowerCase().includes(quality.toLowerCase())
+          q.quality.toLowerCase().includes(quality.toLowerCase()),
         );
       }
 
@@ -108,5 +108,5 @@ export const getServerIframeBySlug = cache(
       console.error("💥 getServerIframeBySlug error:", error);
       return buildErrorResponse("server iframe", error);
     }
-  }
+  },
 );
