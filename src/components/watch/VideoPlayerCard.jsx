@@ -37,6 +37,9 @@ export default function VideoPlayerCard({
         iframeWindow.showModelessDialog = function () {
           return null;
         };
+        iframeWindow.print = function () {
+          return null;
+        };
 
         // منع التنبيهات
         iframeWindow.alert = function (msg) {
@@ -51,86 +54,169 @@ export default function VideoPlayerCard({
           return null;
         };
 
-        // منع النوافذ المنبثقة عبر setTimeout
-        const originalSetTimeout = iframeWindow.setTimeout;
-        iframeWindow.setTimeout = function (func, delay, ...args) {
-          if (typeof func === "function" && delay < 10000) {
-            try {
-              const funcStr = func.toString().toLowerCase();
-              if (
-                funcStr.includes("open") ||
-                funcStr.includes("popup") ||
-                funcStr.includes("window")
-              ) {
-                console.log("🚫 setTimeout popup blocked");
-                return null;
+        // حجب الـ popups بالـ CSS مباشرة
+        const injectCSS = () => {
+          try {
+            if (!iframeDoc) return;
+
+            // CSS قوي لإخفاء جميع أنواع الـ popups
+            const style = iframeDoc.createElement("style");
+            style.id = "anti-popup-style";
+            style.textContent = `
+              /* إخفاء جميع الـ popups المركزة في الوسط */
+              div[style*="position: absolute"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
               }
-            } catch (e) {}
+              
+              /* إخفاء العناصر الموضعية المطلقة */
+              [style*="left: 50%"],
+              [style*="top: 50%"],
+              [style*="transform: translate"],
+              [style*="position: fixed"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+              }
+              
+              /* إخفاء النوافذ المنبثقة */
+              .popup, .modal, #popup, .ad-overlay,
+              .popup-overlay, .modal-overlay, .interstitial,
+              .video-popup, .overlay, .modal-backdrop,
+              .ad-container, .advertisement, .video-ad,
+              .popup-container, .popup-wrapper,
+              [id*="popup"], [class*="popup"],
+              [id*="modal"], [class*="modal"],
+              [id*="ad"], [class*="ad"],
+              [id*="overlay"], [class*="overlay"],
+              [id*="interstitial"], [class*="interstitial"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                position: static !important;
+                width: 0 !important;
+                height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              
+              /* إخفاء العناصر التي تحتوي على "Ad" */
+              div:has(> div:has(> div:has(> div:has(span:contains("Ad"))))) {
+                display: none !important;
+              }
+              
+              /* إخفاء جميع العناصر التي تحتوي على نصوص إعلانية */
+              *:contains("Ad"),
+              *:contains("Advertisement"),
+              *:contains("Publicité") {
+                display: none !important;
+              }
+              
+              /* إخفاء الـ iframes المخفية */
+              iframe[style*="display: none"],
+              iframe[style*="visibility: hidden"] {
+                display: none !important;
+              }
+              
+              /* إخفاء العناصر الكبيرة في المنتصف */
+              div[style*="max-width: 355px"],
+              div[style*="min-width: 290px"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+              }
+              
+              /* إخفاء جميع العناصر المطلقة */
+              body > div[style*="!important"]:not([id="player"]):not([id="video"]):not([class*="player"]) {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+              }
+            `;
+
+            // إزالة الـ style القديم أولاً
+            const oldStyle = iframeDoc.getElementById("anti-popup-style");
+            if (oldStyle) oldStyle.remove();
+
+            // إضافة الـ style الجديد
+            iframeDoc.head.appendChild(style);
+          } catch (err) {
+            // CORS errors طبيعية
           }
-          return originalSetTimeout.call(this, func, delay, ...args);
         };
 
-        // منع النوافذ المنبثقة عبر setInterval
-        const originalSetInterval = iframeWindow.setInterval;
-        iframeWindow.setInterval = function (func, delay, ...args) {
-          if (typeof func === "function" && delay < 15000) {
-            try {
-              const funcStr = func.toString().toLowerCase();
-              if (
-                funcStr.includes("open") ||
-                funcStr.includes("popup") ||
-                funcStr.includes("window")
-              ) {
-                console.log("🚫 setInterval popup blocked");
-                return null;
-              }
-            } catch (e) {}
-          }
-          return originalSetInterval.call(this, func, delay, ...args);
-        };
-
-        // حجب عناصر الـ popup المشتركة
+        // حذف العناصر المزعجة مباشرة
         const hidePopups = () => {
           try {
             if (!iframeDoc) return;
 
             // حذف العناصر المزعجة
-            const badElements = iframeDoc.querySelectorAll(`
+            const badSelectors = `
               .popup, .modal, #popup, .ad-overlay,
               .popup-overlay, .modal-overlay, .interstitial,
               .video-popup, .overlay, .modal-backdrop,
               .ad-container, .advertisement, .video-ad,
+              .popup-container, .popup-wrapper,
               [id*="popup"], [class*="popup"],
               [id*="modal"], [class*="modal"],
               [id*="ad"], [class*="ad"],
-              [id*="overlay"], [class*="overlay"]
-            `);
+              [id*="overlay"], [class*="overlay"],
+              [id*="interstitial"], [class*="interstitial"],
+              div[style*="position: absolute"],
+              div[style*="left: 50%"],
+              div[style*="top: 50%"],
+              div[style*="transform: translate"],
+              div[style*="max-width: 355px"],
+              div[style*="min-width: 290px"],
+              div[style*="border-radius: 1.6em"],
+              div[style*="box-shadow"],
+              div[style*="pointer-events: all"]
+            `;
+
+            const badElements = iframeDoc.querySelectorAll(badSelectors);
 
             badElements.forEach((el) => {
               try {
-                el.remove();
+                // إخفاء العنصر
+                el.style.display = "none !important";
+                el.style.visibility = "hidden !important";
+                el.style.opacity = "0 !important";
+                el.style.pointerEvents = "none !important";
+                el.style.position = "static !important";
+
+                // حذف العنصر تماماً
+                setTimeout(() => {
+                  try {
+                    if (el.parentNode) {
+                      el.remove();
+                    }
+                  } catch (e) {}
+                }, 10);
               } catch (e) {}
             });
 
-            // إخفاء العناصر بالـ style
-            const styleElements = iframeDoc.querySelectorAll(
-              'style, link[rel="stylesheet"]',
-            );
-            styleElements.forEach((el) => {
+            // حذف العناصر التي تحتوي على "Ad"
+            const adElements = iframeDoc.querySelectorAll("*");
+            adElements.forEach((el) => {
               try {
                 if (
-                  el.innerHTML?.includes(".popup") ||
-                  el.innerHTML?.includes(".modal")
+                  el.textContent &&
+                  (el.textContent.includes("Ad") ||
+                    el.textContent.includes("Publicité"))
                 ) {
-                  el.innerHTML = el.innerHTML
-                    .replace(
-                      /\.popup[^}]*\{[^}]*\}/g,
-                      ".popup{display:none!important;}",
-                    )
-                    .replace(
-                      /\.modal[^}]*\{[^}]*\}/g,
-                      ".modal{display:none!important;}",
-                    );
+                  el.style.display = "none !important";
+                  el.style.visibility = "hidden !important";
+                  setTimeout(() => {
+                    try {
+                      if (el.parentNode) el.remove();
+                    } catch (e) {}
+                  }, 10);
                 }
               } catch (e) {}
             });
@@ -142,6 +228,7 @@ export default function VideoPlayerCard({
         // مراقبة التغييرات في الـ DOM
         const observer = new MutationObserver((mutations) => {
           hidePopups();
+          injectCSS();
         });
 
         try {
@@ -150,16 +237,27 @@ export default function VideoPlayerCard({
             subtree: true,
             attributes: true,
             characterData: true,
+            attributeFilter: ["style", "class", "id"],
           });
         } catch (e) {}
 
-        // تطبيق الحماية كل 500 مللي ثانية
-        setInterval(hidePopups, 500);
+        // حقن CSS فوراً
+        injectCSS();
 
-        // تطبيق فوري
+        // تطبيق الحماية كل 300 مللي ثانية
+        setInterval(() => {
+          hidePopups();
+          injectCSS();
+        }, 300);
+
+        // تطبيق فوري متعدد
+        setTimeout(hidePopups, 50);
         setTimeout(hidePopups, 100);
+        setTimeout(hidePopups, 200);
+        setTimeout(hidePopups, 300);
         setTimeout(hidePopups, 500);
         setTimeout(hidePopups, 1000);
+        setTimeout(hidePopups, 2000);
       }
     } catch (err) {
       // CORS errors طبيعية
