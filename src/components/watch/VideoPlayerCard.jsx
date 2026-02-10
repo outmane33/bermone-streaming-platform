@@ -47,11 +47,39 @@ export default function VideoPlayerCard({
           ) : iframeUrl ? (
             <iframe
               src={iframeUrl}
+              // إزالة أذونات الـ popups
+              sandbox="allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-orientation-lock"
+              referrerPolicy="no-referrer"
+              loading="lazy"
               frameBorder="0"
               allowFullScreen
               className="w-full h-full"
               title={`Video - ${activeServer?.name}`}
+              allow="autoplay; fullscreen; picture-in-picture"
               onError={() => {}}
+              // إضافة حماية إضافية
+              onLoad={(e) => {
+                try {
+                  const iframe = e.target;
+                  const iframeWindow = iframe.contentWindow;
+
+                  if (iframeWindow) {
+                    // منع النوافذ المنبثقة
+                    iframeWindow.open = function () {
+                      return null;
+                    };
+                    iframeWindow.alert = function () {};
+                    iframeWindow.confirm = function () {
+                      return false;
+                    };
+                    iframeWindow.prompt = function () {
+                      return null;
+                    };
+                  }
+                } catch (err) {
+                  // CORS errors طبيعية
+                }
+              }}
             />
           ) : null}
         </div>
