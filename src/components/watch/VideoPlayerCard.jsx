@@ -143,7 +143,7 @@ export default function VideoPlayerCard({
           ) : iframeUrl ? (
             <iframe
               src={iframeUrl}
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-orientation-lock"
+              // إزالة sandbox تماماً
               referrerPolicy="no-referrer"
               loading="lazy"
               frameBorder="0"
