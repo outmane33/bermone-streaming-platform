@@ -14,26 +14,11 @@ export default function VideoPlayerCard({
   const activeServer = servers[activeServerIdx];
   const isMaintenance = activeServer?.status === "maintenance";
 
-  // تحديد الـ sandbox attributes حسب نوع السيرفر
-  const getSandboxAttributes = () => {
-    const serverName = activeServer?.name;
-
-    // EarnVids يحتاج بعض الأذونات لكن يمكننا تقييده
-    if (serverName === "EarnVids") {
-      return "allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-orientation-lock";
-    }
-
-    // السيرفرات الأخرى
-    return "allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-orientation-lock";
-  };
-
   // حماية مخصصة لـ EarnVids من الـ popups
   const handleIframeLoad = (e) => {
     const serverName = activeServer?.name;
 
-    // حماية EarnVids فقط
-    if (serverName !== "EarnVids") return;
-
+    // حماية جميع السيرفرات من الـ popups المزعجة
     try {
       const iframe = e.target;
       const iframeWindow = iframe.contentWindow;
@@ -42,54 +27,86 @@ export default function VideoPlayerCard({
         // حفظ الدالة الأصلية
         const originalOpen = iframeWindow.open;
 
-        // منع جميع الـ popups من EarnVids
+        // منع جميع الـ popups المزعجة
         iframeWindow.open = function (url, name, specs) {
-          console.log("🚫 EarnVids Popup blocked:", url);
+          // السماح فقط بـ popups ضرورية
+          if (name === "_self" || name === "_parent" || name === "_top") {
+            return originalOpen.call(this, url, name, specs);
+          }
+
+          // منع جميع الـ popups الأخرى
+          console.log("🚫 Popup blocked:", url);
           return null;
         };
 
         // منع الـ alerts المزعجة
         iframeWindow.alert = function (msg) {
-          console.log("🚫 EarnVids Alert blocked:", msg);
+          console.log("🚫 Alert blocked:", msg);
         };
 
         // منع الـ confirms
         iframeWindow.confirm = function (msg) {
-          console.log("🚫 EarnVids Confirm blocked:", msg);
+          console.log("🚫 Confirm blocked:", msg);
           return false;
         };
 
         // منع الـ prompts
         iframeWindow.prompt = function (msg) {
-          console.log("🚫 EarnVids Prompt blocked:", msg);
+          console.log("🚫 Prompt blocked:", msg);
           return null;
         };
 
-        // منع setTimeout و setInterval المزعجين
-        const originalSetTimeout = iframeWindow.setTimeout;
-        const originalSetInterval = iframeWindow.setInterval;
+        // حجب عناصر الـ popup المشتركة
+        const hidePopups = () => {
+          try {
+            const iframeDoc =
+              iframe.contentDocument || iframe.contentWindow.document;
+            if (!iframeDoc) return;
 
-        iframeWindow.setTimeout = function (func, delay) {
-          if (delay && delay < 5000) {
-            // منع التايم أوت السريع
-            console.log("🚫 EarnVids setTimeout blocked:", delay);
-            return null;
+            const popupSelectors = [
+              ".popup",
+              ".modal",
+              "#popup",
+              ".ad-overlay",
+              ".popup-overlay",
+              ".modal-overlay",
+              ".interstitial",
+              ".video-popup",
+              ".overlay",
+              ".modal-backdrop",
+              '[id*="popup"]',
+              '[class*="popup"]',
+              '[id*="modal"]',
+              '[class*="modal"]',
+              '[id*="ad"]',
+              '[class*="ad"]',
+            ];
+
+            popupSelectors.forEach((selector) => {
+              try {
+                const elements = iframeDoc.querySelectorAll(selector);
+                elements.forEach((el) => {
+                  if (el && el.style) {
+                    el.style.display = "none !important";
+                    el.style.visibility = "hidden !important";
+                    el.style.opacity = "0 !important";
+                    el.style.pointerEvents = "none !important";
+                  }
+                });
+              } catch (err) {
+                // تجاهل الأخطاء
+              }
+            });
+          } catch (err) {
+            // CORS errors طبيعية
           }
-          return originalSetTimeout.call(this, func, delay);
         };
 
-        iframeWindow.setInterval = function (func, delay) {
-          if (delay && delay < 10000) {
-            // منع الإنترفال السريع
-            console.log("🚫 EarnVids setInterval blocked:", delay);
-            return null;
-          }
-          return originalSetInterval.call(this, func, delay);
-        };
+        // تطبيق الحماية كل 1 ثانية
+        setInterval(hidePopups, 1000);
       }
     } catch (err) {
       // CORS errors طبيعية
-      console.log("CORS error (normal):", err.message);
     }
   };
 
@@ -126,7 +143,7 @@ export default function VideoPlayerCard({
           ) : iframeUrl ? (
             <iframe
               src={iframeUrl}
-              sandbox={getSandboxAttributes()}
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-orientation-lock"
               referrerPolicy="no-referrer"
               loading="lazy"
               frameBorder="0"
