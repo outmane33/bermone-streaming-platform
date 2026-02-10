@@ -14,6 +14,85 @@ export default function VideoPlayerCard({
   const activeServer = servers[activeServerIdx];
   const isMaintenance = activeServer?.status === "maintenance";
 
+  // تحديد الـ sandbox attributes حسب نوع السيرفر
+  const getSandboxAttributes = () => {
+    const serverName = activeServer?.name;
+
+    // EarnVids يحتاج بعض الأذونات لكن يمكننا تقييده
+    if (serverName === "EarnVids") {
+      return "allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-orientation-lock";
+    }
+
+    // السيرفرات الأخرى
+    return "allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-orientation-lock";
+  };
+
+  // حماية مخصصة لـ EarnVids من الـ popups
+  const handleIframeLoad = (e) => {
+    const serverName = activeServer?.name;
+
+    // حماية EarnVids فقط
+    if (serverName !== "EarnVids") return;
+
+    try {
+      const iframe = e.target;
+      const iframeWindow = iframe.contentWindow;
+
+      if (iframeWindow) {
+        // حفظ الدالة الأصلية
+        const originalOpen = iframeWindow.open;
+
+        // منع جميع الـ popups من EarnVids
+        iframeWindow.open = function (url, name, specs) {
+          console.log("🚫 EarnVids Popup blocked:", url);
+          return null;
+        };
+
+        // منع الـ alerts المزعجة
+        iframeWindow.alert = function (msg) {
+          console.log("🚫 EarnVids Alert blocked:", msg);
+        };
+
+        // منع الـ confirms
+        iframeWindow.confirm = function (msg) {
+          console.log("🚫 EarnVids Confirm blocked:", msg);
+          return false;
+        };
+
+        // منع الـ prompts
+        iframeWindow.prompt = function (msg) {
+          console.log("🚫 EarnVids Prompt blocked:", msg);
+          return null;
+        };
+
+        // منع setTimeout و setInterval المزعجين
+        const originalSetTimeout = iframeWindow.setTimeout;
+        const originalSetInterval = iframeWindow.setInterval;
+
+        iframeWindow.setTimeout = function (func, delay) {
+          if (delay && delay < 5000) {
+            // منع التايم أوت السريع
+            console.log("🚫 EarnVids setTimeout blocked:", delay);
+            return null;
+          }
+          return originalSetTimeout.call(this, func, delay);
+        };
+
+        iframeWindow.setInterval = function (func, delay) {
+          if (delay && delay < 10000) {
+            // منع الإنترفال السريع
+            console.log("🚫 EarnVids setInterval blocked:", delay);
+            return null;
+          }
+          return originalSetInterval.call(this, func, delay);
+        };
+      }
+    } catch (err) {
+      // CORS errors طبيعية
+      console.log("CORS error (normal):", err.message);
+    }
+  };
+
   return (
     <div className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-4 shadow-xl`}>
       <div className="relative">
@@ -47,39 +126,16 @@ export default function VideoPlayerCard({
           ) : iframeUrl ? (
             <iframe
               src={iframeUrl}
-              // إزالة أذونات الـ popups
-              sandbox="allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-orientation-lock"
+              sandbox={getSandboxAttributes()}
               referrerPolicy="no-referrer"
               loading="lazy"
               frameBorder="0"
               allowFullScreen
               className="w-full h-full"
               title={`Video - ${activeServer?.name}`}
-              allow="autoplay; fullscreen; picture-in-picture"
+              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
               onError={() => {}}
-              // إضافة حماية إضافية
-              onLoad={(e) => {
-                try {
-                  const iframe = e.target;
-                  const iframeWindow = iframe.contentWindow;
-
-                  if (iframeWindow) {
-                    // منع النوافذ المنبثقة
-                    iframeWindow.open = function () {
-                      return null;
-                    };
-                    iframeWindow.alert = function () {};
-                    iframeWindow.confirm = function () {
-                      return false;
-                    };
-                    iframeWindow.prompt = function () {
-                      return null;
-                    };
-                  }
-                } catch (err) {
-                  // CORS errors طبيعية
-                }
-              }}
+              onLoad={handleIframeLoad}
             />
           ) : null}
         </div>
