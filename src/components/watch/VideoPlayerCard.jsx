@@ -14,96 +14,152 @@ export default function VideoPlayerCard({
   const activeServer = servers[activeServerIdx];
   const isMaintenance = activeServer?.status === "maintenance";
 
-  // حماية مخصصة لـ EarnVids من الـ popups
+  // حماية مخصصة من الـ popups
   const handleIframeLoad = (e) => {
     const serverName = activeServer?.name;
 
-    // حماية جميع السيرفرات من الـ popups المزعجة
     try {
       const iframe = e.target;
       const iframeWindow = iframe.contentWindow;
+      const iframeDoc = iframe.contentDocument || iframeWindow.document;
 
       if (iframeWindow) {
-        // حفظ الدالة الأصلية
-        const originalOpen = iframeWindow.open;
-
-        // منع جميع الـ popups المزعجة
-        iframeWindow.open = function (url, name, specs) {
-          // السماح فقط بـ popups ضرورية
-          if (name === "_self" || name === "_parent" || name === "_top") {
-            return originalOpen.call(this, url, name, specs);
-          }
-
-          // منع جميع الـ popups الأخرى
+        // منع جميع النوافذ المنبثقة
+        iframeWindow.open = function (url, name, specs, replace) {
           console.log("🚫 Popup blocked:", url);
           return null;
         };
 
-        // منع الـ alerts المزعجة
-        iframeWindow.alert = function (msg) {
-          console.log("🚫 Alert blocked:", msg);
+        // منع النوافذ الجديدة
+        iframeWindow.showModalDialog = function () {
+          return null;
+        };
+        iframeWindow.showModelessDialog = function () {
+          return null;
         };
 
-        // منع الـ confirms
+        // منع التنبيهات
+        iframeWindow.alert = function (msg) {
+          console.log("🚫 Alert blocked");
+        };
         iframeWindow.confirm = function (msg) {
-          console.log("🚫 Confirm blocked:", msg);
+          console.log("🚫 Confirm blocked");
           return false;
         };
-
-        // منع الـ prompts
         iframeWindow.prompt = function (msg) {
-          console.log("🚫 Prompt blocked:", msg);
+          console.log("🚫 Prompt blocked");
           return null;
+        };
+
+        // منع النوافذ المنبثقة عبر setTimeout
+        const originalSetTimeout = iframeWindow.setTimeout;
+        iframeWindow.setTimeout = function (func, delay, ...args) {
+          if (typeof func === "function" && delay < 10000) {
+            try {
+              const funcStr = func.toString().toLowerCase();
+              if (
+                funcStr.includes("open") ||
+                funcStr.includes("popup") ||
+                funcStr.includes("window")
+              ) {
+                console.log("🚫 setTimeout popup blocked");
+                return null;
+              }
+            } catch (e) {}
+          }
+          return originalSetTimeout.call(this, func, delay, ...args);
+        };
+
+        // منع النوافذ المنبثقة عبر setInterval
+        const originalSetInterval = iframeWindow.setInterval;
+        iframeWindow.setInterval = function (func, delay, ...args) {
+          if (typeof func === "function" && delay < 15000) {
+            try {
+              const funcStr = func.toString().toLowerCase();
+              if (
+                funcStr.includes("open") ||
+                funcStr.includes("popup") ||
+                funcStr.includes("window")
+              ) {
+                console.log("🚫 setInterval popup blocked");
+                return null;
+              }
+            } catch (e) {}
+          }
+          return originalSetInterval.call(this, func, delay, ...args);
         };
 
         // حجب عناصر الـ popup المشتركة
         const hidePopups = () => {
           try {
-            const iframeDoc =
-              iframe.contentDocument || iframe.contentWindow.document;
             if (!iframeDoc) return;
 
-            const popupSelectors = [
-              ".popup",
-              ".modal",
-              "#popup",
-              ".ad-overlay",
-              ".popup-overlay",
-              ".modal-overlay",
-              ".interstitial",
-              ".video-popup",
-              ".overlay",
-              ".modal-backdrop",
-              '[id*="popup"]',
-              '[class*="popup"]',
-              '[id*="modal"]',
-              '[class*="modal"]',
-              '[id*="ad"]',
-              '[class*="ad"]',
-            ];
+            // حذف العناصر المزعجة
+            const badElements = iframeDoc.querySelectorAll(`
+              .popup, .modal, #popup, .ad-overlay,
+              .popup-overlay, .modal-overlay, .interstitial,
+              .video-popup, .overlay, .modal-backdrop,
+              .ad-container, .advertisement, .video-ad,
+              [id*="popup"], [class*="popup"],
+              [id*="modal"], [class*="modal"],
+              [id*="ad"], [class*="ad"],
+              [id*="overlay"], [class*="overlay"]
+            `);
 
-            popupSelectors.forEach((selector) => {
+            badElements.forEach((el) => {
               try {
-                const elements = iframeDoc.querySelectorAll(selector);
-                elements.forEach((el) => {
-                  if (el && el.style) {
-                    el.style.display = "none !important";
-                    el.style.visibility = "hidden !important";
-                    el.style.opacity = "0 !important";
-                    el.style.pointerEvents = "none !important";
-                  }
-                });
-              } catch (err) {
-                // تجاهل الأخطاء
-              }
+                el.remove();
+              } catch (e) {}
+            });
+
+            // إخفاء العناصر بالـ style
+            const styleElements = iframeDoc.querySelectorAll(
+              'style, link[rel="stylesheet"]',
+            );
+            styleElements.forEach((el) => {
+              try {
+                if (
+                  el.innerHTML?.includes(".popup") ||
+                  el.innerHTML?.includes(".modal")
+                ) {
+                  el.innerHTML = el.innerHTML
+                    .replace(
+                      /\.popup[^}]*\{[^}]*\}/g,
+                      ".popup{display:none!important;}",
+                    )
+                    .replace(
+                      /\.modal[^}]*\{[^}]*\}/g,
+                      ".modal{display:none!important;}",
+                    );
+                }
+              } catch (e) {}
             });
           } catch (err) {
             // CORS errors طبيعية
           }
         };
 
-        // تطبيق الحماية كل 1 ثانية
-        setInterval(hidePopups, 1000);
+        // مراقبة التغييرات في الـ DOM
+        const observer = new MutationObserver((mutations) => {
+          hidePopups();
+        });
+
+        try {
+          observer.observe(iframeDoc.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            characterData: true,
+          });
+        } catch (e) {}
+
+        // تطبيق الحماية كل 500 مللي ثانية
+        setInterval(hidePopups, 500);
+
+        // تطبيق فوري
+        setTimeout(hidePopups, 100);
+        setTimeout(hidePopups, 500);
+        setTimeout(hidePopups, 1000);
       }
     } catch (err) {
       // CORS errors طبيعية
@@ -143,7 +199,6 @@ export default function VideoPlayerCard({
           ) : iframeUrl ? (
             <iframe
               src={iframeUrl}
-              // إزالة sandbox تماماً
               referrerPolicy="no-referrer"
               loading="lazy"
               frameBorder="0"
