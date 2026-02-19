@@ -14,10 +14,12 @@ export default function MediaActionButton({
   const handleClick = () => {
     startTransition(async () => {
       try {
-        const url = await action(); // Server Action يرجع URL بدل redirect
+        const url = await action();
         if (url) router.push(url);
       } catch (e) {
-        console.error(e);
+        console.error("Action failed:", e);
+        // إذا فشل — روجو للصفحة بدون token (fallback)
+        router.push(window.location.pathname + "/live");
       }
     });
   };
