@@ -2,9 +2,11 @@ import { HeroBadges } from "./HeroBadges";
 import HeroDetailsGrid from "./HeroDetailsGrid";
 import SocialShare from "./SocialShare";
 import Button from "./Button";
+import MediaActionButton from "./MediaActionButton";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import Link from "next/link";
 import Image from "next/image";
+import { handleWatch, handleDownload } from "@/actions/mediaActions";
 
 const getAltText = (media, type) => {
   const year = media.releaseYear || "";
@@ -32,10 +34,7 @@ const generateJsonLd = (media, type) => {
         "@type": "TVSeason",
         name: `الموسم ${media.seasonNumber}`,
       },
-      partOfTVSeries: {
-        "@type": "TVSeries",
-        name: media.seriesTitle,
-      },
+      partOfTVSeries: { "@type": "TVSeries", name: media.seriesTitle },
       episodeNumber: media.episodeNumber,
       image: fullImageUrl,
       description: media.description,
@@ -46,10 +45,7 @@ const generateJsonLd = (media, type) => {
       "@context": "https://schema.org",
       "@type": "TVSeason",
       name: media.title,
-      partOfTVSeries: {
-        "@type": "TVSeries",
-        name: media.seriesTitle,
-      },
+      partOfTVSeries: { "@type": "TVSeries", name: media.seriesTitle },
       seasonNumber: media.seasonNumber,
       image: fullImageUrl,
       description: media.description,
@@ -83,16 +79,16 @@ export default function HeroSection({ media, type, seriesSlug }) {
   const category = media?.category?.isForeignmovies
     ? "افلام اجنبي"
     : media?.category?.isAsianmovies
-    ? "افلام اسيوي"
-    : media?.category?.isAnimemovies
-    ? "افلام انمي"
-    : media?.category?.isForeignseries
-    ? "مسلسلات اجنبية"
-    : media?.category?.isAsianseries
-    ? "مسلسلات اسيوية"
-    : media?.category?.isAnimeseries
-    ? "مسلسلات انمي"
-    : null;
+      ? "افلام اسيوي"
+      : media?.category?.isAnimemovies
+        ? "افلام انمي"
+        : media?.category?.isForeignseries
+          ? "مسلسلات اجنبية"
+          : media?.category?.isAsianseries
+            ? "مسلسلات اسيوية"
+            : media?.category?.isAnimeseries
+              ? "مسلسلات انمي"
+              : null;
 
   const mappedMedia = {
     poster: media?.image,
@@ -109,22 +105,21 @@ export default function HeroSection({ media, type, seriesSlug }) {
     isLastEpisode: media?.isLastEpisode || false,
   };
 
+  // Pre-bind server actions — slug never rendered in HTML
+  const watchAction = handleWatch.bind(null, media.slug);
+  const downloadAction = handleDownload.bind(null, media.slug);
+
   const jsonLd = generateJsonLd(media, type);
-  console.log(type);
+
   return (
     <>
-      {/* Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       <div className="relative rounded-3xl border border-white/30">
-        <div
-          className={`absolute inset-0 
-          bg-white/5 md:bg-white/10 md:backdrop-blur-md
-          shadow-lg rounded-3xl`}
-        />
+        <div className="absolute inset-0 bg-white/5 md:bg-white/10 md:backdrop-blur-md shadow-lg rounded-3xl" />
 
         <div className="relative p-6 sm:p-10">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
@@ -138,7 +133,7 @@ export default function HeroSection({ media, type, seriesSlug }) {
                   src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${mappedMedia.poster}`}
                   alt={getAltText(media, type)}
                   fill
-                  className={`relative object-cover rounded-xl shadow-2xl border-4 border-white/10 transition-transform duration-300`}
+                  className="relative object-cover rounded-xl shadow-2xl border-4 border-white/10 transition-transform duration-300"
                 />
               </div>
             </div>
@@ -188,24 +183,35 @@ export default function HeroSection({ media, type, seriesSlug }) {
               <HeroDetailsGrid media={mappedMedia} />
 
               <div className="flex items-center justify-between">
-                {(type === "film" || type === "episode") && (
+                {(type?.toUpperCase() === "FILM" ||
+                  type?.toUpperCase() === "EPISODE") && (
                   <div className="flex flex-wrap gap-1 sm:gap-2">
-                    <Link href={`${media.slug}/watch`}>
-                      <Button variant="primary" icon={ICON_MAP.Play}>
-                        مشاهدة الآن
-                      </Button>
-                    </Link>
-                    <Link href={`${media.slug}/download`}>
-                      <Button
-                        variant="secondary"
-                        icon={ICON_MAP.ArrowDownToLine}
-                      >
-                        تحميل
-                      </Button>
-                    </Link>
+                    {/* ✅ Watch — no URL in HTML */}
+                    <MediaActionButton
+                      action={watchAction}
+                      className="group relative font-semibold overflow-hidden rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer px-3 lg:px-6 py-2 lg:py-2.5 text-base bg-gradient-to-r from-cyan-500 to-purple-500 text-white"
+                    >
+                      <span className="flex items-center gap-2 lg:gap-3 justify-center">
+                        <ICON_MAP.Play size={24} className="fill-white" />
+                        <span>مشاهدة الآن</span>
+                      </span>
+                    </MediaActionButton>
+
+                    {/* ✅ Download — no URL in HTML */}
+                    <MediaActionButton
+                      action={downloadAction}
+                      className="group relative font-semibold overflow-hidden rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer px-3 lg:px-6 py-2 lg:py-2.5 text-base border border-white/30 text-white bg-white/10 hover:bg-white/20"
+                    >
+                      <span className="flex items-center gap-2 lg:gap-3 justify-center">
+                        <ICON_MAP.ArrowDownToLine size={24} />
+                        <span>تحميل</span>
+                      </span>
+                    </MediaActionButton>
                   </div>
                 )}
-                {(type === "season" || type === "episode") && (
+
+                {(type?.toUpperCase() === "SEASON" ||
+                  type?.toUpperCase() === "EPISODE") && (
                   <Link href={`${seriesSlug}`}>
                     <Button variant="secondary" icon={ICON_MAP.ArrowLeft}>
                       عودة إلى السلسلة
@@ -213,6 +219,7 @@ export default function HeroSection({ media, type, seriesSlug }) {
                   </Link>
                 )}
               </div>
+
               <SocialShare
                 shareTitle={mappedMedia.title}
                 shareDescription={mappedMedia.story}

@@ -3,6 +3,7 @@ import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import DownloadContentWrapper from "@/components/download/DownloadContentWrapper";
 import DownloadSkeleton from "@/components/shared/skeletons/DownloadSkeleton";
 import { BlurBg } from "@/components/media/BlurBg";
+import { verifyMediaToken } from "@/lib/verifyToken";
 
 export async function generateMetadata() {
   return {
@@ -13,9 +14,10 @@ export async function generateMetadata() {
   };
 }
 
-export default async function DownloadPage({ params }) {
+export default async function DownloadPage({ params, searchParams }) {
   const { slug } = await params;
-
+  const { p, t } = await searchParams;
+  await verifyMediaToken(slug, "watch", p, t);
   return (
     <>
       <meta name="robots" content="noindex, nofollow" />

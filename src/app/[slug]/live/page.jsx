@@ -5,6 +5,7 @@ import { getSeasonsBySeries, getEpisodesBySeason } from "@/actions/series";
 import WatchPage from "@/components/watch/WatchPage";
 import { serializers } from "@/lib/mediaSerializers";
 import { CONTENT_TYPES } from "@/lib/mediaResolver";
+import { verifyMediaToken } from "@/lib/verifyToken";
 
 export async function generateMetadata() {
   return {
@@ -15,8 +16,11 @@ export async function generateMetadata() {
   };
 }
 
-export default async function WatchRoute({ params }) {
+export default async function WatchRoute({ params, searchParams }) {
   const { slug } = await params;
+  const { p, t } = await searchParams;
+
+  await verifyMediaToken(slug, "watch", p, t);
 
   const result = await getServersBySlug(slug);
 
@@ -54,7 +58,7 @@ export default async function WatchRoute({ params }) {
               serializers[CONTENT_TYPES.EPISODE]({
                 episode: ep,
                 seasonImage: season.image,
-              })
+              }),
             ),
           };
         }
