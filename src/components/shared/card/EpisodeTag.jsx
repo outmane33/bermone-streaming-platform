@@ -13,7 +13,7 @@ export const EpisodeTag = ({
       subtitle={episode.duration}
       isActive={isCurrent}
       isLastEpisode={isLastEpisode}
-      href={watchPage ? `/${episode.slug}/watch` : `/${episode.slug}`}
+      href={watchPage ? `/${episode.slug}/live` : `/${episode.slug}`}
     />
   );
 };
