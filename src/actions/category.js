@@ -90,7 +90,7 @@ export const getContent = cache(
         pipeline = buildContentAggregationPipeline(
           filters,
           sortConfig,
-          validPage
+          validPage,
         );
         resultContentType = contentType;
       }
@@ -103,7 +103,7 @@ export const getContent = cache(
 
       const { documents, pagination } = buildPaginationResponse(
         result,
-        validPage
+        validPage,
       );
       return {
         success: true,
@@ -112,6 +112,6 @@ export const getContent = cache(
         pagination,
       };
     },
-    "content"
-  )
+    "content",
+  ),
 );

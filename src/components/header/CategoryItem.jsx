@@ -90,5 +90,5 @@ export const CategoryItem = React.memo(
         )}
       </div>
     );
-  }
+  },
 );

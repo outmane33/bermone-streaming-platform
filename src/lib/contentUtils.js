@@ -36,10 +36,10 @@ export async function findContentBySlug(slug) {
     contentType = content?.slug.includes("فيلم")
       ? "film"
       : content?.slug.includes("حلقة")
-      ? "episode"
-      : content?.slug.includes("موسم")
-      ? "season"
-      : "series";
+        ? "episode"
+        : content?.slug.includes("موسم")
+          ? "season"
+          : "series";
   }
 
   if (!content) return { content: null, contentType: null };
@@ -47,7 +47,7 @@ export async function findContentBySlug(slug) {
   const serialized = serializeDocument(content);
   if (Array.isArray(serialized?.services)) {
     serialized.services = serialized.services.filter(
-      (s) => !EXCLUDED_SERVERS.includes(s.serviceName)
+      (s) => !EXCLUDED_SERVERS.includes(s.serviceName),
     );
   }
 

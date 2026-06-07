@@ -7,7 +7,7 @@ function addSecurityHeaders(response) {
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=()"
+    "camera=(), microphone=(), geolocation=()",
   );
   return response;
 }
@@ -40,7 +40,7 @@ export function middleware(request) {
     if (!isValidOrigin(reqOrigin)) {
       return new NextResponse(
         JSON.stringify({ success: false, error: "Invalid origin" }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
+        { status: 403, headers: { "Content-Type": "application/json" } },
       );
     }
   }
@@ -62,7 +62,7 @@ export function middleware(request) {
         if (returnUrlObj.pathname === pathname) {
           const savedParams = returnUrlObj.searchParams;
           const currentParams = new URLSearchParams(
-            requestWithHeaders.nextUrl.search
+            requestWithHeaders.nextUrl.search,
           );
           const savedPage = savedParams.get("page");
           const savedSort = savedParams.get("sort");
@@ -71,7 +71,7 @@ export function middleware(request) {
 
           if (savedPage && !currentPage && savedSort === currentSort) {
             const response = NextResponse.redirect(
-              new URL(decodedUrl, request.url)
+              new URL(decodedUrl, request.url),
             );
             response.cookies.delete("categoryReturnUrl");
             return addSecurityHeaders(response);

@@ -21,7 +21,7 @@ export default function CardWrapper({ href, children, onNavigateComplete }) {
     if (params) {
       const currentUrl = `${pathname}?${params}`;
       document.cookie = `categoryReturnUrl=${encodeURIComponent(
-        currentUrl
+        currentUrl,
       )}; path=/; max-age=600`;
     }
 

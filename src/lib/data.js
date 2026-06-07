@@ -594,8 +594,8 @@ export const VALID_QUERY_PARAMS = [
 export const ITEMS_PER_PAGE = 42;
 export const CURRENT_YEAR = new Date().getFullYear();
 export const SEARCH_LIMIT = 20;
-export const MAX_SEASONS = 20;
-export const MAX_EPISODES = 60;
+export const MAX_SEASONS = 500;
+export const MAX_EPISODES = 5000;
 export const MAX_RELATED = 12;
 export const MAX_RESPONSE_SIZE = 1000;
 export const EXCLUDED_SERVERS = ["Telegram"];
@@ -608,7 +608,7 @@ export const QUALITY_RANK = {
 };
 export const sortQualities = (qualities) =>
   [...qualities].sort(
-    (a, b) => (QUALITY_RANK[b] || 0) - (QUALITY_RANK[a] || 0)
+    (a, b) => (QUALITY_RANK[b] || 0) - (QUALITY_RANK[a] || 0),
   );
 
 export const getPreferredQuality = (qualities) => {
@@ -621,16 +621,16 @@ export const getPreferredQuality = (qualities) => {
 // ============================================
 
 export const filterOptions = Object.fromEntries(
-  Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.options])
+  Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.options]),
 );
 export const filterLabels = Object.fromEntries(
-  Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.label])
+  Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.label]),
 );
 export const filterIcons = Object.fromEntries(
-  Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.icon])
+  Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.icon]),
 );
 export const filterGradients = Object.fromEntries(
-  Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.gradient])
+  Object.entries(FILTER_CONFIG).map(([key, val]) => [key, val.gradient]),
 );
 
 export const GRADIENTS = DESIGN_TOKENS.gradients;

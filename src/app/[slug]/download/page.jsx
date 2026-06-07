@@ -1,8 +1,10 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import DownloadContentWrapper from "@/components/download/DownloadContentWrapper";
 import DownloadSkeleton from "@/components/shared/skeletons/DownloadSkeleton";
 import { BlurBg } from "@/components/media/BlurBg";
+import Button from "@/components/shared/heroSection/Button";
 
 export async function generateMetadata() {
   return {
@@ -13,7 +15,7 @@ export async function generateMetadata() {
   };
 }
 
-export default async function DownloadPage({ params, searchParams }) {
+export default async function DownloadPage({ params }) {
   const { slug } = await params;
   return (
     <>
@@ -32,20 +34,28 @@ export default async function DownloadPage({ params, searchParams }) {
               <BlurBg position="bottom" size="40" />
 
               <div className="relative mb-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className={`p-2.5 sm:p-3 bg-gradient-to-r ${DESIGN_TOKENS.glass.medium} rounded-xl`}
-                  >
-                    <ICON_MAP.Download className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2.5 sm:p-3 bg-gradient-to-r ${DESIGN_TOKENS.glass.medium} rounded-xl`}
+                    >
+                      <ICON_MAP.Download className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <h1 className="text-xl sm:text-2xl font-bold text-white">
+                        تنزيل
+                      </h1>
+                      <p className="text-white/60 text-xs sm:text-sm">
+                        اختر الجودة والسيرفر للمتابعة
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white">
-                      تنزيل
-                    </h1>
-                    <p className="text-white/60 text-xs sm:text-sm">
-                      اختر الجودة والسيرفر للمتابعة
-                    </p>
-                  </div>
+
+                  <Link href={`/${slug}`}>
+                    <Button variant="secondary" icon={ICON_MAP.ArrowLeft}>
+                      عودة
+                    </Button>
+                  </Link>
                 </div>
 
                 <div className="h-0.5 sm:h-1 bg-gradient-to-l from-cyan-500 via-purple-500 to-transparent rounded-full mt-2 sm:mt-3"></div>

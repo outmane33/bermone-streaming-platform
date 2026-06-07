@@ -16,7 +16,7 @@ export default async function HeroSectionWrapper({ slug }) {
     const relatedData = await relatedHandlers[type](data);
     serializedMedia = serializers[type](
       { ...data, allEpisodes: relatedData.allEpisodes },
-      true
+      true,
     );
     seriesSlug = data.series?.slug;
   } else if (type === CONTENT_TYPES.SEASON) {

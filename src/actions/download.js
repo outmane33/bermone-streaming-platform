@@ -10,11 +10,25 @@ export const getAvailableQualities = async (slug) => {
     if (!content) {
       return { success: false, error: "Content not found", qualities: [] };
     }
+
+    // Season: links direct
+    if (contentType === "season") {
+      const qualities = [
+        ...new Set((content.links || []).map((l) => l.quality).filter(Boolean)),
+      ];
+      return {
+        success: true,
+        qualities: sortQualities(qualities),
+        type: contentType,
+      };
+    }
+
+    // Film/Episode: services
     const qualities = [
       ...new Set(
         content.services
           .flatMap((s) => s.qualities.map((q) => q.quality))
-          .filter(Boolean)
+          .filter(Boolean),
       ),
     ];
     return {
@@ -30,10 +44,29 @@ export const getAvailableQualities = async (slug) => {
 
 export const getServicesForQuality = async (slug, quality) => {
   try {
-    const { content } = await findContentBySlug(slug);
+    const { content, contentType } = await findContentBySlug(slug);
     if (!content) {
       return { success: false, error: "Content not found", services: [] };
     }
+
+    // Season: direct download, no server selection needed
+    if (contentType === "season") {
+      const links = (content.links || []).filter((l) => l.quality === quality);
+      if (!links.length)
+        return {
+          success: false,
+          error: "No link for this quality",
+          services: [],
+        };
+      return {
+        success: true,
+        services: links.map((l) => ({
+          serviceName: l.label || "تحميل مباشر",
+          qualityCount: 1,
+        })),
+      };
+    }
+
     const services = content.services
       .filter((s) => s.qualities.some((q) => q.quality === quality))
       .map((s) => ({
@@ -56,10 +89,27 @@ export const getServicesForQuality = async (slug, quality) => {
 
 export const getDownloadLinks = async (slug, quality, serverName) => {
   try {
-    const { content } = await findContentBySlug(slug);
+    const { content, contentType } = await findContentBySlug(slug);
     if (!content) {
       return { success: false, error: "Content not found" };
     }
+
+    // Season: return direct link
+    if (contentType === "season") {
+      const link = (content.links || []).find(
+        (l) =>
+          l.quality === quality && (l.label || "تحميل مباشر") === serverName,
+      );
+      if (!link?.url) return { success: false, error: "Link not found" };
+      return {
+        success: true,
+        downloadUrl: link.url,
+        quality,
+        serviceName: link.label || "تحميل مباشر",
+      };
+    }
+
+    // Film/Episode: existing logic
     const service = content.services.find((s) => s.serviceName === serverName);
     const qualityObj = service?.qualities.find((q) => q.quality === quality);
     if (!qualityObj) {
@@ -84,7 +134,9 @@ export const getDownloadLinks = async (slug, quality, serverName) => {
     }
     return {
       success: true,
-      downloadUrl: `${serviceManager.downloadUrl}${fileCode}`,
+      downloadUrl: `${serviceManager.downloadUrl}${fileCode}${
+        ["Player4me", "SeekStreaming"].includes(serverName) ? "&dl=1" : ""
+      }`,
       quality,
       serviceName: serverName,
     };

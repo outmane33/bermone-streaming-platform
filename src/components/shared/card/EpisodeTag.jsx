@@ -6,6 +6,8 @@ export const EpisodeTag = ({
   watchPage = false,
   isCurrent = false,
   isLastEpisode = false,
+  episodeType = null,
+  downloadPage = false,
 }) => {
   return (
     <MediaTag
@@ -13,7 +15,14 @@ export const EpisodeTag = ({
       subtitle={episode.duration}
       isActive={isCurrent}
       isLastEpisode={isLastEpisode}
-      href={watchPage ? `/${episode.slug}/live` : `/${episode.slug}`}
+      episodeType={episodeType}
+      href={
+        watchPage
+          ? `/${episode.slug}/live`
+          : downloadPage
+            ? `/${episode.slug}/download`
+            : `/${episode.slug}`
+      }
     />
   );
 };

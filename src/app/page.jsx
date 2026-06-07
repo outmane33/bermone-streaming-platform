@@ -34,7 +34,7 @@ export default async function Home({ searchParams }) {
   const { sortId: parsedSortId, page } = parsePageParams(
     params,
     VALID_SORT_IDS,
-    VALID_QUERY_PARAMS
+    VALID_QUERY_PARAMS,
   );
 
   const sortId =

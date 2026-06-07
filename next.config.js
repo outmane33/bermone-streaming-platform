@@ -1,8 +1,9 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
   poweredByHeader: false,
+
+  serverExternalPackages: ["fs"],
 
   async headers() {
     return [

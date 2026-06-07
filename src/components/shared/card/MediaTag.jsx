@@ -10,6 +10,7 @@ export const MediaTag = ({
   onClick,
   href,
   className = "",
+  episodeType = null,
 }) => {
   const Wrapper = href ? Link : "button";
   const wrapperProps = href ? { href } : { onClick };
@@ -31,6 +32,16 @@ export const MediaTag = ({
         {isLastEpisode && (
           <span className="px-1.5 py-0.5 rounded text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 whitespace-nowrap">
             الأخيرة
+          </span>
+        )}
+        {episodeType === "فلر" && (
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 whitespace-nowrap">
+            فلر
+          </span>
+        )}
+        {episodeType === "حلقة خاصة" && (
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-pink-500/20 text-pink-300 border border-pink-500/30 whitespace-nowrap">
+            خاصة
           </span>
         )}
         <span className="truncate">{title}</span>

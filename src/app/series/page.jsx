@@ -39,7 +39,7 @@ export default async function SeriesPage({ searchParams }) {
   const { sortId: rawSortId, page } = parsePageParams(
     params,
     VALID_SORT_IDS,
-    VALID_QUERY_PARAMS
+    VALID_QUERY_PARAMS,
   );
 
   const sortId = rawSortId || "all";

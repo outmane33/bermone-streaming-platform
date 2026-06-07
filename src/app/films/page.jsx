@@ -37,7 +37,7 @@ export default async function FilmsPage({ searchParams }) {
   const { sortId, page } = parsePageParams(
     params,
     VALID_SORT_IDS,
-    VALID_QUERY_PARAMS
+    VALID_QUERY_PARAMS,
   );
 
   const filters = buildFilters(params, true);

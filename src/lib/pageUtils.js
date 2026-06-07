@@ -35,7 +35,7 @@ export function validateFilterValues(params) {
       const allowedOptions = FILTER_CONFIG[key]?.options || [];
 
       const hasInvalidValues = values.some(
-        (value) => !allowedOptions.includes(value)
+        (value) => !allowedOptions.includes(value),
       );
 
       if (hasInvalidValues) {

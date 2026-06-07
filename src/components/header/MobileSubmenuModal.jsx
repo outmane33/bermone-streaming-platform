@@ -100,7 +100,7 @@ export const MobileSubmenuModal = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 MobileSubmenuModal.displayName = "MobileSubmenuModal";

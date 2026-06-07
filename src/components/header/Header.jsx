@@ -49,7 +49,7 @@ export default function Header() {
   const isTouchDevice = useIsTouchDevice();
 
   const [activeCategory, setActiveCategory] = useState(() =>
-    getActiveCategoryFromPath(pathname)
+    getActiveCategoryFromPath(pathname),
   );
   const [searchFocused, setSearchFocused] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -70,7 +70,7 @@ export default function Header() {
 
   const throttledCheckScreenSize = useCallback(
     throttle(checkScreenSize, 150),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -154,9 +154,9 @@ export default function Header() {
 
   const showOverlay = Boolean(
     openMenuId ||
-      mobileMenuOpen ||
-      mobileSearchOpen ||
-      (searchFocused && searchQuery.trim())
+    mobileMenuOpen ||
+    mobileSearchOpen ||
+    (searchFocused && searchQuery.trim()),
   );
 
   return (
@@ -179,7 +179,7 @@ export default function Header() {
             "gap-2 sm:gap-4 mb-2 sm:mb-4",
             DESIGN_TOKENS.glass.light,
             "px-4 lg:px-6 py-2 sm:py-2.5",
-            "rounded-lg relative z-10"
+            "rounded-lg relative z-10",
           )}
         >
           {mobileSearchOpen ? (

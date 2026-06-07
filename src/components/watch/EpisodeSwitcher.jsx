@@ -6,6 +6,7 @@ export default function EpisodeSwitcher({
   episodes,
   currentSlug,
   seasonStatus,
+  downloadPage,
 }) {
   const decodedCurrentSlug = decodeURIComponent(currentSlug);
 
@@ -33,9 +34,10 @@ export default function EpisodeSwitcher({
           >
             <EpisodeTag
               episode={episode}
-              watchPage={true}
+              watchPage={false}
               isCurrent={episode.slug === decodedCurrentSlug}
               isLastEpisode={isLastEpisode}
+              downloadPage={downloadPage}
             />
           </div>
         );

@@ -66,7 +66,7 @@ const buildSearchPipeline = (query, limit) => {
                     input: { $ifNull: ["$title", ""] },
                     regex: `\\b${query.replace(
                       /[.*+?^${}()|[\]\\]/g,
-                      "\\$&"
+                      "\\$&",
                     )}\\b`,
                     options: "i",
                   },
@@ -124,7 +124,7 @@ export const searchContent = cache(async (query) => {
 
     const serializedFilms = films.map((f) => serializeSearchResult(f, "film"));
     const serializedSeries = series.map((s) =>
-      serializeSearchResult(s, "series")
+      serializeSearchResult(s, "series"),
     );
     const allResults = [...serializedFilms, ...serializedSeries]
       .sort((a, b) => b.relevanceScore - a.relevanceScore)

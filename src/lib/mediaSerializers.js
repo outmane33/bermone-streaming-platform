@@ -48,7 +48,7 @@ export const checkIsLastEpisode = (season, episode, allEpisodes) => {
 
   // Find the highest episode number in the list
   const maxEpisodeNumber = Math.max(
-    ...allEpisodes.map((ep) => ep.episodeNumber)
+    ...allEpisodes.map((ep) => ep.episodeNumber),
   );
 
   return (
@@ -99,6 +99,11 @@ export const serializers = {
       seriesSlug: series.slug,
       seriesTitle: series.title,
       type: CONTENT_TYPES.SEASON,
+      links: (season.links || []).map((link) => ({
+        quality: link.quality || "",
+        url: link.url || "",
+        label: link.label || "",
+      })),
     };
   },
 
@@ -115,6 +120,7 @@ export const serializers = {
         image: data.seasonImage,
         duration: data.episode.duration,
         episodeNumber: data.episode.episodeNumber,
+        episodeType: data.episode.episodeType || null,
         type: CONTENT_TYPES.EPISODE,
       };
     }
@@ -148,6 +154,7 @@ export const serializers = {
       country: series.country,
       language: series.language,
       isLastEpisode,
+      episodeType: episode.episodeType || null,
     };
   },
 };

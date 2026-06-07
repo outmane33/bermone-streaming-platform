@@ -22,7 +22,7 @@ export const serializeDocument = (doc) => {
   let { services, dbId, originalTitle, views, __v, ...serialized } = doc;
   if (Array.isArray(services)) {
     serialized.services = services.filter(
-      (s) => !EXCLUDED_SERVERS.includes(s.serviceName)
+      (s) => !EXCLUDED_SERVERS.includes(s.serviceName),
     );
   }
   if (serialized._id) {
@@ -56,7 +56,7 @@ export const buildMatchQuery = (filters = {}, additionalFilters = {}) => {
     const validYears = cleanFilters.year
       .map((y) => parseInt(y, 10))
       .filter(
-        (y) => !isNaN(y) && y >= 1900 && y <= new Date().getFullYear() + 2
+        (y) => !isNaN(y) && y >= 1900 && y <= new Date().getFullYear() + 2,
       );
     if (validYears.length > 0) matchQuery.releaseYear = { $in: validYears };
   }
@@ -144,7 +144,7 @@ export const buildContentAggregationPipeline = (
   filters,
   sortConfig,
   page,
-  options = {}
+  options = {},
 ) => {
   const { skipPagination = false, projection = {}, type } = options;
   const sortFilter =
@@ -171,7 +171,7 @@ export const buildContentAggregationPipeline = (
 export const buildEpisodeAggregationPipeline = (
   sortConfig,
   page,
-  additionalMatch = {}
+  additionalMatch = {},
 ) => {
   const dataPipeline = [
     // Add initial match to filter out invisible episodes early
@@ -269,7 +269,7 @@ export const buildFilmCollectionsAggregationPipeline = (page) => {
 export const buildPaginationResponse = (result, page) => {
   const totalItems = Math.min(
     result.metadata[0]?.total || 0,
-    MAX_RESPONSE_SIZE
+    MAX_RESPONSE_SIZE,
   );
   const documents = result.data || [];
   const maxPages = Math.ceil(MAX_RESPONSE_SIZE / ITEMS_PER_PAGE);

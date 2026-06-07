@@ -27,8 +27,8 @@ export default function QualitySelector({
                 isSelected
                   ? "bg-white/20 border-white/40 scale-95 shadow-2xl border-2"
                   : loading
-                  ? "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
-                  : `${DESIGN_TOKENS.glass.medium} ${DESIGN_TOKENS.glass.hover} hover:scale-98 hover:shadow-xl`
+                    ? "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
+                    : `${DESIGN_TOKENS.glass.medium} ${DESIGN_TOKENS.glass.hover} hover:scale-98 hover:shadow-xl`
               }
             `}
             role="radio"

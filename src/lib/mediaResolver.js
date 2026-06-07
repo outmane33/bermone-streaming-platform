@@ -47,7 +47,7 @@ const CONTENT_STRATEGIES = {
 
 export async function resolveMediaBySlug(slug) {
   const detectedType = Object.keys(CONTENT_STRATEGIES).find((type) =>
-    CONTENT_STRATEGIES[type].detect(slug)
+    CONTENT_STRATEGIES[type].detect(slug),
   );
 
   if (detectedType) {
@@ -56,7 +56,7 @@ export async function resolveMediaBySlug(slug) {
   }
 
   for (const type of Object.keys(CONTENT_STRATEGIES).filter(
-    (t) => t !== detectedType
+    (t) => t !== detectedType,
   )) {
     const result = await tryFetchType(slug, type);
     if (result) return result;

@@ -24,7 +24,7 @@ export const getSeries = cache(
       .aggregate(pipeline)
       .toArray();
     return { success: true, ...buildPaginationResponse(result, page) };
-  }, "series")
+  }, "series"),
 );
 
 export const getSerieBySlug = cache(
@@ -35,7 +35,7 @@ export const getSerieBySlug = cache(
       .findOne({ slug: cleanSlug(slug) });
     if (!doc) return { success: false, error: "Serie not found", serie: null };
     return { success: true, serie: serializeDocument(doc) };
-  }, "serie")
+  }, "serie"),
 );
 
 export const getSeasonsBySeries = cache(
@@ -58,7 +58,7 @@ export const getSeasonsBySeries = cache(
       seasons: seasons.map(serializeDocument),
       count: seasons.length,
     };
-  }, "seasons")
+  }, "seasons"),
 );
 
 export const getSeasonBySlug = cache(
@@ -85,7 +85,7 @@ export const getSeasonBySlug = cache(
       season: serializeDocument(season),
       series: series ? serializeDocument(series) : null,
     };
-  }, "season")
+  }, "season"),
 );
 
 export const getEpisodesBySeason = cache(
@@ -95,7 +95,7 @@ export const getEpisodesBySeason = cache(
       .collection("episodes")
       .find(
         { seasonId: toObjectId(seasonId) },
-        { projection: PUBLIC_CONTENT_PROJECTION }
+        { projection: PUBLIC_CONTENT_PROJECTION },
       )
       .sort({ episodeNumber: 1 })
       .limit(MAX_EPISODES)
@@ -110,7 +110,7 @@ export const getEpisodesBySeason = cache(
       episodes: episodes.map(serializeDocument),
       count: episodes.length,
     };
-  }, "episodes")
+  }, "episodes"),
 );
 
 export const getEpisodeBySlug = cache(
@@ -160,7 +160,7 @@ export const getEpisodeBySlug = cache(
       season: serializeDocument(data.season),
       series: serializeDocument(data.series),
     };
-  }, "episode")
+  }, "episode"),
 );
 
 export const getEpisodes = cache(
@@ -225,5 +225,5 @@ export const getEpisodes = cache(
       .aggregate(pipeline)
       .toArray();
     return { success: true, ...buildPaginationResponse(result, validPage) };
-  }, "episodes")
+  }, "episodes"),
 );

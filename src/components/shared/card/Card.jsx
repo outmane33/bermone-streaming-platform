@@ -30,7 +30,7 @@ const TopBadges = ({
           >
             {mergedEpisodes?.length > 0 ? (
               `${seasonNumber && `S${seasonNumber}`} E${mergedEpisodes.join(
-                "-"
+                "-",
               )}`
             ) : (
               <>
@@ -150,14 +150,19 @@ export default function Card({
   onNavigateComplete,
 }) {
   if (!media) return null;
-  const content = media?.slug?.includes("مسلسل") ? "مسلسل" : "فيلم";
+
+  const content = media?.slug?.includes("انمي")
+    ? "انمي"
+    : media?.slug?.includes("مسلسل")
+      ? "مسلسل"
+      : "فيلم";
 
   if (isFilmCollection) {
     const films = media?.films || [];
     const oldestFilm = films.reduce(
       (oldest, current) =>
         current.releaseYear < oldest.releaseYear ? current : oldest,
-      films[0] || {}
+      films[0] || {},
     );
     const years = films
       .map((f) => f.releaseYear)
@@ -216,8 +221,9 @@ export default function Card({
               className="text-xs md:text-sm font-bold text-white mb-1 md:mb-2 line-clamp-2 drop-shadow-lg group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-purple-300 group-hover:bg-clip-text transition text-right"
               dir="rtl"
             >
-              مسلسل {media?.series?.title} الموسم {media?.season?.seasonNumber}{" "}
-              الحلقة {media?.episodeNumber} مترجمة
+              {media?.slug?.includes("انمي") ? "انمي" : "مسلسل"}{" "}
+              {media?.series?.title} الموسم {media?.season?.seasonNumber} الحلقة{" "}
+              {media?.episodeNumber} مترجمة
             </h3>
           </div>
         </CardContent>
@@ -241,7 +247,7 @@ export default function Card({
           >
             {content === "فيلم"
               ? `فيلم ${media.title} ${media.releaseYear} مترجم`
-              : `مسلسل ${media.title} مترجم`}
+              : `${content} ${media.title} مترجم`}
           </h3>
           <GenreTags genre={media.genre} />
         </div>

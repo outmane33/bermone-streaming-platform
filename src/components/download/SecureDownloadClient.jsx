@@ -1,10 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Button from "../shared/heroSection/Button";
 import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import { getServicesForQuality, getDownloadLinks } from "@/actions/download";
 import ServerSelector from "./ServerSelector";
 import QualitySelector from "./QualitySelector";
+import SeasonSwitcher from "@/components/watch/SeasonSwitcher";
+import EpisodeSwitcher from "@/components/watch/EpisodeSwitcher";
 
 const Section = ({ title, icon: Icon, children, step }) => (
   <div className="relative mb-6 sm:mb-8">
@@ -25,8 +28,15 @@ const Section = ({ title, icon: Icon, children, step }) => (
   </div>
 );
 
-export default function SecureDownloadClient({ qualities, slug }) {
-  const router = useRouter();
+export default function SecureDownloadClient({
+  qualities,
+  slug,
+  contentType,
+  seasons,
+  allSeasonEpisodes,
+  currentSeasonId: initialSeasonId,
+}) {
+  const [currentSeasonId, setCurrentSeasonId] = useState(initialSeasonId);
   const [selectedQuality, setSelectedQuality] = useState(null);
   const [availableServices, setAvailableServices] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
@@ -35,6 +45,9 @@ export default function SecureDownloadClient({ qualities, slug }) {
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [downloadData, setDownloadData] = useState(null);
   const [countdown, setCountdown] = useState(null);
+
+  const episodes = allSeasonEpisodes?.[currentSeasonId] || [];
+  const currentSeason = seasons?.find((s) => s._id === currentSeasonId);
 
   const handleQualitySelect = async (quality) => {
     setSelectedQuality(quality);
@@ -59,21 +72,17 @@ export default function SecureDownloadClient({ qualities, slug }) {
   const handleDownloadClick = async () => {
     setLoadingLinks(true);
     setCountdown(10);
-
     const interval = setInterval(() => {
       setCountdown((c) => (c > 1 ? c - 1 : null));
     }, 1000);
-
     await new Promise((r) => setTimeout(r, 10000));
     clearInterval(interval);
-
     try {
       const result = await getDownloadLinks(
         slug,
         selectedQuality,
-        selectedService
+        selectedService,
       );
-
       if (result.success && result.downloadUrl) {
         setDownloadData({
           url: result.downloadUrl,
@@ -125,18 +134,7 @@ export default function SecureDownloadClient({ qualities, slug }) {
           <button
             onClick={handleDownloadClick}
             disabled={loadingLinks}
-            className={`
-              w-full py-3.5 sm:py-4 px-4 rounded-xl font-bold text-base sm:text-lg 
-              flex items-center justify-center gap-2 sm:gap-3 cursor-pointer
-              ${DESIGN_TOKENS.effects.hoverScale} ${
-              DESIGN_TOKENS.effects.transition
-            }
-              ${
-                loadingLinks
-                  ? "bg-white/10 cursor-wait"
-                  : `${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700 text-white`
-              }
-            `}
+            className={`w-full py-3.5 sm:py-4 px-4 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 cursor-pointer ${DESIGN_TOKENS.effects.hoverScale} ${DESIGN_TOKENS.effects.transition} ${loadingLinks ? "bg-white/10 cursor-wait" : `${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700 text-white`}`}
             aria-busy={loadingLinks}
           >
             {loadingLinks ? (
@@ -176,19 +174,31 @@ export default function SecureDownloadClient({ qualities, slug }) {
             </div>
             <button
               onClick={handleDownload}
-              className={`
-                w-full flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 
-                rounded-lg font-semibold shadow-md hover:shadow-lg 
-                ${DESIGN_TOKENS.effects.hoverScale} ${DESIGN_TOKENS.glass.medium}
-                bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700 text-white
-                transition-all duration-300
-              `}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 rounded-lg font-semibold shadow-md hover:shadow-lg ${DESIGN_TOKENS.effects.hoverScale} ${DESIGN_TOKENS.glass.medium} bg-gradient-to-r ${DESIGN_TOKENS.gradients.cyan} hover:from-cyan-600 hover:to-blue-700 text-white transition-all duration-300`}
             >
               <ICON_MAP.Download className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>تنزيل {downloadData.quality}</span>
             </button>
           </div>
         </Section>
+      )}
+
+      {/* Season/Episode Switchers — ghir f episode */}
+      {contentType !== "season" && seasons && seasons.length > 1 && (
+        <SeasonSwitcher
+          seasons={seasons}
+          currentSeasonId={currentSeasonId}
+          onSeasonChange={setCurrentSeasonId}
+        />
+      )}
+
+      {contentType !== "season" && episodes.length > 0 && (
+        <EpisodeSwitcher
+          episodes={episodes}
+          currentSlug={slug}
+          seasonStatus={currentSeason?.status}
+          downloadPage={true}
+        />
       )}
     </div>
   );

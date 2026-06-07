@@ -21,8 +21,8 @@ export default function CarouselClient({ carouselMida, className = "" }) {
       scrollLeft < 0
         ? Math.abs(scrollLeft)
         : scrollLeft > maxScroll
-        ? maxScroll - scrollLeft
-        : scrollLeft;
+          ? maxScroll - scrollLeft
+          : scrollLeft;
 
     setScrollState({
       canScrollLeft: normalizedScroll < maxScroll - CONFIG.scroll.threshold,

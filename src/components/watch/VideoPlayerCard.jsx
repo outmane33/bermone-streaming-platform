@@ -14,6 +14,14 @@ export default function VideoPlayerCard({
   const activeServer = servers[activeServerIdx];
   const isMaintenance = activeServer?.status === "maintenance";
 
+  // ⭐ فقط EarnVids يمر من الـ proxy
+  const PROXIED_SERVERS = ["EarnVids"];
+  const useProxy = PROXIED_SERVERS.includes(activeServer?.name);
+  const finalUrl = iframeUrl
+    ? useProxy
+      ? `/api/proxy?url=${encodeURIComponent(iframeUrl)}`
+      : iframeUrl
+    : null;
   return (
     <div className={`${DESIGN_TOKENS.glass.medium} rounded-xl p-4 shadow-xl`}>
       <div className="relative">
@@ -46,12 +54,13 @@ export default function VideoPlayerCard({
             </div>
           ) : iframeUrl ? (
             <iframe
-              src={iframeUrl}
+              src={finalUrl}
               frameBorder="0"
+              allow="autoplay; fullscreen"
               allowFullScreen
               className="w-full h-full"
+              referrerPolicy="no-referrer"
               title={`Video - ${activeServer?.name}`}
-              onError={() => {}}
             />
           ) : null}
         </div>

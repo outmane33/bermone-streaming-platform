@@ -34,6 +34,7 @@ export default function RelatedSection({ relatedMedia, title, seasonStatus }) {
                     key={index}
                     episode={media}
                     isLastEpisode={isLastEpisode}
+                    episodeType={media.episodeType}
                   />
                 );
               })}

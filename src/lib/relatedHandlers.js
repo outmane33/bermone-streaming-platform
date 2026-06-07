@@ -55,7 +55,7 @@ export const relatedHandlers = {
               serializers[CONTENT_TYPES.EPISODE]({
                 episode: ep,
                 seasonImage: data.season.image,
-              })
+              }),
             )
           : [],
       title: "الحلقات",
@@ -71,7 +71,7 @@ export const relatedHandlers = {
               serializers[CONTENT_TYPES.EPISODE]({
                 episode: ep,
                 seasonImage: data.season.image,
-              })
+              }),
             )
           : [],
       title: `الموسم ${data.season.seasonNumber} الحلقات`,

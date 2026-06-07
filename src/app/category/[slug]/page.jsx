@@ -53,7 +53,7 @@ export default async function CategoryPage({ params, searchParams }) {
   const { sortId, page } = parsePageParams(
     searchParamsResolved,
     VALID_SORT_IDS,
-    VALID_QUERY_PARAMS
+    VALID_QUERY_PARAMS,
   );
 
   const filters = buildFilters(searchParamsResolved, true);

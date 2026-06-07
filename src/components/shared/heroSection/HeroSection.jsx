@@ -7,6 +7,7 @@ import { DESIGN_TOKENS, ICON_MAP } from "@/lib/data";
 import Link from "next/link";
 import Image from "next/image";
 import { handleWatch, handleDownload } from "@/actions/mediaActions";
+import SeasonDownloadButton from "../Season Download Button/SeasonDownloadButton";
 
 const getAltText = (media, type) => {
   const year = media.releaseYear || "";
@@ -76,6 +77,12 @@ const generateJsonLd = (media, type) => {
 };
 
 export default function HeroSection({ media, type, seriesSlug }) {
+  const contentTypeLabel =
+    type?.toUpperCase() === "FILM"
+      ? "فيلم"
+      : media?.seriesSlug?.includes("انمي") || media?.slug?.includes("انمي")
+        ? "انمي"
+        : "مسلسل";
   const category = media?.category?.isForeignmovies
     ? "افلام اجنبي"
     : media?.category?.isAsianmovies
@@ -95,7 +102,7 @@ export default function HeroSection({ media, type, seriesSlug }) {
     title: media?.title || media?.originalTitle,
     isNew: media?.category?.isNew || false,
     year: media?.releaseYear,
-    rating: media?.rating || 0,
+    rating: media?.rating || null,
     duration: media?.duration,
     story: media?.description,
     category,
@@ -103,6 +110,7 @@ export default function HeroSection({ media, type, seriesSlug }) {
     country: media?.country,
     language: media?.language,
     isLastEpisode: media?.isLastEpisode || false,
+    episodeType: media?.episodeType || null,
   };
 
   // Pre-bind server actions — slug never rendered in HTML
@@ -145,26 +153,42 @@ export default function HeroSection({ media, type, seriesSlug }) {
                   isNew={mappedMedia.isNew}
                   isLastEpisode={mappedMedia.isLastEpisode}
                 />
+
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-3 bg-gradient-to-r from-white via-cyan-200 to-purple-200 bg-clip-text text-transparent leading-tight">
+                  <span className="bg-gradient-to-r from-white via-cyan-200 to-purple-200 bg-clip-text text-transparent mr-2">
+                    {contentTypeLabel} •{" "}
+                  </span>
                   {mappedMedia.title}
                   {mappedMedia.isLastEpisode && (
                     <span className="text-2xl sm:text-3xl text-red-400 mr-3">
                       • الحلقة الأخيرة
                     </span>
                   )}
+                  {mappedMedia.episodeType === "فلر" && (
+                    <span className="text-2xl sm:text-3xl text-yellow-400 mr-3">
+                      • حلقة فلر
+                    </span>
+                  )}
+                  {mappedMedia.episodeType === "حلقة خاصة" && (
+                    <span className="text-2xl sm:text-3xl text-pink-400 mr-3">
+                      • حلقة خاصة
+                    </span>
+                  )}
                 </h1>
 
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-2 bg-yellow-500/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-yellow-500/30">
-                    <ICON_MAP.Star
-                      size={24}
-                      className="text-yellow-400 fill-yellow-400"
-                    />
-                    <span className="text-2xl font-bold">
-                      {mappedMedia.rating}
-                    </span>
-                    <span className="text-sm text-gray-300">/10</span>
-                  </div>
+                  {mappedMedia.rating > 0 && (
+                    <div className="flex items-center gap-2 bg-yellow-500/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-yellow-500/30">
+                      <ICON_MAP.Star
+                        size={24}
+                        className="text-yellow-400 fill-yellow-400"
+                      />
+                      <span className="text-2xl font-bold">
+                        {mappedMedia.rating}
+                      </span>
+                      <span className="text-sm text-gray-300">/10</span>
+                    </div>
+                  )}
                   {mappedMedia?.duration && (
                     <div className="flex items-center gap-2 text-gray-300">
                       <ICON_MAP.Clock size={18} />
@@ -218,6 +242,11 @@ export default function HeroSection({ media, type, seriesSlug }) {
                     </Button>
                   </Link>
                 )}
+
+                {type?.toUpperCase() === "SEASON" &&
+                  (media?.links?.length > 0 || media?.services?.length > 0) && (
+                    <SeasonDownloadButton slug={media.slug} />
+                  )}
               </div>
 
               <SocialShare

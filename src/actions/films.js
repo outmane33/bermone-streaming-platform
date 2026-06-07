@@ -22,7 +22,7 @@ export const getFilms = cache(
     const pipeline = buildContentAggregationPipeline(filters, sortConfig, page);
     const [result] = await db.collection("films").aggregate(pipeline).toArray();
     return { success: true, ...buildPaginationResponse(result, page) };
-  }, "films")
+  }, "films"),
 );
 
 export const getFilmBySlug = cache(
@@ -36,12 +36,12 @@ export const getFilmBySlug = cache(
         projection: {
           services: 0,
         },
-      }
+      },
     );
 
     if (!film) throw new Error("Film not found");
     return { success: true, film: serializeDocument(film) };
-  }, "film")
+  }, "film"),
 );
 export const getFilmCollection = cache(
   withErrorHandling(async (filmId) => {
@@ -51,7 +51,7 @@ export const getFilmCollection = cache(
       .collection("filmcollections")
       .findOne(
         { films: filmObjectId },
-        { projection: PUBLIC_CONTENT_PROJECTION }
+        { projection: PUBLIC_CONTENT_PROJECTION },
       );
     if (!collection) {
       return {
@@ -65,7 +65,7 @@ export const getFilmCollection = cache(
       .collection("films")
       .find(
         { _id: { $in: collection.films } },
-        { projection: PUBLIC_CONTENT_PROJECTION }
+        { projection: PUBLIC_CONTENT_PROJECTION },
       )
       .sort({ releaseYear: 1 })
       .limit(100)
@@ -75,14 +75,14 @@ export const getFilmCollection = cache(
       collection: serializeDocument(collection),
       films: films.map(serializeDocument),
     };
-  }, "filmCollection")
+  }, "filmCollection"),
 );
 
 export const getRelatedFilms = cache(
   withErrorHandling(async (filmId, filmData = {}, limit = 12) => {
     const safeLimit = Math.min(
       Math.max(parseInt(limit, 10) || 12, 1),
-      MAX_RELATED
+      MAX_RELATED,
     );
     const { db } = await connectToDatabase();
     const filmObjectId = toObjectId(filmId);
@@ -143,5 +143,5 @@ export const getRelatedFilms = cache(
       films: films.map(serializeDocument),
       count: films.length,
     };
-  }, "relatedFilms")
+  }, "relatedFilms"),
 );
